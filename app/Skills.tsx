@@ -37,7 +37,7 @@ export default function Skills
 
         <p className="max-w-md leading-relaxed text-white/70">
           Weniger Abstimmung. Weniger Fehler. Mehr Tempo.
-          Durch agile und Lean-Methoden aus der Softwareentwicklung.
+          Durch agile & lean Methoden aus der Softwareentwicklung.
         </p>
       </div>
 

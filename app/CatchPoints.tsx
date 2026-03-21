@@ -1,11 +1,11 @@
-// app/catchpoints.tsx
+// app/catchPoints.tsx
 
 import {Button} from "@/components/ui/button"
 import Link from "next/link"
 import clsx from "clsx"
 
 
-function Catchpoint
+function CatchPoint
 (
   {count, title, description, buttonTitle, linkTo}:
   { count: string, title: string, description: string, buttonTitle: string, linkTo: string }
@@ -56,7 +56,7 @@ export default function CatchPoints
 ) {
   return (
       <div className="relative z-20 grid grid-cols-1 md:grid-cols-3 md:items-end">
-        <Catchpoint
+        <CatchPoint
           count={"01"}
           title={"Ingenieur"}
           description={"BIM Spezialist - in 30 Minuten eine klare Lösung für dein Projekt"}
@@ -64,7 +64,7 @@ export default function CatchPoints
           linkTo={"mailto:michael.repolusk@sirego.ch"}
         />
 
-        <Catchpoint
+        <CatchPoint
           count={"02"}
           title={"Entwickler"}
           description={" Die Effektivität und Effizienz von Spielen in den Planungsprozess"}
@@ -72,7 +72,7 @@ export default function CatchPoints
           linkTo={"mailto:michael.repolusk@sirego.ch"}
         />
 
-        <Catchpoint
+        <CatchPoint
           count={"03"}
           title={"Visionär"}
           description={" Die Effektivität und Effizienz von Spielen in den Planungsprozess"}

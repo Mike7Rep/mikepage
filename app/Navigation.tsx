@@ -25,7 +25,7 @@ export default function Navigation
         <div className="absolute left-1/2 hidden -translate-x-1/2 gap-10 md:flex">
           <Link href="/bildung" className={styleLink}>Bildung</Link>
           <Link href="/beruf" className={styleLink}>Beruf</Link>
-          <Link href="/skills" className={styleLink}>Skills</Link>
+          <Link href="/app/cv" className={styleLink}>Skills</Link>
           <Link href="/projekte" className={styleLink}>Projekte</Link>
         </div>
 

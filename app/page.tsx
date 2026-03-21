@@ -1,8 +1,9 @@
 // app/page.tsx
 
-import HeroSection from "./heroSection"
-import CatchPoints from "./catchpoints"
-import Skills from "./skills"
+import HeroSection from "./HeroSection"
+import CatchPoints from "./CatchPoints"
+import Skills from "./Skills"
+import Footer from "./Footer"
 
 export default function Page() {
 
@@ -19,23 +20,7 @@ export default function Page() {
         <Skills />
       </section>
 
-      <footer className="flex flex-col items-center justify-between gap-4 border-t border-white/10 bg-black px-6 py-10 md:flex-row md:px-12">
-        <div className="text-[10px] uppercase tracking-[0.12em] text-white/30">
-          © 2026 MICHAEL REPOLUSK. INGENIEUR. ENTWICKLER. VISIONÄR.
-        </div>
-
-        <div className="flex gap-8">
-          <a href="#" className="text-[10px] uppercase tracking-[0.12em] text-white/30 transition hover:text-white">
-            Impressum
-          </a>
-          <a href="#" className="text-[10px] uppercase tracking-[0.12em] text-white/30 transition hover:text-white">
-            Datenschutz
-          </a>
-          <a href="#" className="text-[10px] uppercase tracking-[0.12em] text-white/30 transition hover:text-white">
-            LinkedIn
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
