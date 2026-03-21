@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.03 --&gt; &#10;&#10;neuer Start mit Stitch">
+    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.05 --&gt; &#10;&#10;BUGFIXING">
+      <change afterPath="$PROJECT_DIR$/app/catchpoints.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/skills.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/heroSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/heroSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/navigation.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -14,7 +18,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="38" />
+    <option name="cachedIndexableFilesCount" value="40" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -114,7 +118,8 @@
       <workItem from="1771518254109" duration="381000" />
       <workItem from="1774079931141" duration="1632000" />
       <workItem from="1774083359363" duration="19000" />
-      <workItem from="1774083727414" duration="5297000" />
+      <workItem from="1774083727414" duration="8105000" />
+      <workItem from="1774100426302" duration="6607000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
@@ -140,7 +145,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774088036568</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="mikePage -- v0.00.05 --&gt; &#10;&#10;BUGFIXING">
+      <option name="closed" value="true" />
+      <created>1774089251296</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1774089251296</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -150,6 +163,8 @@
     <MESSAGE value="mikePage -- v0.00.01 --&gt; initial Comit" />
     <MESSAGE value="mikePage -- v0.00.02 --&gt; &#10;&#10;Bild und Schriftzug" />
     <MESSAGE value="mikePage -- v0.00.03 --&gt; &#10;&#10;neuer Start mit Stitch" />
-    <option name="LAST_COMMIT_MESSAGE" value="mikePage -- v0.00.03 --&gt; &#10;&#10;neuer Start mit Stitch" />
+    <MESSAGE value="mikePage -- v0.00.04 --&gt; &#10;&#10;BUGFIXING" />
+    <MESSAGE value="mikePage -- v0.00.05 --&gt; &#10;&#10;BUGFIXING" />
+    <option name="LAST_COMMIT_MESSAGE" value="mikePage -- v0.00.05 --&gt; &#10;&#10;BUGFIXING" />
   </component>
 </project>
