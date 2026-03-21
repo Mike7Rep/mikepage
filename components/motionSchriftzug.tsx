@@ -45,7 +45,7 @@ export default function MotionSchriftzug({ text }: { text: string }) {
 
     return (
         <div ref={wrapRef} className="w-screen overflow-hidden">
-            <motion.div style={{ x }} className="flex whitespace-nowrap text-[15vw]">
+            <motion.div style={{ x }} className="flex whitespace-nowrap text-[15vh]">
                 <div ref={contentRef} className="flex">
                     <span className="pr-10">{text}</span>
                     <span className="pr-10">{text}</span>
