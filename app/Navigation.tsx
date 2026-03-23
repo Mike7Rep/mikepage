@@ -1,13 +1,24 @@
 // app/navigation.tsx
 
+"use client"
+
 //UI
+
 import {Button} from "@/components/ui/button"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 export default function Navigation
 () {
 
   const styleLink = "text-sm uppercase tracking-[0.08em] text-white/60 transition-colors hover:text-white"
+
+  const pathname = usePathname()
+
+
+  if (pathname.includes("print")) {
+    return null
+  }
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/40 px-6 py-6 backdrop-blur-xl md:px-12">
