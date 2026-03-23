@@ -140,8 +140,8 @@ export function Page1() {
             {/*  Berufserfahrung */}
             <h2 className={styleh2}>Berufserfahrung </h2>
             <Berufserfahrung
-              funktion={"Projektleiter Haustechnik"}
-              timeline={"01.08.2025 - 04.11.2025"}
+              funktion={"Fachprojektleiter Lüftung"}
+              timeline={"08.2025 - 11.2025"}
               firma={"integral design build AG, Schlieren (CH)"}
               beschreibung={"Ein Gesamtleister mit der Spezialisierung für den Innenausbau  im Bereich Büros und Healthcare. Mit Interresse und Neugier konnte ich Architekten und Innenarchitekten in der Haustechnik beraten."}
               liste={[
@@ -153,14 +153,14 @@ export function Page1() {
 
             <Berufserfahrung
               funktion={"Projektleiter Haustechnik"}
-              timeline={"01.08.2025 - 04.11.2025"}
-              firma={"integral design build AG, Schlieren (CH)"}
-              beschreibung={"Ein Gesamtleister mit der Spezialisierung für den Innenausbau  im Bereich Büros und Healthcare. Mit Interresse und Neugier konnte ich Architekten und Innenarchitekten in der Haustechnik beraten."}
+              timeline={"10.2021 - 08.2025"}
+              firma={"3-Plan AG, Winterthur (CH)"}
+              beschreibung={"Ingenieurbüro mit allen 4 Gewerken und hohem Fokus auf BIM und Revit. Hier konnte ich meine Erfahrung mit Revit einbringen und neue Prozesse entwickeln - Schema und Automatisierte Ausschreibung."}
               liste={[
-                "HKLSE Konzepte für Büros und Zahnarztpraxen",
-                "Beratung mit Bauherren, Architekten und Unternehmer in allen SIA Phasen",
-                "Erstellung von HKLSE Plänen mit ArchiCAD",
-                "Erstellung von Offerte für Reaktivierung / Umbau von Mieterausbauten"
+                "Fachprojektleitung Lüftung",
+                "BIM Koordinator in unterschiedlichen Projekten",
+                "Mehrfamilienhäueser, Hallen, Hochhäuser, Restaurant, Gerichtsgebäude",
+                "Fachbauleitung HKLS"
               ]}/>
 
           </div>
@@ -248,35 +248,55 @@ export function Page2(){
             <h2 className={styleh2}>fortsetzung Berufserfahrung </h2>
 
             <Berufserfahrung
-              funktion={"Projektleiter Haustechnik"}
-              timeline={"01.08.2025 - 04.11.2025"}
-              firma={"integral design build AG, Schlieren (CH)"}
-              beschreibung={"Ein Gesamtleister mit der Spezialisierung für den Innenausbau  im Bereich Büros und Healthcare. Mit Interresse und Neugier konnte ich Architekten und Innenarchitekten in der Haustechnik beraten."}
+              funktion={"BIM Manager"}
+              timeline={"03.2020 - 04.2021"}
+              firma={"Zauner Anlagentechnik GmbH, Wallern (AT)"}
+              beschreibung={"Grosser Anlagenbauer in Europa mit Fokus auf Datacenter, Pharmacenter und Kraftwerke. Hier konnte ich meine selbst erlernten Revit Kenntnisse noch weiter Entwickeln. Dort habe ich Isometrien automatisiert aus Revit erstellt - so ist das Datacenter in Winterthur entstanden mit über 1000 automatisierten Plänen."}
               liste={[
-                "HKLSE Konzepte für Büros und Zahnarztpraxen",
-                "Beratung mit Bauherren, Architekten und Unternehmer in allen SIA Phasen",
-                "Erstellung von HKLSE Plänen mit ArchiCAD",
-                "Erstellung von Offerte für Reaktivierung / Umbau von Mieterausbauten"
+                "Revit Modellierung in allen Gewerken",
+                "BIM Koordination",
+                "Automatisierte Isometrien aus Revit",
+                "Fachbauleitung vor Ort auf der Baustelle"
               ]}/>
 
             <Berufserfahrung
-              funktion={"Projektleiter Haustechnik"}
+              funktion={"Projekt Entwickler"}
               timeline={"01.08.2025 - 04.11.2025"}
-              firma={"integral design build AG, Schlieren (CH)"}
-              beschreibung={"Ein Gesamtleister mit der Spezialisierung für den Innenausbau  im Bereich Büros und Healthcare. Mit Interresse und Neugier konnte ich Architekten und Innenarchitekten in der Haustechnik beraten."}
+              firma={"Infranorm Technologie GmbH, Wels (AT)"}
+              beschreibung={"Kleines Ingenieur Büro, dass auf Energiegewinnung und Luftreinigung für Produktionsstääten spezialisiert ist. Besonders bei Autozulieferer ist ein kontrolliertes Klima für die Präzission der Bauteile wichtig. Dort konnte ich das neu gelernte Wissen aus dem Studium direkt an echten Projekten anwenden."}
               liste={[
-                "HKLSE Konzepte für Büros und Zahnarztpraxen",
-                "Beratung mit Bauherren, Architekten und Unternehmer in allen SIA Phasen",
-                "Erstellung von HKLSE Plänen mit ArchiCAD",
-                "Erstellung von Offerte für Reaktivierung / Umbau von Mieterausbauten"
+                "Entwicklung von Hallenklimatisierungs Konzepten",
+                "3D Modellierung in AutoCAD AX3000",
+                "Erstellung und Präsentation der Konzepte bei Kunden",
+                "Inbetriebnahmen von geplanten Anlagen",
               ]}/>
 
             <h2 className={styleh2}>weitere Berufserfahrung </h2>
 
             <ul>
               <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>Tätigkeit</span>, Firma Ort</p>
-                <p>08.2007 - 02-2008</p>
+                <p><span className={"font-bold"}>Full Stack Developer</span>, Sirego Gmbh, Hobby</p>
+                <p>11.2024 - heute</p>
+              </li>
+              <li className={"flex flex-row justify-between"}>
+                <p><span className={"font-bold"}>App Tester</span>, Applause App Quality, Online</p>
+                <p>07.2021 - 11.2021</p>
+              </li>
+              <li className={"flex flex-row justify-between"}>
+                <p><span className={"font-bold"}>Nachhilfefachkraft</span>, Bachl Nachhilfe GmbH, Wels</p>
+                <p>09.2014 - 07.2020</p>
+              </li>
+              <li className={"flex flex-row justify-between"}>
+                <p><span className={"font-bold"}>Labor Tutor für Studenten</span>, FH OÖ F&E, Wels</p>
+                <p>07.2015 - 11.2020</p>
+              </li>
+              <li className={"flex flex-row justify-between"}>
+                <p><span className={"font-bold"}>Bankkaufmann</span>, Volksbank Oberösterreich AG, Wels</p>
+                <p>03.2011 - 09.2013</p>
+              </li>
+              <li className={"flex flex-row justify-between"}>
+                <p><span className={"font-bold"}>Grosshandelskaufmann</span>, Paul Lange Austria, Wels</p>
+                <p>04.2002 - 08.2008</p>
               </li>
             </ul>
 

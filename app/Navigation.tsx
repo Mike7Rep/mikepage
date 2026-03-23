@@ -38,6 +38,7 @@ export default function Navigation
           <Link href="/beruf" className={styleLink}>Beruf</Link>
           <Link href="/app/cv" className={styleLink}>Skills</Link>
           <Link href="/projekte" className={styleLink}>Projekte</Link>
+          <Link href="/cv" className={styleLink}>CV</Link>
         </div>
 
         {/* RIGHT */}

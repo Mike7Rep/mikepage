@@ -4,15 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.07 --&gt; &#10;&#10;Mache hier nun den Online CV mit Button PDF Download">
-      <change afterPath="$PROJECT_DIR$/app/api/cv-pdf/route.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/cv/print/page.tsx" afterDir="false" />
+    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.08&#10;&#10;Online CV als PDF nun erstellbar">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/HeroSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/HeroSection.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Navigation.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/cv/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/cv/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/cv/print/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/cv/print/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,7 +126,7 @@
       <workItem from="1774263894957" duration="216000" />
       <workItem from="1774264499535" duration="963000" />
       <workItem from="1774266009432" duration="2441000" />
-      <workItem from="1774277017874" duration="8122000" />
+      <workItem from="1774277017874" duration="10716000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
@@ -181,7 +176,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774117933455</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="mikePage -- v0.00.08&#10;&#10;Online CV als PDF nun erstellbar">
+      <option name="closed" value="true" />
+      <created>1774285261848</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1774285261848</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -195,6 +198,7 @@
     <MESSAGE value="mikePage -- v0.00.05 --&gt; &#10;&#10;BUGFIXING" />
     <MESSAGE value="mikePage -- v0.00.06 --&gt; &#10;&#10;Styling" />
     <MESSAGE value="mikePage -- v0.00.07 --&gt; &#10;&#10;Mache hier nun den Online CV mit Button PDF Download" />
-    <option name="LAST_COMMIT_MESSAGE" value="mikePage -- v0.00.07 --&gt; &#10;&#10;Mache hier nun den Online CV mit Button PDF Download" />
+    <MESSAGE value="mikePage -- v0.00.08&#10;&#10;Online CV als PDF nun erstellbar" />
+    <option name="LAST_COMMIT_MESSAGE" value="mikePage -- v0.00.08&#10;&#10;Online CV als PDF nun erstellbar" />
   </component>
 </project>
