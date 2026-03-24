@@ -14,7 +14,7 @@ export default function HeroSection
           alt="Michael Repolusk"
           fill
           priority
-          sizes={"1000px"}
+          sizes={"2731px"}
           className="object-cover object-[center_10%] opacity-30"
         />
         <div className="absolute inset-0 bg-linear-to-b from-background/90 via-background/20 to-background"/>

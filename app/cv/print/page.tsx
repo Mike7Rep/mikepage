@@ -4,6 +4,9 @@ import Image from "next/image"
 import Link from "next/link"
 import clsx from "clsx"
 
+import Berufserfahrung from "./Berufserfahrung"
+import WeitereBerufserfahrung from "./WeitereBerufserfahrung"
+
 const colorBackground1 = " !bg-gray-800"
 const colorBorder1 = " !border-gray-800"
 const colorText1 = " !text-gray-800"
@@ -13,35 +16,30 @@ const colorBackground3 = "bg-white"
 
 const styleh1 = "text-5xl text-center mt-16 uppercase"
 const styleh2 = "text-xl text-left uppercase font-bold tracking-tight"
-const styleh3 = "text-md text-left uppercase  font-bold tracking-tight"
 
-const styleList = "text-sm list-disc mt-5 text-left flex flex-col gap-2 items-start w-full px-4"
-function Berufserfahrung
-(
-  {funktion, timeline, firma, beschreibung, liste}:
-  { funktion: string, timeline: string, firma: string, beschreibung: string, liste: string[] }
-) {
+const styleList = "text-sm list-disc mt-5 text-left flex flex-col gap-2 items-start w-full px-2"
 
+function HeadLine() {
 
   return (
-    <section className={"text-sm py-2" + colorText1}>
-      <div className={"flex flex-row justify-between items-end pb-2"}>
-        <h3 className={styleh3}>{funktion}</h3>
-        <p className={"text-sm"}>{timeline}</p>
+    <>
+      <h1 className={styleh1}>Michael Repolusk</h1>
+      <p className={"text-center"}>Ingenieur | Entwickler | Visionär</p>
+      <div className={"relative w-25 h-25 flex mx-auto "}>
+        <Image
+          src="/image/logo.png"
+          alt="MR Logo"
+          fill
+          sizes={"1024px"}
+          className={"object-cover object-top"}
+        />
       </div>
-      <span className={"text-sm font-light italic"}>{firma}</span>
-      <p>{beschreibung}</p>
-      <ul className={"py-3"}>
-        {liste.map((item, idx) => (
-          <li
-            className={"list-disc pl-5 ml-5 text-xs"}
-            key={idx}>{item}</li>
-        ))}
-      </ul>
-    </section>
-  )
 
+      <div className={"h-4"}/>
+    </>
+  )
 }
+
 
 export function Page1() {
 
@@ -74,12 +72,12 @@ export function Page1() {
               src="/image/mike.png"
               alt="Michael Repolusk"
               fill
-              sizes={"160px"}
+              sizes={"2731px"}
               className={"object-cover object-top scale-170 mt-16"}
             />
           </div>
           <div className={"flex flex-col my-8 justify-center items-center"}>
-            <h3 className={styleh3}>Kontakt</h3>
+            <h2 className={styleh2}>Kontakt</h2>
             <br/>
             <p className={"text-sm"}>Rychenbergstrasse 73</p>
             <p className={"text-sm"}>8400 Winterthur</p>
@@ -97,17 +95,17 @@ export function Page1() {
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
 
-            <h3 className={styleh3}>Expertise</h3>
+            <h2 className={styleh2}>Expertise</h2>
             <ul className={styleList}>
-              <li>Fähigkeit 1</li>
-              <li>Fähigkeit 1</li>
-              <li>Fähigkeit 1</li>
-              <li>Fähigkeit asas1</li>
+              <li>Full Stack Web Development</li>
+              <li>Engineering Mindset</li>
+              <li>Automation & AI</li>
+              <li>Product Thinking</li>
             </ul>
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
 
-            <h3 className={styleh3}>Sprache</h3>
+            <h2 className={styleh2}>Sprache</h2>
             <ul className={styleList}>
               <li>Deutsch (Muttersprache)</li>
               <li>Englisch (fliessend)</li>
@@ -120,21 +118,24 @@ export function Page1() {
 
         </div>
         <div className={"col-span-2 ml-3"}>
-          <h1 className={styleh1}>Michael Repolusk</h1>
-          <p className={"text-center"}>Ingenieur | Entwickler | Visionär</p>
-
-          <div className={"h-32"}/>
+          <HeadLine/>
 
           {/* Haupteil*/}
           <div className={clsx("w-full h-full flex flex-col pr-8 text-sm", colorText1)}>
             <h2 className={styleh2}>über mich</h2>
-            <p>Ich bin ein Paket aus Ingenieur, Entwickler und Visionär.
-              Ich verbinde fundiertes Know-how aus der Gebäudetechnik mit den effizienten Denkweisen der
-              Softwareentwicklung und erkenne gezielt Optimierungspotenziale in bestehenden Prozessen.</p>
-            <p>Durch eigene Tools habe ich bereits Planungsabläufe vereinfacht, beschleunigt und wirtschaftlicher
-              gemacht.
-              Mit meinem Online-Kollaborationstool verfolge ich das Ziel, die Planungsbranche in ein neues,
-              effizienteres Zeitalter zu führen.</p>
+            <p>
+              Ich bin ein Paket
+              aus <strong>Ingenieur</strong>, <strong>Entwickler</strong> und <strong>Visionär</strong>.
+              Ich verbinde fundiertes Know-how aus der <strong>Gebäudetechnik</strong> mit den effizienten Denkweisen
+              der <strong>Softwareentwicklung</strong> und erkenne <br/> gezielt Optimierungspotenziale in bestehenden
+              Prozessen.
+            </p>
+            <p>
+              Durch eigene Tools habe ich bereits
+              Planungsabläufe <strong>vereinfacht</strong>, <strong> beschleunigt</strong> und <strong>wirtschaftlicher</strong> gemacht. <br/>
+              Mit meinem Online-Kollaborationstool verfolge ich das Ziel, die Planungsbranche in
+              ein <strong>neues</strong>, <strong>effizienteres</strong> Zeitalter zu führen.
+            </p>
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
             {/*  Berufserfahrung */}
@@ -155,7 +156,7 @@ export function Page1() {
               funktion={"Projektleiter Haustechnik"}
               timeline={"10.2021 - 08.2025"}
               firma={"3-Plan AG, Winterthur (CH)"}
-              beschreibung={"Ingenieurbüro mit allen 4 Gewerken und hohem Fokus auf BIM und Revit. Hier konnte ich meine Erfahrung mit Revit einbringen und neue Prozesse entwickeln - Schema und Automatisierte Ausschreibung."}
+              beschreibung={"Ingenieurbüro mit allen 4 Gewerken und hohem Fokus auf BIM und Revit. Hier konnte ich meine Erfahrung mit Revit einbringen und neue Prozesse entwickeln zb.: Schema und Automatisierte Ausschreibung."}
               liste={[
                 "Fachprojektleitung Lüftung",
                 "BIM Koordinator in unterschiedlichen Projekten",
@@ -173,7 +174,7 @@ export function Page1() {
 }
 
 
-export function Page2(){
+export function Page2() {
 
   return (
     <div
@@ -196,31 +197,64 @@ export function Page2(){
         )
         }>
           <div className={"text-sm flex flex-col my-8 justify-center items-center px-8"}>
-            <h2 className={styleh2}>Ausbildung</h2>
-            <br/>
-            <div>
-              <span className={"font-bold"}>MSc in Engineering</span>
-              <p>2016 - 2019</p>
-              <p>FH Oberösterreich</p>
-              <p>Wels (AT)</p>
+            <h2 className={styleh2 + " pb-4"}>Ausbildung</h2>
+            <div className={"flex flex-col gap-4"}>
+              <div>
+                <span className={"font-bold"}>MSc in Engineering</span>
+                <p>2016 - 2019</p>
+                <p>FH OÖ Wels</p>
+              </div>
+
+
+              <div>
+                <span className={"font-bold"}>BSc in Engineering</span>
+                <p>2013 - 2016</p>
+                <p>FH OÖ Wels</p>
+              </div>
+
+
+              <div>
+                <span className={"font-bold"}>Berufsreife</span>
+                <p>2010 - 2013</p>
+                <p>BIFI Wels</p>
+              </div>
+
+
+              <div>
+                <span className={"font-bold"}>Elektrotechnik</span>
+                <p>1999 - 2001</p>
+                <p>HTL Wels</p>
+              </div>
+
+
+              <div>
+                <span className={"font-bold"}>Sporthauptschule</span>
+                <p>1995 - 1999</p>
+                <p>SHS Wels</p>
+              </div>
+
+
+              <div>
+                <span className={"font-bold"}>Volksschule</span>
+                <p>1991 - 1995</p>
+                <p>VS9 Wels</p>
+              </div>
             </div>
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
             <h2 className={styleh2}>Weiterbildung</h2>
             <br/>
             <div>
-              <span className={"font-bold"}>CAS</span>
+              <span className={"font-bold"}>CAS - UX & Design</span>
               <p>2026 - heute</p>
-              <p>OST – Ostschweizer Fachhochschule</p>
-              <p>Rapperswill</p>
+              <p>OST - Rapperswill</p>
             </div>
             <br/>
 
             <div>
-              <span className={"font-bold"}>CAS</span>
-              <p>2026 - heute</p>
-              <p>OST – Ostschweizer Fachhochschule</p>
-              <p>Rapperswill</p>
+              <span className={"font-bold"}>CAS - VDC</span>
+              <p>2022 - 2023</p>
+              <p>FHNW - Sursee</p>
             </div>
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
@@ -229,7 +263,7 @@ export function Page2(){
             <ul className={styleList}>
               <li>ledig</li>
               <li>geb. 07.07.1985</li>
-              <li></li>
+              <li>IQ: 145</li>
             </ul>
 
 
@@ -238,10 +272,7 @@ export function Page2(){
 
         </div>
         <div className={"col-span-2 ml-3"}>
-          <h1 className={styleh1}>Michael Repolusk</h1>
-          <p className={"text-center"}>Ingenieur | Entwickler | Visionär</p>
-
-          <div className={"h-32"}/>
+          <HeadLine/>
 
           {/* Haupteil*/}
           <div className={clsx("w-full h-full flex flex-col pr-8 text-sm", colorText1)}>
@@ -261,43 +292,90 @@ export function Page2(){
 
             <Berufserfahrung
               funktion={"Projekt Entwickler"}
-              timeline={"01.08.2025 - 04.11.2025"}
+              timeline={"04.2018 - 08.2019"}
               firma={"Infranorm Technologie GmbH, Wels (AT)"}
               beschreibung={"Kleines Ingenieur Büro, dass auf Energiegewinnung und Luftreinigung für Produktionsstääten spezialisiert ist. Besonders bei Autozulieferer ist ein kontrolliertes Klima für die Präzission der Bauteile wichtig. Dort konnte ich das neu gelernte Wissen aus dem Studium direkt an echten Projekten anwenden."}
               liste={[
-                "Entwicklung von Hallenklimatisierungs Konzepten",
+                "Entwicklung von Hallen Klimatisierungs Konzepten",
                 "3D Modellierung in AutoCAD AX3000",
                 "Erstellung und Präsentation der Konzepte bei Kunden",
                 "Inbetriebnahmen von geplanten Anlagen",
               ]}/>
 
+            <div className={"h-0.5 my-4 w-full rounded-full" + colorBackground1}/>
+
             <h2 className={styleh2}>weitere Berufserfahrung </h2>
 
-            <ul>
-              <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>Full Stack Developer</span>, Sirego Gmbh, Hobby</p>
-                <p>11.2024 - heute</p>
-              </li>
-              <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>App Tester</span>, Applause App Quality, Online</p>
-                <p>07.2021 - 11.2021</p>
-              </li>
-              <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>Nachhilfefachkraft</span>, Bachl Nachhilfe GmbH, Wels</p>
-                <p>09.2014 - 07.2020</p>
-              </li>
-              <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>Labor Tutor für Studenten</span>, FH OÖ F&E, Wels</p>
-                <p>07.2015 - 11.2020</p>
-              </li>
-              <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>Bankkaufmann</span>, Volksbank Oberösterreich AG, Wels</p>
-                <p>03.2011 - 09.2013</p>
-              </li>
-              <li className={"flex flex-row justify-between"}>
-                <p><span className={"font-bold"}>Grosshandelskaufmann</span>, Paul Lange Austria, Wels</p>
-                <p>04.2002 - 08.2008</p>
-              </li>
+            <ul className={"py-4"}>
+              <WeitereBerufserfahrung
+                funktion={"Full Stack Developer"}
+                ort={" Sirego Gmbh, Hobby"}
+                start={"11.2024"}
+                end={"heute"}
+              />
+              <WeitereBerufserfahrung
+                funktion={"Freiwilliger Mitarbeiter"}
+                ort={" KSW, Winterthur"}
+                start={"08.2022"}
+                end={"08.2022"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Software Tester"}
+                ort={" Applause App Quality, Online"}
+                start={"07.2021"}
+                end={"11.2021"}
+              />
+
+
+              <WeitereBerufserfahrung
+                funktion={"Nachhilfefachkraft"}
+                ort={" Bachl Nachhilfe GmbH, Wels"}
+                start={"09.2014"}
+                end={"07.2020"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Tutor Mathematik und Chemie"}
+                ort={" FH OÖ F&E, Wels"}
+                start={"07.2015"}
+                end={"07.2020"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Bankkaufmann"}
+                ort={"Volksbank Oberösterreich AG, Wels"}
+                start={"03.2011"}
+                end={"09.2013"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Bürokaufmann"}
+                ort={"Philipp Gruppe, Wels"}
+                start={"09.2008"}
+                end={"09.2010"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Lagerlogistiker"}
+                ort={"Colop GmbH, Wels"}
+                start={"03.2007"}
+                end={"08.2008"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Lagerlogistiker"}
+                ort={"Holter GmbH, Wels"}
+                start={"09.2006"}
+                end={"12.2006"}
+              />
+
+              <WeitereBerufserfahrung
+                funktion={"Grosshandelskaufmann"}
+                ort={"Paul Lange Austria, Wels"}
+                start={"04.2002"}
+                end={"06.2006"}
+              />
             </ul>
 
 
@@ -315,8 +393,8 @@ export default function CV
   return (
     <section className={"relative flex flex-col items-center gap-0 my-0 bg-white"}>
 
-      <Page1 />
-      <Page2 />
+      <Page1/>
+      <Page2/>
 
     </section>
   )
