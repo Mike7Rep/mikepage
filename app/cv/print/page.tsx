@@ -25,13 +25,13 @@ function HeadLine() {
     <>
       <h1 className={styleh1}>Michael Repolusk</h1>
       <p className={"text-center"}>Ingenieur | Entwickler | Visionär</p>
-      <div className={"relative w-25 h-25 flex mx-auto "}>
+      <div className={"relative w-25 h-25 flex mx-auto z-30 "}>
         <Image
           src="/image/logo.png"
           alt="MR Logo"
           fill
           sizes={"1024px"}
-          className={"object-cover object-top"}
+          className={"object-cover object-top scale-120"}
         />
       </div>
 
@@ -118,7 +118,7 @@ export function Page1() {
 
         </div>
         <div className={"col-span-2 ml-3"}>
-          <HeadLine/>
+          <HeadLine />
 
           {/* Haupteil*/}
           <div className={clsx("w-full h-full flex flex-col pr-8 text-sm", colorText1)}>
