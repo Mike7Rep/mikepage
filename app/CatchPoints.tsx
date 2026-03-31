@@ -61,7 +61,7 @@ export default function CatchPoints
           title={"Ingenieur"}
           description={"BIM Spezialist - in 30 Minuten eine klare Lösung für dein Projekt"}
           buttonTitle={"30min Gratis Meeting"}
-          linkTo={"mailto:michael.repolusk@sirego.ch"}
+          linkTo={"/bookmeeting"}
         />
 
         <CatchPoint
@@ -69,7 +69,7 @@ export default function CatchPoints
           title={"Entwickler"}
           description={" Die Effektivität und Effizienz von Spielen in den Planungsprozess"}
           buttonTitle={"30min Gratis Meeting"}
-          linkTo={"mailto:michael.repolusk@sirego.ch"}
+          linkTo={"/bookmeeting"}
         />
 
         <CatchPoint

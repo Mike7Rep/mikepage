@@ -17,14 +17,16 @@ const colorBackground3 = "bg-white"
 const styleh1 = "text-5xl text-center mt-16 uppercase"
 const styleh2 = "text-xl text-left uppercase font-bold tracking-tight"
 
-const styleList = "text-sm list-disc mt-5 text-left flex flex-col gap-2 items-start w-full px-2"
+const styleList = "text-xs list-disc mt-5 text-left flex flex-col gap-2 items-start w-full px-2"
 
 function HeadLine() {
 
   return (
     <>
       <h1 className={styleh1}>Michael Repolusk</h1>
-      <p className={"text-center"}>Ingenieur | Entwickler | Visionär</p>
+      <p className={"text-center"}>
+        Revit Spezialist | BIM Koordinator | HLKSE Planung & Prozessoptimierung
+      </p>
       <div className={"relative w-25 h-25 flex mx-auto z-30 "}>
         <Image
           src="/image/logo.png"
@@ -82,34 +84,36 @@ export function Page1() {
             <p className={"text-sm"}>Rychenbergstrasse 73</p>
             <p className={"text-sm"}>8400 Winterthur</p>
             <br/>
-            <Link
-              className={"underline"}
-              href={"tel:+41767248793"}><p className={"text-sm"}>+41 76 724 87 93</p></Link>
-            <Link
-              className={"underline"}
-              href={"mailto:michael.repolusk@sirego.ch"}><p className={"text-sm"}>michael.repolusk@sirego.ch</p>
+            <Link className={"underline"}  href={"tel:+41767248793"}>
+              <p className={"text-sm"}>+41 76 724 87 93</p>
             </Link>
-            <Link
-              className={"underline"}
-              href={"https://www.michael-repolusk.com/"}><p className={"text-sm"}>www.michael-repolusk.com</p></Link>
+            <Link className={"underline"} href={"mailto:michael.repolusk@sirego.ch"}>
+              <p className={"text-sm"}>michael.repolusk@sirego.ch</p>
+            </Link>
+            <Link className={"underline"} href={"https://www.michael-repolusk.com/"}>
+              <p className={"text-sm"}>www.michael-repolusk.com</p>
+            </Link>
 
-            <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
+            <div className={"h-0.5 my-8 w-8/10 rounded-full" + colorBackground1}/>
 
             <h2 className={styleh2}>Expertise</h2>
             <ul className={styleList}>
-              <li>Full Stack Web Development</li>
-              <li>Engineering Mindset</li>
-              <li>Automation & AI</li>
-              <li>Product Thinking</li>
+              <li>Revit Modellierung HLKSE</li>
+              <li>BIM Koordination</li>
+              <li>Revit Templates & Familien</li>
+              <li>Prozessoptimierung</li>
+              <li>Automatisierung</li>
+              <li>Projektleitung Gebäudetechnik</li>
+              <li>Fachbauleitung Gebäudetechnik</li>
             </ul>
 
-            <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
+            <div className={"h-0.5 my-8 w-8/10 rounded-full" + colorBackground1}/>
 
             <h2 className={styleh2}>Sprache</h2>
             <ul className={styleList}>
               <li>Deutsch (Muttersprache)</li>
               <li>Englisch (fliessend)</li>
-              <li>Schweizer Deutsch</li>
+              <li>Schweizerdeutsch</li>
             </ul>
 
 
@@ -124,43 +128,49 @@ export function Page1() {
           <div className={clsx("w-full h-full flex flex-col pr-8 text-sm", colorText1)}>
             <h2 className={styleh2}>über mich</h2>
             <p>
-              Ich bin ein Paket
-              aus <strong>Ingenieur</strong>, <strong>Entwickler</strong> und <strong>Visionär</strong>.
-              Ich verbinde fundiertes Know-how aus der <strong>Gebäudetechnik</strong> mit den effizienten Denkweisen
-              der <strong>Softwareentwicklung</strong> und erkenne <br/> gezielt Optimierungspotenziale in bestehenden
-              Prozessen.
+              Ich bin spezialisierter <strong>Revit- und BIM-Fachplaner</strong> im Bereich
+              <strong> Gebäudetechnik (HLKSE)</strong> mit Fokus auf
+              <strong> effiziente Planungsprozesse</strong>, strukturierte Modelle und
+              praxisnahe Umsetzung im Projektalltag.
             </p>
             <p>
-              Durch eigene Tools habe ich bereits
-              Planungsabläufe <strong>vereinfacht</strong>, <strong> beschleunigt</strong> und <strong>wirtschaftlicher</strong> gemacht. <br/>
-              Mit meinem Online-Kollaborationstool verfolge ich das Ziel, die Planungsbranche in
-              ein <strong>neues</strong>, <strong>effizienteres</strong> Zeitalter zu führen.
+              Durch meine Erfahrung in <strong>Planung, BIM-Koordination und Projektleitung</strong>
+              kenne ich die Anforderungen von Ingenieurbüros aus erster Hand und unterstütze
+              gezielt bei <strong>Kapazitätsengpässen</strong>, der Qualitätssicherung und beim
+              Aufbau effizienter Revit-Workflows.
+            </p>
+            <p>
+              Zusätzlich nutze ich mein technisches Verständnis in der
+              <strong> Softwareentwicklung</strong>, um Planungsabläufe durch
+              <strong> Templates, Automatisierungen und digitale Tools</strong>
+              schneller, strukturierter und wirtschaftlicher zu gestalten.
             </p>
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
             {/*  Berufserfahrung */}
             <h2 className={styleh2}>Berufserfahrung </h2>
             <Berufserfahrung
-              funktion={"Fachprojektleiter Lüftung"}
+              funktion={"Projektleiter Haustechnik"}
               timeline={"08.2025 - 11.2025"}
               firma={"integral design build AG, Schlieren (CH)"}
               beschreibung={"Ein Gesamtleister mit der Spezialisierung für den Innenausbau  im Bereich Büros und Healthcare. Mit Interresse und Neugier konnte ich Architekten und Innenarchitekten in der Haustechnik beraten."}
               liste={[
-                "HKLSE Konzepte für Büros und Zahnarztpraxen",
-                "Beratung mit Bauherren, Architekten und Unternehmer in allen SIA Phasen",
-                "Erstellung von HKLSE Plänen mit ArchiCAD",
-                "Erstellung von Offerte für Reaktivierung / Umbau von Mieterausbauten"
+                "Entwicklung von HKLSE Konzepten für Büros und Zahnarztpraxen",
+                "Beratung von Bauherren, Architekten und Unternehmern in den SIA Phasen",
+                "Erstellung und Koordination von HKLSE Plänen",
+                "Erarbeitung von Offerten für Reaktivierungen, Umbauten und Mieterausbauten"
               ]}/>
 
             <Berufserfahrung
-              funktion={"Projektleiter Haustechnik"}
+              funktion={"Projektleiter Haustechnik | BIM / Revit"}
               timeline={"10.2021 - 08.2025"}
               firma={"3-Plan AG, Winterthur (CH)"}
               beschreibung={"Ingenieurbüro mit allen 4 Gewerken und hohem Fokus auf BIM und Revit. Hier konnte ich meine Erfahrung mit Revit einbringen und neue Prozesse entwickeln zb.: Schema und Automatisierte Ausschreibung."}
               liste={[
-                "Fachprojektleitung Lüftung",
-                "BIM Koordinator in unterschiedlichen Projekten",
-                "Mehrfamilienhäueser, Hallen, Hochhäuser, Restaurant, Gerichtsgebäude",
+                "Fachprojektleitung Lüftung in anspruchsvollen HLKSE Projekten",
+                "BIM Koordination in interdisziplinären Projekten",
+                "Aufbau und Optimierung von Revit-Prozessen, Schemata und Ausschreibungsworkflows",
+                "Projektarbeit in Mehrfamilienhäusern, Hallen, Hochhäusern, Restaurants und öffentlichen Bauten",
                 "Fachbauleitung HKLS"
               ]}/>
 
@@ -279,27 +289,32 @@ export function Page2() {
             <h2 className={styleh2}>fortsetzung Berufserfahrung </h2>
 
             <Berufserfahrung
-              funktion={"BIM Manager"}
+              funktion={"BIM Manager | Revit Spezialist"}
               timeline={"03.2020 - 04.2021"}
               firma={"Zauner Anlagentechnik GmbH, Wallern (AT)"}
-              beschreibung={"Grosser Anlagenbauer in Europa mit Fokus auf Datacenter, Pharmacenter und Kraftwerke. Hier konnte ich meine selbst erlernten Revit Kenntnisse noch weiter Entwickeln. Dort habe ich Isometrien automatisiert aus Revit erstellt - so ist das Datacenter in Winterthur entstanden mit über 1000 automatisierten Plänen."}
+              beschreibung={
+                "Grosser Anlagenbauer mit Fokus auf Datacenter, Pharmacenter und Kraftwerke. Vertiefung der Revit-Kenntnisse im Grossprojektumfeld sowie Entwicklung automatisierter Abläufe für eine skalierbare Planerstellung."
+              }
               liste={[
-                "Revit Modellierung in allen Gewerken",
-                "BIM Koordination",
-                "Automatisierte Isometrien aus Revit",
+                "Revit Modellierung in mehreren Gewerken",
+                "BIM Koordination in komplexen Anlagenbauprojekten",
+                "Automatisierte Erstellung von Isometrien aus Revit",
+                "Mitwirkung an Datacenter-Projekten mit über 1000 automatisiert erzeugten Plänen",
                 "Fachbauleitung vor Ort auf der Baustelle"
               ]}/>
 
             <Berufserfahrung
-              funktion={"Projekt Entwickler"}
+              funktion={"Projektingenieur Gebäudetechnik"}
               timeline={"04.2018 - 08.2019"}
               firma={"Infranorm Technologie GmbH, Wels (AT)"}
-              beschreibung={"Kleines Ingenieur Büro, dass auf Energiegewinnung und Luftreinigung für Produktionsstääten spezialisiert ist. Besonders bei Autozulieferer ist ein kontrolliertes Klima für die Präzission der Bauteile wichtig. Dort konnte ich das neu gelernte Wissen aus dem Studium direkt an echten Projekten anwenden."}
+              beschreibung={
+                "Ingenieurbüro mit Spezialisierung auf Energiegewinnung und Luftreinigung für Produktionsstätten. Entwicklung technischer Konzepte und 3D-Planung in engem Austausch mit Kunden und Projektbeteiligten."
+              }
               liste={[
-                "Entwicklung von Hallen Klimatisierungs Konzepten",
-                "3D Modellierung in AutoCAD AX3000",
-                "Erstellung und Präsentation der Konzepte bei Kunden",
-                "Inbetriebnahmen von geplanten Anlagen",
+                "Entwicklung von Hallen-Klimatisierungskonzepten",
+                "3D Modellierung mit AutoCAD AX3000",
+                "Erstellung und Präsentation technischer Konzepte bei Kunden",
+                "Begleitung von Inbetriebnahmen geplanter Anlagen"
               ]}/>
 
             <div className={"h-0.5 my-4 w-full rounded-full" + colorBackground1}/>

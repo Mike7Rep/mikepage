@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.12&#10;&#10;Online CV fertig">
+      <change afterPath="$PROJECT_DIR$/app/bookmeeting/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/CatchPoints.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/CatchPoints.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/cv/print/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/cv/print/page.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -14,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="49" />
+    <option name="cachedIndexableFilesCount" value="50" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -74,6 +76,13 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecapSpentCounter">
+    <option name="endsOfQuotaMs" value="1775901605614" />
+    <option name="spentUsd" value="0.0093716" />
+  </component>
+  <component name="RecapUselessUpdatesCounter">
+    <option name="suspendCountdown" value="6" />
+  </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/public/image" />
@@ -132,7 +141,17 @@
       <workItem from="1774277017874" duration="10716000" />
       <workItem from="1774287766907" duration="15000" />
       <workItem from="1774357412873" duration="5882000" />
-      <workItem from="1774365152969" duration="1201000" />
+      <workItem from="1774365152969" duration="1216000" />
+      <workItem from="1774367563095" duration="3000" />
+      <workItem from="1774383330799" duration="2530000" />
+      <workItem from="1774550740867" duration="4000" />
+      <workItem from="1774558043704" duration="22000" />
+      <workItem from="1774558171319" duration="143000" />
+      <workItem from="1774598278409" duration="613000" />
+      <workItem from="1774602780828" duration="598000" />
+      <workItem from="1774609427754" duration="598000" />
+      <workItem from="1774620158699" duration="696000" />
+      <workItem from="1774944856287" duration="1324000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
@@ -214,7 +233,23 @@
       <option name="project" value="LOCAL" />
       <updated>1774365227102</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="mikePage -- v0.00.12&#10;&#10;Online CV fertig">
+      <option name="closed" value="true" />
+      <created>1774366361443</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1774366361443</updated>
+    </task>
+    <task id="LOCAL-00012" summary="mikePage -- v0.00.12&#10;&#10;Online CV fertig">
+      <option name="closed" value="true" />
+      <created>1774366365673</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1774366365673</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
