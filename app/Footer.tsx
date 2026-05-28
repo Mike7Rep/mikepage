@@ -1,5 +1,9 @@
 // app/Footer.tsx
 
+import Link from "next/link"
+
+import { contact } from "@/lib/profile-data"
+
 
 export default function Footer
 (
@@ -14,12 +18,15 @@ export default function Footer
         © 2026 MICHAEL REPOLUSK. INGENIEUR. ENTWICKLER. VISIONÄR.
       </div>
 
-      <div className="flex gap-8">
-        <a href="#" className="text-[10px] uppercase tracking-[0.12em] text-white/30 transition hover:text-white">
+      <div className="flex flex-wrap justify-center gap-8">
+        <Link href="/impressum" className={linkStyle}>
           Impressum
-        </a>
+        </Link>
+        <Link href="/datenschutz" className={linkStyle}>
+          Datenschutz
+        </Link>
         <a
-          href="https://www.linkedin.com/in/michael-repolusk-6855161b3/"
+          href={contact.linkedin}
           className={linkStyle}>
           LinkedIn
         </a>

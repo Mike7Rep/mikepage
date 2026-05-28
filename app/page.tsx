@@ -16,7 +16,7 @@ export default function Page() {
         <CatchPoints />
       </section>
 
-      <section className="bg-black px-6 py-24 md:px-12">
+      <section id="skills" className="scroll-mt-28 bg-black px-6 py-24 md:px-12">
         <Skills />
       </section>
 

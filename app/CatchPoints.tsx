@@ -3,6 +3,7 @@
 import {Button} from "@/components/ui/button"
 import Link from "next/link"
 import clsx from "clsx"
+import { ArrowRight } from "lucide-react"
 
 
 function CatchPoint
@@ -27,7 +28,7 @@ function CatchPoint
       <div className="flex h-full flex-col justify-between p-8 md:p-6">
         <div>
           <span className="mb-2 block text-xs tracking-[0.25em] text-white/40">{count}</span>
-          <h2 className="text-4xl font-bold uppercase tracking-tight">{title}</h2>
+          <h2 className="text-4xl font-bold uppercase tracking-[0]">{title}</h2>
         </div>
 
         <div
@@ -35,14 +36,17 @@ function CatchPoint
           <p className="text-lg leading-relaxed text-white/70 py-4">
             {description}
           </p>
+          <Button asChild className="ml-auto px-6 uppercase tracking-[0.08em]">
           <Link
-            className={"cursor-pointer z-10 w-full flex"}
+            className={"z-10"}
             href={linkTo}
+            target={linkTo.startsWith("http") ? "_blank" : undefined}
+            rel={linkTo.startsWith("http") ? "noreferrer" : undefined}
           >
-            <Button className="px-6 uppercase tracking-[0.08em] ml-auto">
               {buttonTitle}
-            </Button>
+              <ArrowRight data-icon="inline-end" />
           </Link>
+          </Button>
         </div>
       </div>
     </div>
@@ -75,9 +79,9 @@ export default function CatchPoints
         <CatchPoint
           count={"03"}
           title={"Visionär"}
-          description={" Die Effektivität und Effizienz von Spielen in den Planungsprozess"}
+          description={"RealBIM, Automatisierung und spielerische Logik für bessere Entscheidungen im Planungsprozess."}
           buttonTitle={"Sirego realBIM"}
-          linkTo={"www.sirego.ch"}
+          linkTo={"https://www.sirego.ch"}
         />
       </div>
   )

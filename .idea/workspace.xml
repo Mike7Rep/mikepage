@@ -4,11 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.12&#10;&#10;Online CV fertig">
-      <change afterPath="$PROJECT_DIR$/app/bookmeeting/page.tsx" afterDir="false" />
+    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.14 CODEX Optimierung">
+      <change afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/beruf/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/bildung/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/datenschutz/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/impressum/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/kontakt/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/projekte/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/contact-cta.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/profile-timeline.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/profile-data.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/mikepage.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/mikepage.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/CatchPoints.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/CatchPoints.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/cv/print/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/cv/print/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Footer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/HeroSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/HeroSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Navigation.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Skills.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Skills.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/berufe/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/berufe/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/bookmeeting/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/bookmeeting/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,7 +35,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="50" />
+    <option name="cachedIndexableFilesCount" value="51" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -41,6 +60,9 @@
   <component name="PackageJsonUpdateNotifier">
     <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -57,6 +79,7 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
@@ -113,7 +136,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-WS-253.31033.133" />
+        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
       </set>
     </attachedChunks>
   </component>
@@ -151,7 +174,14 @@
       <workItem from="1774602780828" duration="598000" />
       <workItem from="1774609427754" duration="598000" />
       <workItem from="1774620158699" duration="696000" />
-      <workItem from="1774944856287" duration="1324000" />
+      <workItem from="1774944856287" duration="1582000" />
+      <workItem from="1774950385969" duration="12000" />
+      <workItem from="1774991502807" duration="15000" />
+      <workItem from="1775028450984" duration="124000" />
+      <workItem from="1775029122669" duration="25000" />
+      <workItem from="1775855748328" duration="299000" />
+      <workItem from="1775916364517" duration="48000" />
+      <workItem from="1779994707744" duration="876000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
@@ -249,7 +279,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774366365673</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="mikePage -- v0.00.13&#10;&#10;Online CV fertig">
+      <option name="closed" value="true" />
+      <created>1774947632517</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1774947632517</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -268,7 +306,9 @@
     <MESSAGE value="mikePage -- v0.00.10&#10;&#10;Online CV fertig" />
     <MESSAGE value="mikePage -- v0.00.11&#10;&#10;Online CV fertig" />
     <MESSAGE value="mikePage -- v0.00.12&#10;&#10;Online CV fertig" />
-    <option name="LAST_COMMIT_MESSAGE" value="mikePage -- v0.00.12&#10;&#10;Online CV fertig" />
+    <MESSAGE value="mikePage -- v0.00.13&#10;&#10;Online CV fertig" />
+    <MESSAGE value="mikePage -- v0.00.14 CODEX Optimierung" />
+    <option name="LAST_COMMIT_MESSAGE" value="mikePage -- v0.00.14 CODEX Optimierung" />
     <option name="LAST_CHUNK_COMMIT_MESSAGE" value="mikePage -- v0.00.09&#10;&#10;Online CV als PDF nun erstellbar" />
   </component>
 </project>

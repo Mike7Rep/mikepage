@@ -78,6 +78,9 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.2.0
+      tailwindcss-motion:
+        specifier: ^1.1.1
+        version: 1.1.1(tailwindcss@4.2.0)
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -3811,6 +3814,11 @@ packages:
 
   tailwind-merge@3.5.0:
     resolution: {integrity: sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==}
+
+  tailwindcss-motion@1.1.1:
+    resolution: {integrity: sha512-CeeQAc5o31BuEPMyWdq/786X7QWNeifa+8khfu74Fs8lGkgEwjNYv6dGv+lRFS8FWXV5dp7F3AU9JjBXjiaQfw==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || insiders'
 
   tailwindcss@4.2.0:
     resolution: {integrity: sha512-yYzTZ4++b7fNYxFfpnberEEKu43w44aqDMNM9MHMmcKuCH7lL8jJ4yJ7LGHv7rSwiqM0nkiobF9I6cLlpS2P7Q==}
@@ -8203,6 +8211,10 @@ snapshots:
   tagged-tag@1.0.0: {}
 
   tailwind-merge@3.5.0: {}
+
+  tailwindcss-motion@1.1.1(tailwindcss@4.2.0):
+    dependencies:
+      tailwindcss: 4.2.0
 
   tailwindcss@4.2.0: {}
 

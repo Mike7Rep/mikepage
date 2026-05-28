@@ -6,9 +6,9 @@ function Square
   {title, subTitle}: { title: string, subTitle: string }
 ) {
   return (
-    <div className="group aspect-square bg-white/4 p-8 flex justify-end text-right transition-all duration-700 hover:bg-white/50">
-      <div className="flex flex-col justify-end transition-all duration-700 ease-out group-hover:-translate-y-20">
-    <span className="mb-2 text-6xl font-bold uppercase transition-colors duration-700 group-hover:text-primary/80">
+    <div className="group aspect-square bg-white/4 p-8 flex justify-end text-right transition-all duration-700 hover:-translate-y-1 hover:bg-white/50">
+      <div className="flex flex-col justify-end transition-all duration-700 ease-out group-hover:-translate-y-8">
+    <span className="mb-2 text-6xl font-bold uppercase tracking-[0] transition-colors duration-700 group-hover:text-primary/80">
       {title}
     </span>
         <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors duration-700 group-hover:text-black">
@@ -23,13 +23,13 @@ export default function Skills
 () {
   return (
     <div className="mx-auto grid max-w-7xl gap-16 lg:grid-cols-2 lg:items-center">
-      <div className="space-y-8">
+      <div className="flex flex-col gap-8">
         <div
           className="inline-block border border-white/15 px-4 py-1 text-[10px] uppercase tracking-[0.2em] text-white/60">
           Features
         </div>
 
-        <h3 className="text-4xl font-bold uppercase leading-none tracking-tight md:text-5xl">
+        <h3 className="text-4xl font-bold uppercase leading-none tracking-[0] md:text-5xl">
           Optimiert für
           <br/>
           effiziente Planung.
