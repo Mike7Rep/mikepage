@@ -131,3 +131,32 @@
   }
 
 }
+
+@keyframes skill-drift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-0.4deg);
+  }
+  35% {
+    transform: translate3d(10px, -8px, 0) rotate(0.5deg);
+  }
+  70% {
+    transform: translate3d(-8px, 7px, 0) rotate(-0.2deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.4deg);
+  }
+}
+
+.skill-drift {
+  animation-name: skill-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-drift {
+    animation: none;
+    will-change: auto;
+  }
+}

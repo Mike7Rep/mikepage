@@ -25,7 +25,7 @@ function HeadLine() {
     <>
       <h1 className={styleh1}>Michael Repolusk</h1>
       <p className={"text-center"}>
-        Revit Spezialist | BIM Koordinator | HLKSE Planung & Prozessoptimierung
+        Product Owner | Webentwickler | Engineering & Prozessautomatisierung
       </p>
       <div className={"relative w-25 h-25 flex mx-auto z-30 "}>
         <Image
@@ -98,13 +98,13 @@ export function Page1() {
 
             <h2 className={styleh2}>Expertise</h2>
             <ul className={styleList}>
-              <li>Revit Modellierung HLKSE</li>
-              <li>BIM Koordination</li>
-              <li>Revit Templates & Familien</li>
-              <li>Prozessoptimierung</li>
-              <li>Automatisierung</li>
-              <li>Projektleitung Gebäudetechnik</li>
-              <li>Fachbauleitung Gebäudetechnik</li>
+              <li>Product Ownership</li>
+              <li>React & Next.js Webentwicklung</li>
+              <li>TypeScript / JavaScript</li>
+              <li>UX, Prototyping & Designsysteme</li>
+              <li>Agile, Lean & VDC Methoden</li>
+              <li>Prozessautomatisierung</li>
+              <li>BIM, Revit & Gebäudetechnik</li>
             </ul>
 
             <div className={"h-0.5 my-8 w-8/10 rounded-full" + colorBackground1}/>
@@ -128,48 +128,47 @@ export function Page1() {
           <div className={clsx("w-full h-full flex flex-col pr-8 text-sm", colorText1)}>
             <h2 className={styleh2}>über mich</h2>
             <p>
-              Ich bin spezialisierter <strong>Revit- und BIM-Fachplaner</strong> im Bereich
-              <strong> Gebäudetechnik (HLKSE)</strong> mit Fokus auf
-              <strong> effiziente Planungsprozesse</strong>, strukturierte Modelle und
-              praxisnahe Umsetzung im Projektalltag.
+              Ich verbinde <strong>Product Ownership und Webentwicklung</strong> mit einem
+              starken technischen Hintergrund aus <strong>Engineering, BIM und Gebäudetechnik</strong>.
+              Dadurch kann ich Anforderungen schnell verstehen, priorisieren und in schlanke
+              digitale Produkte übersetzen.
             </p>
             <p>
-              Durch meine Erfahrung in <strong>Planung, BIM-Koordination und Projektleitung</strong>
-              kenne ich die Anforderungen von Ingenieurbüros aus erster Hand und unterstütze
-              gezielt bei <strong>Kapazitätsengpässen</strong>, der Qualitätssicherung und beim
-              Aufbau effizienter Revit-Workflows.
+              Mein Fokus liegt auf <strong>klaren Oberflächen, Prozessautomatisierung und
+              produktnaher Umsetzung</strong>: von CRM- und Management-Tools über PDF-Workflows
+              bis zu Konzept- und Planungstools, die im Alltag wirklich genutzt werden.
             </p>
             <p>
-              Zusätzlich nutze ich mein technisches Verständnis in der
-              <strong> Softwareentwicklung</strong>, um Planungsabläufe durch
-              <strong> Templates, Automatisierungen und digitale Tools</strong>
-              schneller, strukturierter und wirtschaftlicher zu gestalten.
+              Aus der Projektleitung kenne ich Stakeholder, Kosten, Termine und Qualität aus der
+              Praxis. In der Softwareentwicklung nutze ich dieses Wissen für
+              <strong> schnelle Entscheidungen, saubere Priorisierung und belastbare Weblösungen</strong>.
             </p>
 
             <div className={"h-0.5 my-8 w-full rounded-full" + colorBackground1}/>
             {/*  Berufserfahrung */}
             <h2 className={styleh2}>Berufserfahrung </h2>
             <Berufserfahrung
-              funktion={"Projektleiter Haustechnik"}
-              timeline={"08.2025 - 11.2025"}
-              firma={"integral design build AG, Schlieren (CH)"}
-              beschreibung={"Ein Gesamtleister mit der Spezialisierung für den Innenausbau  im Bereich Büros und Healthcare. Mit Interresse und Neugier konnte ich Architekten und Innenarchitekten in der Haustechnik beraten."}
+              funktion={"Full Stack Developer | Product Owner"}
+              timeline={"11.2024 - heute"}
+              firma={"Sirego GmbH, Winterthur / Remote (CH)"}
+              beschreibung={"Entwicklung und Produktführung digitaler Werkzeuge an der Schnittstelle von KMU-Prozessen, Planung, BIM und Software. Fokus auf schnelle, verständliche Weboberflächen ohne unnötige Plattformkomplexität."}
               liste={[
-                "Entwicklung von HKLSE Konzepten für Büros und Zahnarztpraxen",
-                "Beratung von Bauherren, Architekten und Unternehmern in den SIA Phasen",
-                "Erstellung und Koordination von HKLSE Plänen",
-                "Erarbeitung von Offerten für Reaktivierungen, Umbauten und Mieterausbauten"
+                "Konzeption und Umsetzung von React- und Next.js-Anwendungen",
+                "Product Ownership für CRM-, Management- und Konzept-Tools",
+                "Anforderungsanalyse, Priorisierung und nutzernahe Umsetzung",
+                "PDF-, Buchungs- und Prozessworkflows für einfache digitale Abläufe"
               ]}/>
 
             <Berufserfahrung
               funktion={"Projektleiter Haustechnik | BIM / Revit"}
               timeline={"10.2021 - 08.2025"}
               firma={"3-Plan AG, Winterthur (CH)"}
-              beschreibung={"Ingenieurbüro mit allen 4 Gewerken und hohem Fokus auf BIM und Revit. Hier konnte ich meine Erfahrung mit Revit einbringen und neue Prozesse entwickeln zb.: Schema und Automatisierte Ausschreibung."}
+              beschreibung={"Ingenieurbüro mit allen 4 Gewerken und hohem Fokus auf BIM und Revit. Aufbau effizienter digitaler Planungsprozesse und Übersetzung komplexer Anforderungen in praktikable Workflows."}
               liste={[
                 "Fachprojektleitung Lüftung in anspruchsvollen HLKSE Projekten",
                 "BIM Koordination in interdisziplinären Projekten",
                 "Aufbau und Optimierung von Revit-Prozessen, Schemata und Ausschreibungsworkflows",
+                "Strukturierung von Anforderungen zwischen Projektteam, Planung und Ausführung",
                 "Projektarbeit in Mehrfamilienhäusern, Hallen, Hochhäusern, Restaurants und öffentlichen Bauten",
                 "Fachbauleitung HKLS"
               ]}/>
@@ -322,12 +321,6 @@ export function Page2() {
             <h2 className={styleh2}>weitere Berufserfahrung </h2>
 
             <ul className={"py-4"}>
-              <WeitereBerufserfahrung
-                funktion={"Full Stack Developer"}
-                ort={" Sirego Gmbh, Hobby"}
-                start={"11.2024"}
-                end={"heute"}
-              />
               <WeitereBerufserfahrung
                 funktion={"Freiwilliger Mitarbeiter"}
                 ort={" KSW, Winterthur"}

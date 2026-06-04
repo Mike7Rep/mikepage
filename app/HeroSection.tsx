@@ -1,5 +1,4 @@
-// app/heroSection.tsx
-
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, CalendarDays, Code2, Layers3, Mail, Wrench } from "lucide-react"
 
@@ -12,10 +11,19 @@ export default function HeroSection
   return (
     <>
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-size-[56px_56px]" />
-        <div className="absolute inset-0 bg-linear-to-b from-black via-black/85 to-black" />
-        <div className="absolute right-10 top-32 hidden rotate-45 border border-primary/30 bg-primary/5 p-16 motion-preset-float-sm motion-loop-infinite motion-duration-2000 md:block" />
-        <div className="absolute bottom-24 left-10 hidden rotate-45 border border-white/10 bg-white/5 p-10 motion-preset-float-sm motion-loop-infinite motion-delay-300 md:block" />
+        <Image
+          src="/image/mike.png"
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 1024px) 70vw, 120vw"
+          className="pointer-events-none absolute inset-y-0 right-[-22vw] z-0 object-cover object-[48%_10%] opacity-[0.28] mix-blend-luminosity motion-preset-blur-right motion-duration-1000 sm:right-[-12vw] md:right-[-4vw] md:object-contain md:object-right-top md:opacity-[0.32] lg:right-0 lg:scale-125 xl:scale-135"
+        />
+        <div className="absolute inset-0 z-10 bg-[linear-gradient(to_right,rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:56px_56px]" />
+        <div className="absolute inset-0 z-20 bg-linear-to-b from-black/76 via-black/82 to-black" />
+        <div className="absolute inset-y-0 left-0 z-20 w-full bg-linear-to-r from-black via-black/68 to-black/10 md:w-4/5" />
+        <div className="absolute right-10 top-32 z-30 hidden rotate-45 border border-primary/30 bg-primary/5 p-16 motion-preset-float-sm motion-loop-infinite motion-duration-2000 md:block" />
+        <div className="absolute bottom-24 left-10 z-30 hidden rotate-45 border border-white/10 bg-white/5 p-10 motion-preset-float-sm motion-loop-infinite motion-delay-300 md:block" />
       </div>
 
       <div className="z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center gap-12 px-6 pb-16 text-white md:px-12">

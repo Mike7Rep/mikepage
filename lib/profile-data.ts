@@ -149,57 +149,48 @@ export const educationTimeline: TimelineItem[] = [
 export const projectTimeline: TimelineItem[] = [
   {
     period: "aktuell",
-    title: "realBIM Workflow",
+    title: "Sirego CRM",
+    organization: "Sirego GmbH",
+    category: "software",
+    summary:
+      "Auftrags-, Lohn-, Zeit- und Finanzmanagement für KMU in einem schlanken Tool, damit operative Arbeit ohne Excel- und Word-Umwege läuft.",
+    highlights: [
+      "Aufträge, Zeiten, Lohn und Finanzen in einem Arbeitsfluss",
+      "Reduzierte Medienbrüche für kleine Unternehmen",
+      "Login-basierte Web-App für den produktiven Alltag",
+    ],
+    href: "https://crm.sirego.ch",
+    actionLabel: "CRM ansehen",
+  },
+  {
+    period: "aktuell",
+    title: "Sirego Firmenpage",
+    organization: "Sirego GmbH",
+    category: "software",
+    summary:
+      "Firmenpage für Produkt- und Dienstleistungsangebote rund um Revit, BIM, Gebäudetechnik und schnelle Konzeptarbeit.",
+    highlights: [
+      "Klare Angebotskommunikation für Projektanfragen",
+      "Meeting- und Einstiegswege für neue Kunden",
+      "Positionierung von Engineering, BIM und Software Engineering",
+    ],
+    href: "https://www.sirego.ch",
+    actionLabel: "Sirego ansehen",
+  },
+  {
+    period: "aktuell",
+    title: "realBIM Konzept Tool",
     organization: "Sirego GmbH",
     category: "project",
     summary:
-      "Digitale Arbeitsweise für bessere Abstimmung zwischen Planung, BIM-Modell und Ausführung.",
+      "Online-Konzept-Tool, um PDF-Pläne zu nutzen, Bauteile zu platzieren, zu verbinden, zu bemassen und den Stand als prüfbares PDF weiterzugeben.",
     highlights: [
-      "Klares Informationsmodell",
-      "Schnelle Abstimmung im Projektteam",
-      "Weniger Reibung zwischen Modell, Planung und Entscheidung",
+      "PDF-Plan importieren und massstabsgetreu kalibrieren",
+      "Bauteile platzieren, verbinden und bemassen",
+      "Konzeptstand inklusive Bauteilliste als PDF exportieren",
     ],
-    href: "https://www.sirego.ch",
-    actionLabel: "Zum Projekt",
-  },
-  {
-    period: "2024 - heute",
-    title: "Planungs- und Automations-Tools",
-    organization: "Eigenentwicklung",
-    category: "software",
-    summary:
-      "Kleine, schnelle Werkzeuge, die wiederkehrende Planungsaufgaben greifbarer und effizienter machen.",
-    highlights: [
-      "React/Next.js als schlanke Oberfläche",
-      "Automatisierung statt manueller Wiederholung",
-      "Fokus auf einfache Bedienung im Projektalltag",
-    ],
-  },
-  {
-    period: "2021 - 2025",
-    title: "Revit-Prozesse und Vorlagen",
-    organization: "Projektarbeit",
-    category: "bim",
-    summary:
-      "Aufbau und Verbesserung von Revit-Strukturen für konsistentere Modelle, Schemata und Ausschreibungen.",
-    highlights: [
-      "Templates und Familien",
-      "Schema-Workflows",
-      "Koordinierte Modellqualität",
-    ],
-  },
-  {
-    period: "2020 - 2021",
-    title: "Datacenter-Planautomation",
-    organization: "Anlagenbau",
-    category: "project",
-    summary:
-      "Skalierbare Planableitung und automatisierte Isometrien für komplexe Anlagenbau-Modelle.",
-    highlights: [
-      "Sehr hohe Planzahl",
-      "Automatisierte Ableitungen aus Revit",
-      "BIM-Koordination in komplexen Projektstrukturen",
-    ],
+    href: "https://realbim.sirego.ch",
+    actionLabel: "Tool testen",
   },
 ]
 

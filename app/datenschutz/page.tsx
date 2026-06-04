@@ -22,8 +22,8 @@ const sections = [
     text: "Wenn du per E-Mail oder Telefon Kontakt aufnimmst, werden die von dir übermittelten Angaben nur zur Bearbeitung deiner Anfrage und für die anschliessende Kommunikation verwendet.",
   },
   {
-    title: "Meeting-Buchung mit Zeeg",
-    text: "Für die Terminbuchung wird auf Zeeg verlinkt. Beim Öffnen und Nutzen der Zeeg-Buchungsseite können Daten an Zeeg übermittelt werden, insbesondere Daten, die für die Terminvereinbarung erforderlich sind.",
+    title: "Meeting-Anfrage",
+    text: "Für Meeting-Anfragen wird ein E-Mail-Link verwendet. Dabei werden keine Formulardaten auf dieser Website gespeichert und keine eigene Buchungsdatenbank betrieben.",
   },
   {
     title: "Externe Links",
@@ -69,13 +69,6 @@ export default function DatenschutzPage() {
             und{" "}
             <a className="text-primary underline-offset-4 hover:underline" href="https://www.edoeb.admin.ch/de/datenschutzerklaerungen-im-internet" target="_blank" rel="noreferrer">
               Datenschutzerklärungen im Internet
-            </a>
-            .
-          </p>
-          <p className="mt-4">
-            Hinweise zu Zeeg und zur Einbettung des Buchungssystems findest du im{" "}
-            <a className="text-primary underline-offset-4 hover:underline" href="https://zeeg.me/de/help/articles/12582767-zeeg-auf-deiner-website-einbetten" target="_blank" rel="noreferrer">
-              Zeeg Hilfe-Center
             </a>
             .
           </p>
