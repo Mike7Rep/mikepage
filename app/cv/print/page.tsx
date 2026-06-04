@@ -4,6 +4,8 @@ import Image from "next/image"
 import Link from "next/link"
 import clsx from "clsx"
 
+import { contact } from "@/lib/profile-data"
+
 import Berufserfahrung from "./Berufserfahrung"
 import WeitereBerufserfahrung from "./WeitereBerufserfahrung"
 
@@ -81,17 +83,17 @@ export function Page1() {
           <div className={"flex flex-col my-8 justify-center items-center"}>
             <h2 className={styleh2}>Kontakt</h2>
             <br/>
-            <p className={"text-sm"}>Rychenbergstrasse 73</p>
-            <p className={"text-sm"}>8400 Winterthur</p>
+            <p className={"text-sm"}>{contact.street}</p>
+            <p className={"text-sm"}>{contact.city}</p>
             <br/>
-            <Link className={"underline"}  href={"tel:+41767248793"}>
-              <p className={"text-sm"}>+41 76 724 87 93</p>
+            <Link className={"underline"}  href={`tel:${contact.phone.replaceAll(" ", "")}`}>
+              <p className={"text-sm"}>{contact.phone}</p>
             </Link>
-            <Link className={"underline"} href={"mailto:michael.repolusk@sirego.ch"}>
-              <p className={"text-sm"}>michael.repolusk@sirego.ch</p>
+            <Link className={"underline"} href={`mailto:${contact.email}`}>
+              <p className={"text-sm"}>{contact.email}</p>
             </Link>
-            <Link className={"underline"} href={"https://www.michael-repolusk.com/"}>
-              <p className={"text-sm"}>www.michael-repolusk.com</p>
+            <Link className={"underline"} href={contact.website}>
+              <p className={"text-sm"}>{contact.website.replace("https://", "").replace(/\/$/, "")}</p>
             </Link>
 
             <div className={"h-0.5 my-8 w-8/10 rounded-full" + colorBackground1}/>

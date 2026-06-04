@@ -196,8 +196,8 @@ export const projectTimeline: TimelineItem[] = [
 
 export const contact = {
   name: "Michael Repolusk",
-  street: "Rychenbergstrasse 73",
-  city: "8400 Winterthur",
+  street: "Bleichemattstrasse 9",
+  city: "5600 Lenzburg",
   email: "michael.repolusk@sirego.ch",
   phone: "+41 76 724 87 93",
   website: "https://www.michael-repolusk.com/",

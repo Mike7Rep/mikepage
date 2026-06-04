@@ -1,5 +1,6 @@
+import Image from "next/image"
 import Link from "next/link"
-import { CalendarDays, Mail, MapPin, Phone } from "lucide-react"
+import { CalendarDays, Mail, MapPin, Phone, QrCode } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { contact } from "@/lib/profile-data"
@@ -81,6 +82,31 @@ export default function KontaktPage() {
               <div key={item.label}>{content}</div>
             )
           })}
+
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-5">
+            <div className="flex items-start gap-4">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-md border border-primary/25 bg-primary/10 text-primary">
+                <QrCode className="size-5" aria-hidden="true" />
+              </div>
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="text-xs uppercase tracking-[0.16em] text-white/42">
+                  vCard QR
+                </span>
+                <span className="text-base leading-7 text-white/78">
+                  Scannen und Kontakt speichern
+                </span>
+              </div>
+            </div>
+            <div className="mt-5 rounded-md border border-white/10 bg-white p-4">
+              <Image
+                src="/image/vcard-qr.svg"
+                alt="vCard QR-Code von Michael Repolusk"
+                width={1104}
+                height={1104}
+                className="mx-auto aspect-square w-full max-w-64"
+              />
+            </div>
+          </div>
         </div>
       </section>
     </main>
