@@ -1,8 +1,9 @@
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Clock3, Mail, Video } from "lucide-react"
+import { CalendarDays, Clock3, Mail, Video } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { contact } from "@/lib/profile-data"
+import ZeegEmbed from "./ZeegEmbed"
 
 const meetingMailHref = `mailto:${contact.email}?subject=${encodeURIComponent("30-Minuten-Meeting anfragen")}&body=${encodeURIComponent("Hallo Michael\n\nIch möchte gerne ein 30-Minuten-Meeting buchen.\n\nMögliche Zeitfenster:\n1.\n2.\n3.\n\nKurz zum Thema:\n")}`
 
@@ -18,19 +19,19 @@ export default function BookingPage() {
             30-Minuten-Meeting buchen
           </h1>
           <p className="max-w-2xl text-base leading-7 text-white/65">
-            Schreib mir kurz dein Thema und zwei bis drei passende Zeitfenster. Die Seite bleibt bewusst schlank: keine Datenbank, kein Formular, keine externe Pflicht.
+            Wähle direkt einen Termin im Kalender oder schreib mir kurz dein Thema und zwei bis drei passende Zeitfenster per E-Mail.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="uppercase tracking-[0.08em]">
-              <Link href={meetingMailHref}>
-                <Mail data-icon="inline-start" />
-                Meeting anfragen
+              <Link href="#zeeg-meeting">
+                <CalendarDays data-icon="inline-start" />
+                Termin wählen
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-              <Link href="/kontakt">
-                Kontaktseite
-                <ArrowRight data-icon="inline-end" />
+              <Link href={meetingMailHref}>
+                <Mail data-icon="inline-start" />
+                E-Mail schreiben
               </Link>
             </Button>
           </div>
@@ -61,11 +62,27 @@ export default function BookingPage() {
           </div>
           <Button asChild size="lg" className="uppercase tracking-[0.08em]">
             <Link href={meetingMailHref}>
-              Terminanfrage senden
+              Anfrage per E-Mail
               <Mail data-icon="inline-end" />
             </Link>
           </Button>
         </div>
+
+        <section id="zeeg-meeting" className="scroll-mt-28 rounded-lg border border-white/10 bg-white/[0.035] p-3 md:p-6">
+          <div className="mb-4 flex flex-col gap-3">
+            <div>
+              <h2 className="text-2xl leading-tight font-bold tracking-[0] uppercase md:text-4xl">
+                Direkt Termin wählen
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/60">
+                Der Kalender wird über Zeeg geladen. Falls der Embed blockiert wird, nutze einfach die E-Mail-Anfrage.
+              </p>
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-md border border-white/10 bg-white">
+            <ZeegEmbed />
+          </div>
+        </section>
       </section>
     </main>
   )
