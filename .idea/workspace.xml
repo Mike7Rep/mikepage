@@ -5,29 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.14 CODEX Optimierung">
-      <change afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/beruf/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/bildung/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/datenschutz/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/impressum/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/kontakt/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/projekte/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/components/contact-cta.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/components/profile-timeline.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/profile-data.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/mikepage.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/mikepage.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/CatchPoints.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/CatchPoints.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Footer.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/HeroSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/HeroSection.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Navigation.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Skills.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Skills.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/berufe/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/berufe/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/bookmeeting/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/bookmeeting/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +13,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="51" />
+    <option name="cachedIndexableFilesCount" value="62" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -136,7 +114,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.24374.125" />
       </set>
     </attachedChunks>
   </component>
@@ -181,7 +159,10 @@
       <workItem from="1775029122669" duration="25000" />
       <workItem from="1775855748328" duration="299000" />
       <workItem from="1775916364517" duration="48000" />
-      <workItem from="1779994707744" duration="876000" />
+      <workItem from="1779994707744" duration="904000" />
+      <workItem from="1780583941224" duration="70000" />
+      <workItem from="1780584063798" duration="97000" />
+      <workItem from="1781001795157" duration="10000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
@@ -287,7 +268,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774947632517</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="mikePage -- v0.00.14 CODEX Optimierung">
+      <option name="closed" value="true" />
+      <created>1779999003495</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1779999003495</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
