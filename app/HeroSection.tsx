@@ -17,7 +17,7 @@ export default function HeroSection
           fill
           priority
           sizes="(min-width: 1024px) 70vw, 120vw"
-          className="pointer-events-none absolute inset-y-0 right-[-22vw] z-0 object-cover object-[48%_10%] opacity-[0.28] mix-blend-luminosity motion-preset-blur-right motion-duration-1000 sm:right-[-12vw] md:right-[-4vw] md:object-contain md:object-right-top md:opacity-[0.32] lg:right-0 lg:scale-125 xl:scale-135"
+          className="pointer-events-none absolute z-0 object-cover object-[50%_8%] opacity-[0.28] mix-blend-luminosity motion-preset-blur-right motion-duration-1000 md:object-contain md:object-top md:opacity-[0.32] lg:scale-125 xl:scale-135"
         />
         <div className="absolute inset-0 z-10 bg-[linear-gradient(to_right,rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:56px_56px]" />
         <div className="absolute inset-0 z-20 bg-linear-to-b from-black/76 via-black/82 to-black" />

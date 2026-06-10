@@ -100,7 +100,7 @@ export default function Skills
                 className="skill-drift motion-preset-pop motion-duration-700"
                 style={{
                   animationDelay: `${(index % 10) * -1.8}s`,
-                  animationDuration: `${18 + (index % 7) * 2}s`,
+                  animationDuration: `${36 + (index % 7) * 4}s`,
                 }}
               >
                 <div className={[
