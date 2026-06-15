@@ -19,6 +19,6 @@ def test_asset_analysis_rejects_invalid_action():
         )
 
 
-def test_evaluate_once_rejects_notional_above_live_test_cap():
-    with pytest.raises(ValidationError):
-        EvaluateOnceRequest(maxNotional=25.01)
+def test_evaluate_once_allows_policy_sized_notional_cap():
+    assert EvaluateOnceRequest().maxNotional is None
+    assert EvaluateOnceRequest(maxNotional=1000).maxNotional == 1000

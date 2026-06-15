@@ -3,21 +3,30 @@ from api.policy import decide_buy
 from api.schemas import AssetAnalysis
 
 
-def test_policy_allows_fractional_buy_when_thresholds_pass():
+def test_policy_allows_whole_share_buy_when_thresholds_pass():
     analysis = _analysis()
     context = _context(fractionable=True)
     decision = decide_buy(analysis, context, settings=_settings())
     assert decision.should_buy is True
     assert decision.notional == 1500
-    assert decision.qty is None
+    assert decision.qty == 15
 
 
-def test_policy_caps_one_shot_notional():
+def test_policy_caps_one_shot_budget_but_still_uses_whole_shares():
     analysis = _analysis()
-    context = _context(fractionable=True)
+    context = _context(fractionable=True, price=10)
     decision = decide_buy(analysis, context, max_notional=25, settings=_settings())
     assert decision.should_buy is True
-    assert decision.notional == 25
+    assert decision.notional == 20
+    assert decision.qty == 2
+
+
+def test_policy_skips_when_capped_budget_cannot_buy_whole_share():
+    analysis = _analysis()
+    context = _context(fractionable=True, price=100)
+    decision = decide_buy(analysis, context, max_notional=25, settings=_settings())
+    assert decision.should_buy is False
+    assert decision.reason == "integer quantity below 1"
 
 
 def test_policy_blocks_low_confidence():

@@ -17,7 +17,7 @@ class WeeklyJobRequest(BaseModel):
 
 class EvaluateOnceRequest(BaseModel):
     execute: bool = True
-    maxNotional: float = Field(default=25, gt=0, le=25)
+    maxNotional: Optional[float] = Field(default=None, gt=0)
     maxOrders: int = Field(default=1, ge=1, le=1)
 
 

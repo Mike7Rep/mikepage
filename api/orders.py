@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
+from fastapi import HTTPException, status
+
 from .alpaca import AlpacaClient
 from .config import Settings, get_settings
 from .schemas import OrderDecision, OrderResult
@@ -17,10 +19,9 @@ def build_buy_order(symbol: str, decision: OrderDecision) -> dict:
         "time_in_force": "day",
         "client_order_id": _client_order_id(symbol),
     }
-    if decision.qty:
-        payload["qty"] = str(decision.qty)
-    else:
-        payload["notional"] = f"{decision.notional:.2f}"
+    if not decision.qty:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "whole-share qty missing")
+    payload["qty"] = str(decision.qty)
     return payload
 
 

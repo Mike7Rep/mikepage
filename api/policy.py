@@ -35,9 +35,6 @@ def decide_buy(
     if budget <= 0:
         return OrderDecision(should_buy=False, reason="buying power limit reached")
 
-    if asset.get("fractionable"):
-        return OrderDecision(should_buy=True, reason="fractional notional buy", notional=budget)
-
     qty = floor(budget / price) if price > 0 else 0
     if qty < 1:
         return OrderDecision(should_buy=False, reason="integer quantity below 1")

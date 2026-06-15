@@ -72,7 +72,7 @@ async def evaluate_weekly(execute: bool = True, force: bool = False) -> WeeklyJo
 
 async def evaluate_once(
     execute: bool = True,
-    max_notional: float = 25,
+    max_notional: Optional[float] = None,
     max_orders: int = 1,
 ) -> OneShotJobResult:
     _ = max_orders
