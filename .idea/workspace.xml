@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.14 CODEX Optimierung">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Navigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/Navigation.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,7 +13,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="104" />
+    <option name="cachedIndexableFilesCount" value="109" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -39,23 +37,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0" />
-      <entry key="S10" value="1.0" />
-      <entry key="S30" value="1.0" />
-      <entry key="S60" value="1.0" />
-      <entry key="M2" value="1.0" />
-      <entry key="M5" value="1.0" />
-      <entry key="M10" value="1.0" />
-      <entry key="M15" value="1.0" />
-      <entry key="M30" value="1.0" />
-      <entry key="H1" value="1.0" />
-      <entry key="H2" value="1.0" />
-      <entry key="H4" value="1.0" />
-      <entry key="D1" value="1.0" />
-      <entry key="W1" value="1.0" />
+      <entry key="MS100" value="1.000000026673827" />
+      <entry key="MS500" value="1.031621343549649" />
+      <entry key="S2" value="1.598426786523722" />
+      <entry key="S5" value="2.2095066963422205" />
+      <entry key="S10" value="2.549870391340484" />
+      <entry key="S30" value="2.835598233691675" />
+      <entry key="S60" value="2.915848429505938" />
+      <entry key="M2" value="2.957424014353034" />
+      <entry key="M5" value="2.9884191304361893" />
+      <entry key="M10" value="3.2802516993486313" />
+      <entry key="M15" value="4.071717486873235" />
+      <entry key="M30" value="7.0169397191251734" />
+      <entry key="H1" value="10.763512305107797" />
+      <entry key="H2" value="13.791543141744151" />
+      <entry key="H4" value="15.722984019622594" />
+      <entry key="D1" value="17.59400158475815" />
+      <entry key="W1" value="17.941316067366657" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -77,23 +75,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.6070974421975234" />
-      <entry key="MS500" value="0.9050064628829054" />
-      <entry key="S2" value="0.9753554615276419" />
-      <entry key="S5" value="0.9900683286467772" />
-      <entry key="S10" value="0.9950217729511135" />
-      <entry key="S30" value="0.9983378297043665" />
-      <entry key="S60" value="0.999168569213607" />
-      <entry key="M2" value="0.9995841981612189" />
-      <entry key="M5" value="0.9998336585129451" />
-      <entry key="M10" value="0.9999168257974986" />
-      <entry key="M15" value="0.9999445497629764" />
-      <entry key="M30" value="0.9999722744971364" />
-      <entry key="H1" value="0.999986137152479" />
-      <entry key="H2" value="0.999993068552217" />
-      <entry key="H4" value="0.9999965342701028" />
-      <entry key="D1" value="0.9999994223775164" />
-      <entry key="W1" value="0.999999917482482" />
+      <entry key="MS100" value="0.9659363545120907" />
+      <entry key="MS500" value="1.0244360493154507" />
+      <entry key="S2" value="1.5947676791770755" />
+      <entry key="S5" value="2.207040881721641" />
+      <entry key="S10" value="2.5483385938085843" />
+      <entry key="S30" value="2.835001601920296" />
+      <entry key="S60" value="2.9155378692535754" />
+      <entry key="M2" value="2.9572655497658586" />
+      <entry key="M5" value="2.988354845502382" />
+      <entry key="M10" value="3.28021631486596" />
+      <entry key="M15" value="4.0716880160636455" />
+      <entry key="M30" value="7.016913938187347" />
+      <entry key="H1" value="10.763492341748773" />
+      <entry key="H2" value="13.791530291493164" />
+      <entry key="H4" value="15.722976677919776" />
+      <entry key="D1" value="17.59400021298366" />
+      <entry key="W1" value="17.941315867467555" />
     </decayedShown>
   </component>
   <component name="PackageJsonUpdateNotifier">
@@ -226,6 +224,8 @@
       <workItem from="1781001795157" duration="10000" />
       <workItem from="1781544703103" duration="1844000" />
       <workItem from="1781548552943" duration="247000" />
+      <workItem from="1781548850436" duration="1895000" />
+      <workItem from="1781552860891" duration="86000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
