@@ -1,0 +1,10 @@
+.next
+.git
+node_modules
+api/__pycache__
+api/.pytest_cache
+.DS_Store
+.env*
+data
+coverage
+*.tsbuildinfo

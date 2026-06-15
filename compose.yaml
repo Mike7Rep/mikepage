@@ -1,0 +1,44 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    environment:
+      API_DB_PATH: /data/trading.sqlite3
+      AI_MOCK_RESPONSES: ${AI_MOCK_RESPONSES:-false}
+    ports:
+      - "8000:8000"
+    volumes:
+      - api-data:/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "pnpm install --frozen-lockfile && pnpm dev --hostname 0.0.0.0"
+    depends_on:
+      - api
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    environment:
+      CI: "true"
+      PYTHON_API_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - web-node-modules:/app/node_modules
+      - web-next:/app/.next
+
+volumes:
+  api-data:
+  web-node-modules:
+  web-next:
