@@ -88,14 +88,14 @@ export async function getAssetChart(symbol: string) {
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
-  const baseUrl = process.env.PYTHON_API_URL || "http://localhost:8000"
+  const baseUrl = getPythonApiBaseUrl()
   const token = process.env.PYTHON_API_TOKEN
 
   if (!token) {
     throw new Error("PYTHON_API_TOKEN fehlt.")
   }
 
-  const response = await fetch(`${baseUrl.replace(/\/+$/, "")}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     cache: "no-store",
     headers: {
       accept: "application/json",
@@ -109,4 +109,19 @@ async function apiFetch<T>(path: string): Promise<T> {
   }
 
   return response.json() as Promise<T>
+}
+
+function getPythonApiBaseUrl() {
+  const rawBaseUrl = process.env.PYTHON_API_URL || "http://localhost:8000"
+  const baseUrl = rawBaseUrl.trim().replace(/^PYTHON_API_URL=/, "").replace(/\/+$/, "")
+
+  try {
+    new URL(baseUrl)
+  } catch {
+    throw new Error(
+      "PYTHON_API_URL ist ungueltig. In Railway muss der Name PYTHON_API_URL sein und der Wert nur die URL.",
+    )
+  }
+
+  return baseUrl
 }
