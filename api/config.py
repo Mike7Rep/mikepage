@@ -47,6 +47,7 @@ class Settings:
     max_asset_bp_pct: float = _float("MAX_ASSET_BP_PCT", 0.15)
     reserve_bp_pct: float = _float("RESERVE_BP_PCT", 0.05)
     db_path: str = os.getenv("API_DB_PATH", "/data/trading.sqlite3")
+    database_url: str = os.getenv("DATABASE_URL", "")
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "watchlist", _watchlist())

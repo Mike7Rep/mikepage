@@ -1,12 +1,17 @@
 import type { ReactNode } from "react"
+import Link from "next/link"
 import { ShieldCheck } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 export function DashboardFrame({
   actions,
+  activeSection,
   children,
   subtitle,
 }: {
   actions?: ReactNode
+  activeSection?: "depot" | "vermoegen"
   children: ReactNode
   subtitle: string
 }) {
@@ -19,10 +24,11 @@ export function DashboardFrame({
               <ShieldCheck className="size-5" aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-5xl leading-none font-extrabold tracking-[0] uppercase md:text-7xl">
+              <h1 className="text-4xl leading-none font-extrabold tracking-[0] uppercase sm:text-5xl md:text-7xl">
                 myDashboard
               </h1>
               <p className="mt-3 text-sm leading-6 text-white/55">{subtitle}</p>
+              <DashboardNavigation activeSection={activeSection} />
             </div>
           </div>
           {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -30,5 +36,40 @@ export function DashboardFrame({
         {children}
       </section>
     </main>
+  )
+}
+
+function DashboardNavigation({ activeSection }: { activeSection?: "depot" | "vermoegen" }) {
+  return (
+    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-fit rounded-md border border-white/10 bg-white/[0.035] p-1">
+      <DashboardNavLink active={activeSection === "vermoegen"} href="/myDashboard/vermoegen">
+        Vermögen
+      </DashboardNavLink>
+      <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
+        Depot
+      </DashboardNavLink>
+    </nav>
+  )
+}
+
+function DashboardNavLink({
+  active,
+  children,
+  href,
+}: {
+  active: boolean
+  children: ReactNode
+  href: string
+}) {
+  return (
+    <Link
+      className={cn(
+        "rounded-sm px-3 py-1.5 text-xs font-medium text-white/55 transition hover:text-white",
+        active && "bg-primary text-primary-foreground hover:text-primary-foreground"
+      )}
+      href={href}
+    >
+      {children}
+    </Link>
   )
 }

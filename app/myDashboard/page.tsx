@@ -1,11 +1,7 @@
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
 import { hasDashboardSession } from "@/lib/dashboard-auth"
-import { getDashboardPortfolio } from "@/lib/python-api"
-import { DashboardActions } from "./_components/dashboard-actions"
-import { DashboardContent, dashboardSubtitle } from "./_components/dashboard-content"
-import { DashboardError } from "./_components/dashboard-error"
-import { DashboardFrame } from "./_components/dashboard-frame"
 import { LoginPanel } from "./_components/login-panel"
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
@@ -26,28 +22,7 @@ export default async function MyDashboardPage({ searchParams }: { searchParams?:
     return <LoginPanel loginFailed={searchValue(params, "login") === "failed"} />
   }
 
-  return <AuthenticatedDashboard />
-}
-
-async function AuthenticatedDashboard() {
-  let data: Awaited<ReturnType<typeof getDashboardPortfolio>> | null = null
-  let errorMessage: string | null = null
-
-  try {
-    data = await getDashboardPortfolio()
-  } catch (error) {
-    errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler"
-  }
-
-  if (!data) {
-    return <DashboardError message={errorMessage || "Unbekannter Fehler"} />
-  }
-
-  return (
-    <DashboardFrame actions={<DashboardActions />} subtitle={dashboardSubtitle(data)}>
-      <DashboardContent data={data} />
-    </DashboardFrame>
-  )
+  redirect("/myDashboard/depot")
 }
 
 function searchValue(params: Record<string, string | string[] | undefined>, key: string) {

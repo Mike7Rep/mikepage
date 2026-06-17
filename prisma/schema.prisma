@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model WealthSnapshot {
+  id           Int      @id @default(autoincrement())
+  weekKey      String   @unique @map("week_key")
+  year         Int
+  week         Int
+  currency     String   @default("CHF")
+  total        Decimal  @db.Decimal(12, 2)
+  savings      Decimal  @db.Decimal(12, 2)
+  cashReserve  Decimal  @map("cash_reserve") @db.Decimal(12, 2)
+  investments  Decimal  @db.Decimal(12, 2)
+  mintos       Decimal  @db.Decimal(12, 2)
+  bondora      Decimal  @db.Decimal(12, 2)
+  alpaca       Decimal  @db.Decimal(12, 2)
+  bankAccount  Decimal  @map("bank_account") @db.Decimal(12, 2)
+  card         Decimal  @db.Decimal(12, 2)
+  legacyDegiro Decimal  @default(0) @map("legacy_degiro") @db.Decimal(12, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([year, week])
+  @@map("wealth_snapshots")
+}
+
+model AssetPriceBar {
+  id        Int      @id @default(autoincrement())
+  symbol    String
+  date      DateTime @db.Date
+  open      Decimal  @db.Decimal(18, 6)
+  high      Decimal  @db.Decimal(18, 6)
+  low       Decimal  @db.Decimal(18, 6)
+  close     Decimal  @db.Decimal(18, 6)
+  volume    Decimal  @db.Decimal(20, 2)
+  source    String   @default("alpaca")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([symbol, date])
+  @@index([symbol, date])
+  @@map("asset_price_bars")
+}
+
+model Run {
+  id         Int       @id @default(autoincrement())
+  runDate    DateTime  @map("run_date") @db.Date
+  kind       String
+  status     String
+  createdAt  DateTime  @default(now()) @map("created_at")
+  finishedAt DateTime? @map("finished_at")
+  reviews    Review[]
+
+  @@unique([runDate, kind])
+  @@map("runs")
+}
+
+model Review {
+  id           Int      @id @default(autoincrement())
+  runId        Int?     @map("run_id")
+  run          Run?     @relation(fields: [runId], references: [id])
+  symbol       String
+  analysisJson Json     @map("analysis_json")
+  decisionJson Json     @map("decision_json")
+  orderJson    Json     @map("order_json")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([runId])
+  @@index([createdAt])
+  @@map("reviews")
+}

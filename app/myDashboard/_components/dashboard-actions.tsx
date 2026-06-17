@@ -4,11 +4,11 @@ import { LogOut, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logoutDashboardAction } from "../actions"
 
-export function DashboardActions() {
+export function DashboardActions({ refreshHref = "/myDashboard/depot" }: { refreshHref?: string }) {
   return (
     <>
       <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-        <Link href="/myDashboard">
+        <Link href={refreshHref}>
           <RefreshCw data-icon="inline-start" />
           Aktualisieren
         </Link>

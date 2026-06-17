@@ -55,6 +55,7 @@ export type AssetChartBar = {
   low: number
   close: number
   volume: number
+  averageEntryPrice?: number | null
 }
 
 export type AssetChartFill = {

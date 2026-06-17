@@ -109,6 +109,7 @@ class AssetChartBar(BaseModel):
     low: float
     close: float
     volume: float
+    averageEntryPrice: Optional[float] = None
 
 
 class AssetChartFill(BaseModel):

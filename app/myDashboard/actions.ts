@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 
 import {
   clearDashboardSession,
@@ -9,6 +10,7 @@ import {
   validateDashboardLogin,
 } from "@/lib/dashboard-auth"
 import { getAssetChart } from "@/lib/python-api"
+import { parseWealthSnapshotForm, upsertWealthSnapshot } from "@/lib/wealth-data"
 
 export async function loginDashboardAction(formData: FormData) {
   const user = String(formData.get("user") ?? "")
@@ -32,4 +34,13 @@ export async function getAssetChartAction(symbol: string) {
     throw new Error("Nicht angemeldet.")
   }
   return getAssetChart(symbol)
+}
+
+export async function createOrUpdateWealthSnapshotAction(formData: FormData) {
+  if (!(await hasDashboardSession())) {
+    throw new Error("Nicht angemeldet.")
+  }
+
+  await upsertWealthSnapshot(parseWealthSnapshotForm(formData))
+  revalidatePath("/myDashboard/vermoegen")
 }

@@ -5,7 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.14 CODEX Optimierung">
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/mikepage.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/mikepage.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/chart_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/chart_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/api/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/storage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/tests/test_scheduler_storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/tests/test_scheduler_storage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/asset-chart-panel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/asset-chart-panel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-actions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-actions.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-frame.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-frame.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/actions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/actions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/python-api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/python-api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,7 +32,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="109" />
+    <option name="cachedIndexableFilesCount" value="135" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -226,6 +245,10 @@
       <workItem from="1781548552943" duration="247000" />
       <workItem from="1781548850436" duration="1895000" />
       <workItem from="1781552860891" duration="86000" />
+      <workItem from="1781673354870" duration="37000" />
+      <workItem from="1781673601743" duration="562000" />
+      <workItem from="1781674877504" duration="599000" />
+      <workItem from="1781675640559" duration="7000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
