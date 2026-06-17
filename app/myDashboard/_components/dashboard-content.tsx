@@ -21,7 +21,7 @@ export function DashboardContent({ data }: { data: AlpacaDashboardData }) {
       </section>
 
       {data.warnings.length > 0 ? <Warnings warnings={data.warnings} /> : null}
-      <AiReviews currency={data.currency} reviews={data.latestReviews} />
+      <AiReviews reviews={data.latestReviews} />
       <DashboardInteractive data={data} />
     </div>
   )

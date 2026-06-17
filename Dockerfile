@@ -12,4 +12,4 @@ COPY . .
 RUN pnpm build
 
 EXPOSE 3000
-CMD ["sh", "-c", "pnpm start --hostname :: --port ${PORT:-3000}"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start --hostname :: --port ${PORT:-3000}"]
