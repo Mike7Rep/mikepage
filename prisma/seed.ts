@@ -17,6 +17,14 @@ type SeedRow = {
   card: number
 }
 
+type InvestmentAssetSeedRow = {
+  name: string
+  value: number
+  totalValue: number | null
+  sharePercent: number | null
+  valuationDate: string
+}
+
 const adapter = new PrismaPg({
   connectionString:
     process.env.DATABASE_URL ||
@@ -79,6 +87,17 @@ const rows: SeedRow[] = [
   row("26_21", 59385, 8571, 200, 18695, 8258, 569, 0, 16379, 6713, 0),
 ]
 
+const investmentAssets: InvestmentAssetSeedRow[] = [
+  investmentAsset("iPad Pro 11 inch 4th Gen 2022", 100, null, null, "2026-05-04"),
+  investmentAsset("iPhone 12 256 GB", 50, null, null, "2026-05-04"),
+  investmentAsset("PS5", 50, null, null, "2026-05-04"),
+  investmentAsset("MINTOS - Teilhaber", 1000, null, null, "2026-05-04"),
+  investmentAsset("Mac Ai3 M1 8Gb 500 Siber", 200, null, null, "2026-05-04"),
+  investmentAsset("SIREGO Gmbh Anteile", 12121, 17315, 70, "2026-05-18"),
+  investmentAsset("MacBook Pro M4 Pro", 1000, null, null, "2026-05-04"),
+  investmentAsset("Schatzi AG Anteile", 4174, 8348, 50, "2026-05-18"),
+]
+
 async function main() {
   for (const item of rows) {
     const { expectedTotal, ...data } = item
@@ -116,6 +135,20 @@ async function main() {
 
   console.log(`Seeded ${count} wealth snapshots.`)
   console.log(`24_36 total: ${week2436?.total.toString()}`)
+
+  const investmentAssetCount = await prisma.investmentAsset.count()
+  if (investmentAssetCount === 0) {
+    await prisma.investmentAsset.createMany({
+      data: investmentAssets.map((item, index) => ({
+        ...item,
+        valuationDate: new Date(`${item.valuationDate}T00:00:00.000Z`),
+        sortOrder: index,
+      })),
+    })
+    console.log(`Seeded ${investmentAssets.length} investment assets.`)
+  } else {
+    console.log(`Skipped investment assets seed: ${investmentAssetCount} rows already exist.`)
+  }
 }
 
 function row(
@@ -143,6 +176,22 @@ function row(
     alpaca,
     bankAccount,
     card,
+  }
+}
+
+function investmentAsset(
+  name: string,
+  value: number,
+  totalValue: number | null,
+  sharePercent: number | null,
+  valuationDate: string
+): InvestmentAssetSeedRow {
+  return {
+    name,
+    value,
+    totalValue,
+    sharePercent,
+    valuationDate,
   }
 }
 

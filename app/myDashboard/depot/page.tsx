@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 
 import { hasDashboardSession } from "@/lib/dashboard-auth"
 import { getDashboardPortfolio } from "@/lib/python-api"
@@ -6,17 +7,23 @@ import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardContent, dashboardSubtitle } from "../_components/dashboard-content"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
+import { DashboardLoadingFrame } from "../_components/dashboard-loading-frame"
 import { LoginPanel } from "../_components/login-panel"
-
-export const dynamic = "force-dynamic"
-export const runtime = "nodejs"
 
 export const metadata: Metadata = {
   title: "Depot | myDashboard",
   robots: { index: false, follow: false },
 }
 
-export default async function DepotPage() {
+export default function DepotPage() {
+  return (
+    <Suspense fallback={<DashboardLoadingFrame activeSection="depot" subtitle="Depot wird geladen." />}>
+      <DepotContent />
+    </Suspense>
+  )
+}
+
+async function DepotContent() {
   const authenticated = await hasDashboardSession()
 
   if (!authenticated) {

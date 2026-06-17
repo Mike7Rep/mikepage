@@ -3,8 +3,6 @@
 
 import puppeteer from "puppeteer"
 
-export const runtime = "nodejs"
-
 export async function GET() {
   const browser = await puppeteer.launch({
     headless: true,

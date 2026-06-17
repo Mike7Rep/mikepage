@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 import type { AlpacaDashboardData } from "@/lib/python-api"
-import { AssetChartPanel } from "./asset-chart-panel"
+import { AssetChartPanel, prefetchAssetChart } from "./asset-chart-panel"
 import { PositionsTable } from "./positions-table"
 
 export function DashboardInteractive({ data }: { data: AlpacaDashboardData }) {
@@ -17,6 +17,7 @@ export function DashboardInteractive({ data }: { data: AlpacaDashboardData }) {
       />
       <PositionsTable
         data={data}
+        onPrefetch={prefetchAssetChart}
         selectedSymbol={selectedSymbol}
         onSelect={setSelectedSymbol}
       />

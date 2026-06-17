@@ -29,10 +29,12 @@ export function PositionsTable({
   data,
   selectedSymbol,
   onSelect,
+  onPrefetch,
 }: {
   data: AlpacaDashboardData
   selectedSymbol: string | null
   onSelect: (symbol: string) => void
+  onPrefetch?: (symbol: string) => void
 }) {
   const [sort, setSort] = useState<SortState>(null)
   const positions = useMemo(() => sortPositions(data.positions, sort), [data.positions, sort])
@@ -61,6 +63,7 @@ export function PositionsTable({
         ) : (
           <TableRows
             currency={data.currency}
+            onPrefetch={onPrefetch}
             onSelect={onSelect}
             positions={positions}
             selectedSymbol={selectedSymbol}
@@ -84,6 +87,7 @@ function TableRows({
   sort,
   setSort,
   onSelect,
+  onPrefetch,
 }: {
   currency: string
   positions: DashboardPosition[]
@@ -91,6 +95,7 @@ function TableRows({
   sort: SortState
   setSort: (sort: SortState) => void
   onSelect: (symbol: string) => void
+  onPrefetch?: (symbol: string) => void
 }) {
   return (
     <Table className="min-w-[820px] text-white">
@@ -112,12 +117,14 @@ function TableRows({
             role="button"
             tabIndex={0}
             onClick={() => onSelect(position.asset)}
+            onFocus={() => onPrefetch?.(position.asset)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault()
                 onSelect(position.asset)
               }
             }}
+            onMouseEnter={() => onPrefetch?.(position.asset)}
           >
             <TableCell className="px-4 font-medium text-white">{position.asset}</TableCell>
             <TableCell className="max-w-[280px] truncate text-white/70" title={position.name}>{position.name}</TableCell>

@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag } from "next/cache"
+
 import { prisma } from "@/lib/prisma"
 
 export type WealthSnapshotView = {
@@ -32,7 +34,31 @@ export type WealthSnapshotInput = {
   card: number
 }
 
+export type InvestmentAssetView = {
+  id: number
+  name: string
+  value: number
+  totalValue: number | null
+  sharePercent: number | null
+  valuationDate: string | null
+  sortOrder: number
+  updatedAt: string
+}
+
+export type InvestmentAssetInput = {
+  name: string
+  value: number
+  totalValue: number | null
+  sharePercent: number | null
+  valuationDate: Date | null
+  sortOrder: number
+}
+
 export async function getWealthSnapshots(): Promise<WealthSnapshotView[]> {
+  "use cache"
+  cacheLife("hours")
+  cacheTag("dashboard:wealth")
+
   const rows = await prisma.wealthSnapshot.findMany({
     orderBy: [{ year: "asc" }, { week: "asc" }, { id: "asc" }],
   })
@@ -64,6 +90,27 @@ export async function getWealthSnapshots(): Promise<WealthSnapshotView[]> {
   })
 }
 
+export async function getInvestmentAssets(): Promise<InvestmentAssetView[]> {
+  "use cache"
+  cacheLife("hours")
+  cacheTag("dashboard:investment-assets")
+
+  const rows = await prisma.investmentAsset.findMany({
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  })
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    value: Number(row.value),
+    totalValue: row.totalValue === null ? null : Number(row.totalValue),
+    sharePercent: row.sharePercent === null ? null : Number(row.sharePercent),
+    valuationDate: row.valuationDate ? row.valuationDate.toISOString().slice(0, 10) : null,
+    sortOrder: row.sortOrder,
+    updatedAt: row.updatedAt.toISOString(),
+  }))
+}
+
 export async function upsertWealthSnapshot(input: WealthSnapshotInput) {
   const { year, week } = parseWeekKey(input.weekKey)
   const existing = await prisma.wealthSnapshot.findUnique({
@@ -93,6 +140,23 @@ export async function upsertWealthSnapshot(input: WealthSnapshotInput) {
   })
 }
 
+export async function replaceInvestmentAssets(inputs: InvestmentAssetInput[]) {
+  return prisma.$transaction(async (tx) => {
+    await tx.investmentAsset.deleteMany()
+
+    if (!inputs.length) {
+      return
+    }
+
+    await tx.investmentAsset.createMany({
+      data: inputs.map((input, index) => ({
+        ...input,
+        sortOrder: index,
+      })),
+    })
+  })
+}
+
 export function parseWealthSnapshotForm(formData: FormData): WealthSnapshotInput {
   const weekKey = String(formData.get("weekKey") ?? "").trim()
   parseWeekKey(weekKey)
@@ -108,6 +172,39 @@ export function parseWealthSnapshotForm(formData: FormData): WealthSnapshotInput
     bankAccount: parseMoney(formData, "bankAccount"),
     card: parseMoney(formData, "card"),
   }
+}
+
+export function parseInvestmentAssetsForm(formData: FormData): InvestmentAssetInput[] {
+  const names = formData.getAll("investmentAssetName")
+  const values = formData.getAll("investmentAssetValue")
+  const totalValues = formData.getAll("investmentAssetTotalValue")
+  const sharePercents = formData.getAll("investmentAssetSharePercent")
+  const valuationDates = formData.getAll("investmentAssetValuationDate")
+
+  return names.flatMap((rawName, index) => {
+    const name = String(rawName ?? "").trim()
+    const rawValue = String(values[index] ?? "").trim()
+    const rawTotalValue = String(totalValues[index] ?? "").trim()
+    const rawSharePercent = String(sharePercents[index] ?? "").trim()
+    const rawValuationDate = String(valuationDates[index] ?? "").trim()
+
+    if (!name && !rawValue && !rawTotalValue && !rawSharePercent && !rawValuationDate) {
+      return []
+    }
+
+    if (!name) {
+      throw new Error("Anlagen-Zeilen brauchen einen Namen.")
+    }
+
+    return [{
+      name,
+      value: parseMoneyString(rawValue || "0"),
+      totalValue: parseOptionalMoneyString(rawTotalValue),
+      sharePercent: parseOptionalPercentString(rawSharePercent),
+      valuationDate: parseOptionalDateString(rawValuationDate),
+      sortOrder: index,
+    }]
+  })
 }
 
 function totalFromInput(input: WealthSnapshotInput, legacyDegiro: number) {
@@ -143,10 +240,42 @@ function parseMoney(formData: FormData, key: keyof Omit<WealthSnapshotInput, "we
   const raw = String(formData.get(key) ?? "").trim()
   if (!raw) return 0
 
-  const normalized = raw.replace(/'/g, "").replace(",", ".")
-  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
-    throw new Error("Beträge müssen positiv sein und maximal 2 Nachkommastellen haben.")
+  return parseMoneyString(raw)
+}
+
+function parseMoneyString(raw: string) {
+  const normalized = raw.replace(/'/g, "")
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error("Beträge müssen ganze positive Zahlen sein.")
   }
 
   return Number(normalized)
+}
+
+function parseOptionalMoneyString(raw: string) {
+  if (!raw.trim()) return null
+  return parseMoneyString(raw)
+}
+
+function parseOptionalPercentString(raw: string) {
+  if (!raw.trim()) return null
+  if (!/^\d+$/.test(raw)) {
+    throw new Error("Anteile müssen ganze positive Zahlen sein.")
+  }
+
+  const value = Number(raw)
+  if (value > 100) {
+    throw new Error("Anteile dürfen maximal 100 sein.")
+  }
+
+  return value
+}
+
+function parseOptionalDateString(raw: string) {
+  if (!raw.trim()) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    throw new Error("Datum muss im Format YYYY-MM-DD sein.")
+  }
+
+  return new Date(`${raw}T00:00:00.000Z`)
 }

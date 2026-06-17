@@ -1,20 +1,27 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { Suspense } from "react"
 
 import { hasDashboardSession } from "@/lib/dashboard-auth"
+import { DashboardLoadingFrame } from "./_components/dashboard-loading-frame"
 import { LoginPanel } from "./_components/login-panel"
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
-
-export const dynamic = "force-dynamic"
-export const runtime = "nodejs"
 
 export const metadata: Metadata = {
   title: "myDashboard | Michael Repolusk",
   robots: { index: false, follow: false },
 }
 
-export default async function MyDashboardPage({ searchParams }: { searchParams?: SearchParams }) {
+export default function MyDashboardPage({ searchParams }: { searchParams?: SearchParams }) {
+  return (
+    <Suspense fallback={<DashboardLoadingFrame subtitle="Login wird geprüft." />}>
+      <MyDashboardGate searchParams={searchParams} />
+    </Suspense>
+  )
+}
+
+async function MyDashboardGate({ searchParams }: { searchParams?: SearchParams }) {
   const params = searchParams ? await searchParams : {}
   const authenticated = await hasDashboardSession()
 

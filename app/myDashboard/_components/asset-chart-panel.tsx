@@ -20,6 +20,7 @@ import { getAssetChartAction } from "../actions"
 import { formatCurrency, formatDate, formatQuantity } from "../format"
 
 type LoadState = "idle" | "loading" | "ready" | "error"
+type ChartActionResult = Awaited<ReturnType<typeof getAssetChartAction>>
 
 const assetChartConfig = {
   close: {
@@ -31,6 +32,12 @@ const assetChartConfig = {
     color: "#facc15",
   },
 } satisfies ChartConfig
+
+const chartRequests = new Map<string, Promise<ChartActionResult>>()
+
+export function prefetchAssetChart(symbol: string) {
+  void loadAssetChart(symbol)
+}
 
 export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; onClose: () => void }) {
   const [chart, setChart] = useState<AssetChartData | null>(null)
@@ -45,11 +52,17 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
         if (!active) return null
         setState("loading")
         setError(null)
-        return getAssetChartAction(symbol)
+        setChart(null)
+        return loadAssetChart(symbol)
       })
-      .then((data) => {
-        if (!active || !data) return
-        setChart(data)
+      .then((result) => {
+        if (!active || !result) return
+        if (!result.ok) {
+          setError(result.error)
+          setState("error")
+          return
+        }
+        setChart(result.data)
         setState("ready")
       })
       .catch((reason: unknown) => {
@@ -142,6 +155,30 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
       </CardContent>
     </Card>
   )
+}
+
+function loadAssetChart(symbol: string) {
+  const normalizedSymbol = symbol.trim().toUpperCase()
+  const existing = chartRequests.get(normalizedSymbol)
+  if (existing) return existing
+
+  const promise = getAssetChartAction(normalizedSymbol).then(
+    (result) => {
+      if (!result.ok) {
+        chartRequests.delete(normalizedSymbol)
+      }
+      return result
+    },
+    (error: unknown) => {
+      chartRequests.delete(normalizedSymbol)
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Chart konnte nicht geladen werden.",
+      } satisfies ChartActionResult
+    }
+  )
+  chartRequests.set(normalizedSymbol, promise)
+  return promise
 }
 
 function LoadingState() {

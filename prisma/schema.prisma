@@ -30,6 +30,21 @@ model WealthSnapshot {
   @@map("wealth_snapshots")
 }
 
+model InvestmentAsset {
+  id            Int       @id @default(autoincrement())
+  name          String
+  value         Decimal   @db.Decimal(12, 2)
+  totalValue    Decimal?  @map("total_value") @db.Decimal(12, 2)
+  sharePercent  Decimal?  @map("share_percent") @db.Decimal(7, 4)
+  valuationDate DateTime? @map("valuation_date") @db.Date
+  sortOrder     Int       @default(0) @map("sort_order")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([sortOrder])
+  @@map("investment_assets")
+}
+
 model AssetPriceBar {
   id        Int      @id @default(autoincrement())
   symbol    String

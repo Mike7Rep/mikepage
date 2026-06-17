@@ -1,7 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag } from "next/cache"
 
 import {
   clearDashboardSession,
@@ -10,7 +10,16 @@ import {
   validateDashboardLogin,
 } from "@/lib/dashboard-auth"
 import { getAssetChart } from "@/lib/python-api"
-import { parseWealthSnapshotForm, upsertWealthSnapshot } from "@/lib/wealth-data"
+import {
+  parseInvestmentAssetsForm,
+  parseWealthSnapshotForm,
+  replaceInvestmentAssets,
+  upsertWealthSnapshot,
+} from "@/lib/wealth-data"
+
+export type AssetChartActionResult =
+  | { ok: true; data: Awaited<ReturnType<typeof getAssetChart>> }
+  | { ok: false; error: string }
 
 export async function loginDashboardAction(formData: FormData) {
   const user = String(formData.get("user") ?? "")
@@ -18,7 +27,7 @@ export async function loginDashboardAction(formData: FormData) {
 
   if (await validateDashboardLogin(user, password)) {
     await createDashboardSession()
-    redirect("/myDashboard")
+    redirect("/myDashboard/depot")
   }
 
   redirect("/myDashboard?login=failed")
@@ -29,11 +38,20 @@ export async function logoutDashboardAction() {
   redirect("/myDashboard")
 }
 
-export async function getAssetChartAction(symbol: string) {
+export async function getAssetChartAction(symbol: string): Promise<AssetChartActionResult> {
   if (!(await hasDashboardSession())) {
-    throw new Error("Nicht angemeldet.")
+    return { ok: false, error: "Nicht angemeldet." }
   }
-  return getAssetChart(symbol)
+
+  try {
+    const data = await getAssetChart(symbol)
+    return { ok: true, data }
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Chart konnte nicht geladen werden.",
+    }
+  }
 }
 
 export async function createOrUpdateWealthSnapshotAction(formData: FormData) {
@@ -42,5 +60,16 @@ export async function createOrUpdateWealthSnapshotAction(formData: FormData) {
   }
 
   await upsertWealthSnapshot(parseWealthSnapshotForm(formData))
+  updateTag("dashboard:wealth")
+  revalidatePath("/myDashboard/vermoegen")
+}
+
+export async function updateInvestmentAssetsAction(formData: FormData) {
+  if (!(await hasDashboardSession())) {
+    throw new Error("Nicht angemeldet.")
+  }
+
+  await replaceInvestmentAssets(parseInvestmentAssetsForm(formData))
+  updateTag("dashboard:investment-assets")
   revalidatePath("/myDashboard/vermoegen")
 }

@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.14 CODEX Optimierung">
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/ai-reviews.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/ai-reviews.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-content.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-content.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -234,6 +230,7 @@
       <workItem from="1781673601743" duration="562000" />
       <workItem from="1781674877504" duration="599000" />
       <workItem from="1781675640559" duration="2310000" />
+      <workItem from="1781680191347" duration="279000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
