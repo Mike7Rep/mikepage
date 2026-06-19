@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useSyncExternalStore } from "react"
 import { Canvas } from "@react-three/fiber"
-import { ContactShadows, OrbitControls, PerspectiveCamera } from "@react-three/drei"
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
 
 import AreonChurModel from "./areonChurModel"
 
@@ -41,36 +41,38 @@ export default function AreonChurCanvas() {
       style={{ height: "clamp(380px, 46vw, 540px)" }}
     >
       <Canvas dpr={[1, 1.65]} gl={{ antialias: true, alpha: false }} shadows style={{ touchAction: "pan-y" }}>
-        <color attach="background" args={["#050707"]} />
-        <fog attach="fog" args={["#050707", 8.8, 13.6]} />
-        <PerspectiveCamera makeDefault position={[5.8, 4.4, 8.4]} fov={39} />
+        <color attach="background" args={["#060807"]} />
+        <fog attach="fog" args={["#060807", 6.5, 11.5]} />
+        <PerspectiveCamera makeDefault position={[4.6, 3.6, 5.6]} fov={40} />
 
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[-4.5, 6, 4.5]} intensity={2.7} color="#ffffff" castShadow />
-        <directionalLight position={[4.5, 3.2, -3.5]} intensity={1.45} color="#cceeff" />
-        <pointLight position={[0, 1.8, 4.8]} intensity={1.35} color="#d2ac91" distance={9} />
+        <hemisphereLight args={["#e3edff", "#2c3a1f", 0.95]} />
+        <ambientLight intensity={0.22} />
+        <directionalLight
+          position={[-3.2, 5.2, 3.4]}
+          intensity={2.5}
+          color="#fff4e6"
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-bias={-0.0004}
+        >
+          <orthographicCamera attach="shadow-camera" args={[-3, 3, 3, -3, 0.5, 18]} />
+        </directionalLight>
+        <directionalLight position={[4.2, 3.2, -3.2]} intensity={0.7} color="#bcd6ff" />
+        <pointLight position={[0, 1.4, 3.2]} intensity={0.8} color="#ffd2a6" distance={6} />
 
         <Suspense fallback={null}>
           <AreonChurModel reducedMotion={reducedMotion} />
-          <ContactShadows
-            position={[0, -0.52, 0]}
-            opacity={0.42}
-            scale={9.5}
-            blur={2.8}
-            far={4}
-            color="#000000"
-          />
         </Suspense>
 
         <OrbitControls
           enablePan={false}
           enableZoom={false}
-          minPolarAngle={Math.PI / 3.8}
-          maxPolarAngle={Math.PI / 2.35}
+          minPolarAngle={Math.PI / 4.2}
+          maxPolarAngle={Math.PI / 2.4}
           minAzimuthAngle={-Math.PI / 4.5}
           maxAzimuthAngle={Math.PI / 4.5}
           rotateSpeed={0.42}
-          target={[0, 0.35, 0]}
+          target={[0, 0.45, 0]}
         />
       </Canvas>
     </div>
