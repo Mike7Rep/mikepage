@@ -3,6 +3,7 @@ import Link from "next/link"
 
 import Footer from "./Footer"
 import HeroSection from "./HeroSection"
+import ProjectsSection from "@/components/projects/projectsSection"
 import { contact } from "@/lib/profile-data"
 
 const services = [
@@ -20,14 +21,6 @@ const skills = [
   "Next.js",
   "Product Owner",
   "UX",
-] as const
-
-const projects = [
-  ["AREON Chur", "BIM Koordination", "Eventhalle"],
-  ["Talstation Unterwasser", "BIM Koordination / PL HKLS", "Architektur und Haustechnik"],
-  ["Vantage ZRH1", "BIM Koordination / PL Lüftung", "Datacenter"],
-  ["The Brick 80", "BIM Koordination / PL Lüftung", "Umnutzung"],
-  ["GSK Pharmacenter", "BIM Koordination / Fachbauleitung", "Labor / Pharma"],
 ] as const
 
 export default function Page() {
@@ -140,33 +133,7 @@ export default function Page() {
         </div>
       </section>
 
-      <section id="projekte" className="px-5 py-20 sm:px-8 md:py-32">
-        <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[0.42fr_0.58fr]">
-          <div className="md:sticky md:top-24 md:h-fit">
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/55">
-              Projekte
-            </p>
-            <h2 className="text-4xl font-black uppercase leading-none tracking-[0] sm:text-6xl">
-              Anspruchsvolle Projektwelten.
-            </h2>
-          </div>
-          <div className="divide-y divide-white/10 border-y border-white/10">
-            {projects.map(([name, role, type]) => (
-              <article key={name} className="grid gap-4 py-8 sm:grid-cols-[0.58fr_0.42fr] sm:items-end">
-                <div>
-                  <h3 className="text-3xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
-                    {name}
-                  </h3>
-                  <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-cyan-100/55">
-                    {type}
-                  </p>
-                </div>
-                <p className="text-base leading-7 text-white/58 sm:text-right">{role}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ProjectsSection />
 
       <Footer />
     </main>
