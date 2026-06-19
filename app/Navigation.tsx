@@ -32,7 +32,7 @@ export default function Navigation
   const pathname = usePathname()
 
 
-  if (pathname.includes("print") || pathname.startsWith("/myDashboard")) {
+  if (pathname === "/" || pathname.includes("print") || pathname.startsWith("/myDashboard")) {
     return null
   }
 

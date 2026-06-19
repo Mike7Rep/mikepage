@@ -1,94 +1,83 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Code2, Layers3, Mail, Wrench } from "lucide-react"
+import { ArrowDown, Mail, Menu } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { contact } from "@/lib/profile-data"
 
-export default function HeroSection
-() {
-
+export default function HeroSection() {
   return (
-    <>
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <Image
-          src="/image/mike.png"
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 1024px) 70vw, 120vw"
-          className="pointer-events-none absolute z-0 object-cover object-[50%_8%] opacity-[0.58] mix-blend-luminosity motion-preset-blur-right motion-duration-1000 md:object-contain md:object-top md:opacity-[0.62] lg:scale-125 xl:scale-135"
-        />
-        <div className="absolute inset-0 z-10 bg-[linear-gradient(to_right,rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:56px_56px]" />
-        <div className="absolute inset-0 z-20 bg-linear-to-b from-black/60 via-black/70 to-black" />
-        <div className="absolute inset-y-0 left-0 z-20 w-full bg-linear-to-r from-black via-black/56 to-black/0 md:w-4/5" />
-        <div className="absolute right-10 top-32 z-30 hidden rotate-45 border border-primary/30 bg-primary/5 p-16 motion-preset-float-sm motion-loop-infinite motion-duration-2000 md:block" />
-        <div className="absolute bottom-24 left-10 z-30 hidden rotate-45 border border-white/10 bg-white/5 p-10 motion-preset-float-sm motion-loop-infinite motion-delay-300 md:block" />
-      </div>
+    <section className="relative min-h-[100svh] overflow-hidden bg-black text-white">
+      <Image
+        src="/image/mike.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none origin-bottom scale-110 object-contain object-bottom opacity-100 brightness-125 motion-preset-blur-right motion-duration-1000 sm:scale-100 sm:object-center sm:brightness-100"
+      />
 
-      <div className="z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center gap-12 px-6 pb-16 text-white md:px-12">
-        <div className="flex max-w-5xl flex-col gap-8">
-          <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-white/55">
-            <span className="motion-preset-slide-up-sm motion-duration-700 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-              BIM
-            </span>
-            <span className="motion-preset-slide-up-sm motion-delay-100 motion-duration-700 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-              Revit
-            </span>
-            <span className="motion-preset-slide-up-sm motion-delay-200 motion-duration-700 rounded-md border border-white/10 bg-white/5 px-3 py-2">
-              React
-            </span>
-          </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,transparent_0,transparent_38%,rgba(0,0,0,0.36)_78%),linear-gradient(to_bottom,rgba(0,0,0,0.1),transparent_34%,rgba(0,0,0,0.68)),linear-gradient(to_right,rgba(0,0,0,0.56),transparent_34%,rgba(0,0,0,0.56))]" />
 
-          <div className="flex flex-col gap-5">
-            <h1 className="motion-preset-slide-up-sm motion-delay-100 motion-duration-700 max-w-5xl text-5xl leading-none font-extrabold tracking-[0] uppercase md:text-8xl">
-              Michael Repolusk
-            </h1>
-            <p className="motion-preset-slide-up-sm motion-delay-200 motion-duration-700 max-w-2xl text-lg leading-8 text-white/70 md:text-xl">
-              Fast paced development meets engineering: BIM, Revit, Gebäudetechnik und schlanke digitale Tools für klare Projektentscheidungen.
-            </p>
-          </div>
-
-          <div className="motion-preset-slide-up-sm motion-delay-300 motion-duration-700 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" className="uppercase tracking-[0.08em]">
-              <Link href="/bookmeeting">
-                <CalendarDays data-icon="inline-start" />
-                30min Meeting
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-              <Link href={`mailto:${contact.email}`}>
-                <Mail data-icon="inline-start" />
-                E-Mail schreiben
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white/70 hover:bg-white/10 hover:text-white">
-              <Link href="/berufe">
-                Timeline
-                <ArrowRight data-icon="inline-end" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="motion-preset-slide-up-sm motion-delay-500 motion-duration-700 grid gap-3 md:grid-cols-3">
-          {[
-            { icon: Layers3, title: "BIM Koordination", text: "Modelle, Revit-Standards und saubere Übergaben." },
-            { icon: Wrench, title: "HLKSE Planung", text: "Technische Lösungen für Umbau, Ausbau und Ausführung." },
-            { icon: Code2, title: "Software Tools", text: "Schlanke Oberflächen für wiederkehrende Aufgaben." },
-          ].map((item) => {
-            const Icon = item.icon
-
-            return (
-              <div key={item.title} className="group rounded-lg border border-white/10 bg-white/[0.035] p-5 transition-all duration-500 hover:-translate-y-1 hover:border-primary/35 hover:bg-white/6">
-                <Icon className="mb-6 size-7 text-primary transition-transform duration-500 group-hover:rotate-6" aria-hidden="true" />
-                <h2 className="text-lg font-bold tracking-[0] uppercase text-white">{item.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-white/58">{item.text}</p>
-              </div>
-            )
-          })}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between px-5 pt-5 sm:px-8 sm:pt-7">
+        <Link
+          href="/"
+          className="pointer-events-auto text-sm font-semibold uppercase tracking-[0.2em] text-white/82 transition-colors hover:text-white"
+        >
+          Michael Repolusk
+        </Link>
+        <div className="pointer-events-auto flex items-start gap-2">
+          <details className="group relative">
+            <summary
+              className="flex size-10 cursor-pointer list-none items-center justify-center rounded-full border border-white/12 bg-white/[0.06] text-white/78 shadow-2xl shadow-black/40 backdrop-blur-xl transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50 [&::-webkit-details-marker]:hidden"
+              aria-label="Menü öffnen"
+            >
+              <Menu className="size-4" aria-hidden="true" />
+            </summary>
+            <nav className="absolute right-0 mt-3 min-w-44 rounded-2xl border border-white/12 bg-black/70 p-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/64 shadow-2xl shadow-black/50 backdrop-blur-xl">
+              {[
+                ["Vision", "#vision"],
+                ["realBIM", "#realbim"],
+                ["Leistungen", "#leistungen"],
+                ["Projekte", "#projekte"],
+              ].map(([label, href]) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="block rounded-xl px-3 py-2 transition-colors hover:bg-white/10 hover:text-cyan-50"
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </details>
+          <Link
+            href={`mailto:${contact.email}`}
+            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 shadow-2xl shadow-black/40 backdrop-blur-xl transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+          >
+            <Mail className="size-3.5" aria-hidden="true" />
+            Kontaktieren
+          </Link>
         </div>
       </div>
-    </>
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-8 z-20 mx-auto flex w-full max-w-7xl flex-col items-center gap-7 px-5 text-center sm:bottom-10">
+        <div className="motion-preset-slide-up-sm motion-duration-700 flex flex-col items-center gap-2">
+          <h1 className="text-3xl font-black uppercase leading-none tracking-[0] text-white drop-shadow-2xl sm:text-5xl">
+            BIM Visionär
+          </h1>
+          <p className="max-w-sm text-sm font-medium leading-6 text-white/62 sm:text-base">
+            Revit, BIM und realBIM mit klarem Blick auf bessere digitale Planungsphasen.
+          </p>
+        </div>
+
+        <Link
+          href="#vision"
+          className="pointer-events-auto inline-flex size-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-white/75 backdrop-blur-xl transition-all hover:-translate-y-1 hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+          aria-label="Zur Vision scrollen"
+        >
+          <ArrowDown className="size-4" aria-hidden="true" />
+        </Link>
+      </div>
+    </section>
   )
 }
