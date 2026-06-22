@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, useSyncExternalStore } from "react"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
 
-import AreonChurModel from "./areonChurModel"
+import TalstationModel from "./talstationModel"
 
 const emptySubscribe = () => () => undefined
 const getClientSnapshot = () => true
@@ -26,17 +26,17 @@ function usePrefersReducedMotion() {
   return reducedMotion
 }
 
-export default function AreonChurCanvas() {
+export default function TalstationCanvas() {
   const isClient = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot)
   const reducedMotion = usePrefersReducedMotion()
 
   if (!isClient) {
-    return <AreonCanvasFallback />
+    return <TalstationCanvasFallback />
   }
 
   return (
     <div
-      data-testid="areon-stage"
+      data-testid="talstation-stage"
       className="relative overflow-visible bg-transparent [&_canvas]:!touch-pan-y"
       style={{ height: "clamp(300px, 36vw, 460px)" }}
     >
@@ -49,7 +49,7 @@ export default function AreonChurCanvas() {
         <fog attach="fog" args={["#050505", 7.5, 14]} />
         <PerspectiveCamera makeDefault position={[6.8, 4.9, 7.8]} fov={38} />
 
-        <hemisphereLight args={["#e3edff", "#2c3a1f", 0.95]} />
+        <hemisphereLight args={["#e3edff", "#33421f", 0.95]} />
         <ambientLight intensity={0.22} />
         <directionalLight
           position={[-3.2, 5.2, 3.4]}
@@ -59,13 +59,13 @@ export default function AreonChurCanvas() {
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0004}
         >
-          <orthographicCamera attach="shadow-camera" args={[-3, 3, 3, -3, 0.5, 18]} />
+          <orthographicCamera attach="shadow-camera" args={[-3.5, 3.5, 3.5, -3.5, 0.5, 18]} />
         </directionalLight>
         <directionalLight position={[4.2, 3.2, -3.2]} intensity={0.7} color="#bcd6ff" />
         <pointLight position={[0, 1.4, 3.2]} intensity={0.8} color="#ffd2a6" distance={6} />
 
         <Suspense fallback={null}>
-          <AreonChurModel reducedMotion={reducedMotion} />
+          <TalstationModel reducedMotion={reducedMotion} />
         </Suspense>
 
         <OrbitControls
@@ -76,23 +76,22 @@ export default function AreonChurCanvas() {
           minAzimuthAngle={-Math.PI / 4.5}
           maxAzimuthAngle={Math.PI / 4.5}
           rotateSpeed={0.42}
-          target={[0, 0.45, 0]}
+          target={[0, 0.5, 0]}
         />
       </Canvas>
     </div>
   )
 }
 
-function AreonCanvasFallback() {
+function TalstationCanvasFallback() {
   return (
     <div
-      data-testid="areon-stage-fallback"
+      data-testid="talstation-stage-fallback"
       className="relative overflow-visible bg-transparent"
       style={{ height: "clamp(300px, 36vw, 460px)" }}
     >
-      <div className="absolute inset-x-[23%] bottom-[24%] h-[22%] rounded-sm bg-white/15 shadow-2xl shadow-black/60" />
-      <div className="absolute inset-x-[28%] bottom-[45%] h-[5%] rounded-sm bg-white/70 shadow-xl shadow-white/10" />
-      <div className="absolute inset-x-[34%] bottom-[32%] h-px bg-cyan-100/20" />
+      <div className="absolute inset-x-[22%] bottom-[26%] h-[20%] rounded-sm bg-white/12 shadow-2xl shadow-black/60" />
+      <div className="absolute inset-x-[26%] bottom-[44%] h-[6%] -skew-y-3 rounded-sm bg-white/70 shadow-xl shadow-white/10" />
     </div>
   )
 }

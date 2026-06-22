@@ -410,7 +410,7 @@ export default function AreonChurModel({ reducedMotion }: { reducedMotion: boole
   })
 
   return (
-    <group ref={groupRef} rotation={[0, -0.58, 0]} position={[-0.08, -0.07, 0.38]} scale={0.54}>
+    <group ref={groupRef} rotation={[0, -0.58, 0]} position={[-0.08, 0.12, 0.34]} scale={0.46}>
       <SiteBase />
       <SideAnnexes />
       <HallBody />

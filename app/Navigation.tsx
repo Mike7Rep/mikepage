@@ -14,12 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, Briefcase, CalendarDays, FileText, FolderKanban, GraduationCap, Mail, Menu } from "lucide-react"
+import { Briefcase, CalendarDays, FileText, FolderKanban, GraduationCap, Mail, Menu, PackageOpen } from "lucide-react"
 
 const navLinks = [
   { href: "/bildung", label: "Bildung", icon: GraduationCap },
   { href: "/berufe", label: "Beruf", icon: Briefcase },
-  { href: "/#skills", label: "Skills", icon: BookOpen },
+  { href: "/#produkte", label: "Produkte", icon: PackageOpen },
   { href: "/projekte", label: "Projekte", icon: FolderKanban },
   { href: "/cv", label: "CV", icon: FileText },
 ]

@@ -36,8 +36,8 @@ export default function HeroSection() {
             <nav className="absolute right-0 mt-3 min-w-44 rounded-2xl border border-white/12 bg-black/70 p-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/64 shadow-2xl shadow-black/50 backdrop-blur-xl">
               {[
                 ["Vision", "#vision"],
-                ["realBIM", "#realbim"],
                 ["Leistungen", "#leistungen"],
+                ["Produkte", "#produkte"],
                 ["Projekte", "#projekte"],
               ].map(([label, href]) => (
                 <Link
@@ -62,11 +62,12 @@ export default function HeroSection() {
 
       <div className="pointer-events-none absolute inset-x-0 bottom-8 z-20 mx-auto flex w-full max-w-7xl flex-col items-center gap-7 px-5 text-center sm:bottom-10">
         <div className="motion-preset-slide-up-sm motion-duration-700 flex flex-col items-center gap-2">
-          <h1 className="text-3xl font-black uppercase leading-none tracking-[0] text-white drop-shadow-2xl sm:text-5xl">
-            BIM Visionär
+          <h1 className="max-w-2xl text-3xl font-black uppercase leading-none tracking-[0] text-white drop-shadow-2xl sm:text-5xl">
+            Product Owner für digitale Baulösungen.
           </h1>
           <p className="max-w-sm text-sm font-medium leading-6 text-white/62 sm:text-base">
-            Revit, BIM und realBIM mit klarem Blick auf bessere digitale Planungsphasen.
+            Ich verbinde BIM, Revit und Fullstack-Produktentwicklung, damit digitale Planung
+            schneller, sauberer und wirksamer wird.
           </p>
         </div>
 

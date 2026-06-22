@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="mikePage -- v0.00.14 CODEX Optimierung">
+      <change afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/projects/areonChurCanvas.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/projects/areonChurCanvas.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/projects/areonChurModel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/projects/areonChurModel.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="135" />
+    <option name="cachedIndexableFilesCount" value="148" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -231,6 +234,7 @@
       <workItem from="1781674877504" duration="599000" />
       <workItem from="1781675640559" duration="2310000" />
       <workItem from="1781680191347" duration="279000" />
+      <workItem from="1782115368254" duration="976000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
