@@ -9,15 +9,15 @@ import {
   TheilerhausCanvas,
 } from "./projectCanvases"
 
+const infoLinkClass =
+  "w-fit rounded-full bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-black shadow-2xl shadow-black/30 transition-all hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+
 export default function ProjectsSection() {
   return (
     <section id="projekte" className="px-5 py-20 sm:px-8 md:py-32">
       <div className="mx-auto max-w-7xl">
         <div className="mb-14 grid gap-8 md:grid-cols-[0.42fr_0.58fr] md:items-end">
           <div>
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/55">
-              Projekte
-            </p>
             <h2 className="text-4xl font-black uppercase leading-none tracking-[0] sm:text-5xl">
               Anspruchsvolle Projektwelten.
             </h2>
@@ -34,7 +34,7 @@ export default function ProjectsSection() {
           <div className="flex flex-col gap-5 md:pl-4">
             <div>
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
-                2023-2025 / BIM Koordinator / Eventhalle
+                BIM Koordinator
               </p>
               <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
                 AREON Chur
@@ -49,9 +49,9 @@ export default function ProjectsSection() {
               href="https://areonchur.ch"
               target="_blank"
               rel="noreferrer"
-              className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+              className={infoLinkClass}
             >
-              areonchur.ch
+              Info
             </Link>
           </div>
         </article>
@@ -64,7 +64,7 @@ export default function ProjectsSection() {
           <div className="flex flex-col gap-5 md:order-1 md:pr-4">
             <div>
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
-                Toggenburg / BIM Koordination / PL HKLS
+                BIM Koordinator / Projektleiter HKLS
               </p>
               <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
                 Talstation Unterwasser
@@ -80,9 +80,9 @@ export default function ProjectsSection() {
               href="https://www.chaeserrugg.ch/de/geniessen/architektur/bahnhof-unterwasser"
               target="_blank"
               rel="noreferrer"
-              className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+              className={infoLinkClass}
             >
-              chaeserrugg.ch
+              Info
             </Link>
           </div>
         </article>
@@ -93,7 +93,7 @@ export default function ProjectsSection() {
           <div className="flex flex-col gap-5 md:pl-4">
             <div>
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
-                Winterthur / BIM Koordination / PL Lüftung
+                BIM Koordinator / Projektleiter Lüftung
               </p>
               <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
                 Vantage ZRH1
@@ -109,9 +109,9 @@ export default function ProjectsSection() {
               href="https://vantage-dc.com/data-center-locations/emea/zurich-i-switzerland/"
               target="_blank"
               rel="noreferrer"
-              className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+              className={infoLinkClass}
             >
-              vantage-dc.com
+              Info
             </Link>
           </div>
         </article>
@@ -124,7 +124,7 @@ export default function ProjectsSection() {
           <div className="flex flex-col gap-5 md:order-1 md:pr-4">
             <div>
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
-                Zürich / BIM Koordination / PL Lüftung
+                BIM Koordinator / Projektleiter Lüftung
               </p>
               <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
                 The Brick 80
@@ -140,9 +140,9 @@ export default function ProjectsSection() {
               href="https://z2g.ch/projekte/umnutzung-buerogebaeude-nordring-zuerich/"
               target="_blank"
               rel="noreferrer"
-              className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+              className={infoLinkClass}
             >
-              z2g.ch
+              Info
             </Link>
           </div>
         </article>
@@ -153,7 +153,7 @@ export default function ProjectsSection() {
           <div className="flex flex-col gap-5 md:pl-4">
             <div>
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
-                Marburg / BIM Koordination / Fachbauleitung
+                BIM Koordinator / Fachbauleitung
               </p>
               <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
                 GSK Pharmacenter
@@ -169,9 +169,9 @@ export default function ProjectsSection() {
               href="https://de.gsk.com/de-de/unternehmen/at-a-glance/marburg/"
               target="_blank"
               rel="noreferrer"
-              className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+              className={infoLinkClass}
             >
-              gsk.com
+              Info
             </Link>
           </div>
         </article>
@@ -187,7 +187,7 @@ export default function ProjectsSection() {
           <div className="flex flex-col gap-5 md:order-1 md:pr-4">
             <div>
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
-                Zug / BIM Koordination / Fachbauleitung Lüftung
+                BIM Koordinator / Fachbauleitung Lüftung
               </p>
               <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
                 Theilerhaus Zug
@@ -203,9 +203,9 @@ export default function ProjectsSection() {
               href="https://www.eggenspieler.ch/projekt/theilerhaus-zug/"
               target="_blank"
               rel="noreferrer"
-              className="w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+              className={infoLinkClass}
             >
-              eggenspieler.ch
+              Info
             </Link>
           </div>
         </article>

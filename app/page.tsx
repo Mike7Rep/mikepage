@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 
 import Footer from "./Footer"
@@ -88,26 +89,21 @@ const quoteGroups = [
 
 function QuoteDivider({ quotes }: { quotes: readonly QuoteItem[] }) {
   return (
-    <section className="px-5 py-12 sm:px-8 md:py-18">
+    <section className="px-5 py-10 sm:px-8 md:py-16">
       <div className="mx-auto max-w-7xl border-y border-white/10 py-10">
-        <div className="grid gap-6 md:grid-cols-[0.22fr_0.78fr] md:items-start">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/38">
-            Haltung
-          </p>
-          <div className="grid gap-6">
-            {quotes.map(({ quote, author }) => (
-              <blockquote key={quote} className="max-w-4xl">
-                <p className="text-2xl font-black uppercase leading-[1.04] tracking-[0] text-white sm:text-4xl">
-                  {quote}
-                </p>
-                {author ? (
-                  <cite className="mt-4 block text-xs font-semibold not-italic uppercase tracking-[0.22em] text-cyan-100/45">
-                    {author}
-                  </cite>
-                ) : null}
-              </blockquote>
-            ))}
-          </div>
+        <div className="grid gap-7">
+          {quotes.map(({ quote, author }) => (
+            <blockquote key={quote} className="max-w-4xl">
+              <p className="text-2xl font-semibold leading-tight tracking-[0] text-white sm:text-3xl">
+                &quot;{quote}&quot;
+              </p>
+              {author ? (
+                <cite className="mt-4 block text-xs font-semibold not-italic uppercase tracking-[0.18em] text-white/45">
+                  {author}
+                </cite>
+              ) : null}
+            </blockquote>
+          ))}
         </div>
       </div>
     </section>
@@ -121,19 +117,26 @@ export default function Page() {
 
       <section id="vision" className="relative isolate overflow-hidden px-5 py-20 sm:px-8 md:py-28">
         <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-cyan-200/30 to-transparent" />
-        <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[0.88fr_1.12fr] md:items-end">
-          <div className="flex min-h-[36vh] flex-col justify-end gap-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/55">
-              Vision
-            </p>
+        <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[0.52fr_0.48fr] md:items-center md:gap-14">
+          <div className="flex flex-col gap-6">
             <h2 className="max-w-4xl text-4xl font-black uppercase leading-[0.98] tracking-[0] text-white sm:text-5xl">
-              Mein Ziel: digitale Planungsphasen mindestens 30% effizienter machen.
+              Die besten Lösungen entstehen zwischen KI und Mensch.
             </h2>
+            <p className="max-w-xl text-base leading-7 text-white/64 md:text-lg md:leading-8">
+              Ich entwickle digitale Werkzeuge, die KI und Menschen sinnvoll verbinden. KI
+              übernimmt Routinearbeit und erstellt erste Entwürfe. Der Mensch bringt Kreativität,
+              Fachwissen und den Feinschliff ein. So entstehen bessere Lösungen, mehr Produktivität
+              und mehr Freude an der Arbeit.
+            </p>
           </div>
-          <p className="max-w-xl justify-self-end text-base leading-7 text-white/64 md:text-lg md:leading-8">
-            Dafür eliminiere ich Reibung, ordne Daten, optimiere Modellprozesse und entwickle Tools,
-            die sich für Planer wie gute Produkte anfühlen.
-          </p>
+          <Image
+            src="/image/ki-mensch-software.png"
+            alt="Menschliche Hand mit Hammer und KI-Hand als Symbol für Zusammenarbeit."
+            width={1536}
+            height={1024}
+            sizes="(min-width: 768px) 42vw, 100vw"
+            className="vision-image-reveal aspect-[3/2] w-full rounded-md object-cover"
+          />
         </div>
       </section>
 
@@ -143,16 +146,13 @@ export default function Page() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/55">
-                Dienstleistungen
-              </p>
               <h2 className="max-w-3xl text-4xl font-black uppercase leading-none tracking-[0] sm:text-5xl">
                 Was ich für digitale Bauprozesse anbiete.
               </h2>
             </div>
             <Link
               href={`mailto:${contact.email}`}
-              className="w-fit rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-black transition-all hover:bg-cyan-100"
+              className="w-fit rounded-full bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-black shadow-2xl shadow-black/30 transition-all hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               Kontaktieren
             </Link>
@@ -187,9 +187,6 @@ export default function Page() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 grid gap-6 md:grid-cols-[0.58fr_0.42fr] md:items-end">
             <div>
-              <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/55">
-                Produkte
-              </p>
               <h2 className="max-w-3xl text-4xl font-black uppercase leading-none tracking-[0] sm:text-5xl">
                 Produkte, die aus echten Bauproblemen entstehen.
               </h2>
@@ -219,7 +216,7 @@ export default function Page() {
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-8 w-fit rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50"
+                  className="mt-8 w-fit rounded-full bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-black shadow-2xl shadow-black/30 transition-all hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
                   {action}
                 </Link>

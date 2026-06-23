@@ -126,6 +126,10 @@
     @apply bg-background text-foreground;
   }
 
+  h1 {
+    @apply text-3xl sm:text-6xl font-black uppercase leading-none tracking-[0] text-white drop-shadow-2xl ;
+  }
+
   h2 {
     font-size: 2rem;
   }
@@ -154,9 +158,43 @@
   will-change: transform;
 }
 
+.vision-image-reveal {
+  box-shadow: 0 24px 90px rgb(0 0 0 / 0.42);
+}
+
+@supports (animation-timeline: view()) {
+  @keyframes vision-image-reveal {
+    from {
+      filter: blur(18px) brightness(0.62);
+      opacity: 0.58;
+      transform: scale(1.04);
+    }
+    to {
+      filter: blur(0) brightness(1);
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .vision-image-reveal {
+    animation: vision-image-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 18%;
+    will-change: filter, opacity, transform;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skill-drift {
     animation: none;
+    will-change: auto;
+  }
+
+  .vision-image-reveal {
+    animation: none;
+    filter: none;
+    opacity: 1;
+    transform: none;
     will-change: auto;
   }
 }
