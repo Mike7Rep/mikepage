@@ -19,7 +19,7 @@ import { Briefcase, CalendarDays, FileText, FolderKanban, GraduationCap, Mail, M
 const navLinks = [
   { href: "/bildung", label: "Bildung", icon: GraduationCap },
   { href: "/berufe", label: "Beruf", icon: Briefcase },
-  { href: "/#produkte", label: "Produkte", icon: PackageOpen },
+  { href: "/#angebot", label: "Angebot", icon: PackageOpen },
   { href: "/projekte", label: "Projekte", icon: FolderKanban },
   { href: "/cv", label: "CV", icon: FileText },
 ]

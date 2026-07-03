@@ -16,3 +16,4 @@ export const VantageZrhCanvas = dynamic(() => import("./vantageZrhCanvas"), { ss
 export const Brick80Canvas = dynamic(() => import("./brick80Canvas"), { ssr: false, loading: Placeholder })
 export const GskMarburgCanvas = dynamic(() => import("./gskMarburgCanvas"), { ssr: false, loading: Placeholder })
 export const TheilerhausCanvas = dynamic(() => import("./theilerhausCanvas"), { ssr: false, loading: Placeholder })
+export const WohnparkBuchholzCanvas = dynamic(() => import("./wohnparkBuchholzCanvas"), { ssr: false, loading: Placeholder })

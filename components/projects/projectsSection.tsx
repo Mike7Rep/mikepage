@@ -7,6 +7,7 @@ import {
   Brick80Canvas,
   GskMarburgCanvas,
   TheilerhausCanvas,
+  WohnparkBuchholzCanvas,
 } from "./projectCanvases"
 
 const infoLinkClass =
@@ -201,6 +202,38 @@ export default function ProjectsSection() {
             </p>
             <Link
               href="https://www.eggenspieler.ch/projekt/theilerhaus-zug/"
+              target="_blank"
+              rel="noreferrer"
+              className={infoLinkClass}
+            >
+              Info
+            </Link>
+          </div>
+        </article>
+
+        <article
+          id="wohnpark-buchholzstrasse"
+          className="grid gap-8 border-b border-white/10 py-10 md:grid-cols-[0.58fr_0.42fr] md:items-center md:gap-12"
+        >
+          <WohnparkBuchholzCanvas />
+
+          <div className="flex flex-col gap-5 md:pl-4">
+            <div>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/45">
+                Revit Modellierung / BIM Koordination
+              </p>
+              <h3 className="text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
+                Wohnpark Buchholzstrasse
+              </h3>
+            </div>
+            <p className="max-w-xl text-base leading-7 text-white/60">
+              Wohnüberbauung mit acht zusammenhängenden Baukörpern auf einer
+              grosszügigen Grünfläche. Das Low-Poly-Modell reduziert den
+              Grundriss auf die erkennbare Gebäudelogik: verbundene Blöcke,
+              einfache Fensterbänder und grüne Zwischenräume.
+            </p>
+            <Link
+              href="https://wohnpark-buchholzstrasse.ch/"
               target="_blank"
               rel="noreferrer"
               className={infoLinkClass}

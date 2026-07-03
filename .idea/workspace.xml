@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="Optimierungen">
-      <change afterPath="$PROJECT_DIR$/public/image/ki-mensch-software.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/HeroSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/HeroSection.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/projects/projectsSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/projects/projectsSection.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-    </list>
+    <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="Optimierungen" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -239,7 +230,7 @@
       <workItem from="1781675640559" duration="2310000" />
       <workItem from="1781680191347" duration="279000" />
       <workItem from="1782115368254" duration="976000" />
-      <workItem from="1782214115274" duration="2018000" />
+      <workItem from="1782214115274" duration="2072000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />
@@ -353,7 +344,15 @@
       <option name="project" value="LOCAL" />
       <updated>1779999003495</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Optimierungen">
+      <option name="closed" value="true" />
+      <created>1782218765433</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1782218765433</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -159,19 +159,17 @@
 }
 
 .vision-image-reveal {
-  box-shadow: 0 24px 90px rgb(0 0 0 / 0.42);
+  transform-origin: center;
 }
 
 @supports (animation-timeline: view()) {
   @keyframes vision-image-reveal {
     from {
       filter: blur(18px) brightness(0.62);
-      opacity: 0.58;
       transform: scale(1.04);
     }
     to {
       filter: blur(0) brightness(1);
-      opacity: 1;
       transform: scale(1);
     }
   }
@@ -180,7 +178,7 @@
     animation: vision-image-reveal linear both;
     animation-timeline: view();
     animation-range: entry 0% cover 18%;
-    will-change: filter, opacity, transform;
+    will-change: filter, transform;
   }
 }
 
@@ -193,7 +191,6 @@
   .vision-image-reveal {
     animation: none;
     filter: none;
-    opacity: 1;
     transform: none;
     will-change: auto;
   }
