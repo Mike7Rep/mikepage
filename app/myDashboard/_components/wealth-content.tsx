@@ -1,7 +1,7 @@
 "use client"
 
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react"
-import { Landmark, Plus, Save, Trash2, TrendingUp, Vault, WalletCards } from "lucide-react"
+import { Plus, Save, Trash2 } from "lucide-react"
 import {
   Area,
   AreaChart,
@@ -10,15 +10,13 @@ import {
   YAxis,
 } from "recharts"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -30,7 +28,6 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import type { InvestmentAssetView, WealthSnapshotView } from "@/lib/wealth-data"
 import { createOrUpdateWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
 import { valueTone } from "../format"
-import { KpiCard } from "./kpi-card"
 
 const wealthTooltipLabels: Record<string, string> = {
   total: "Gesamt",
@@ -60,7 +57,6 @@ export function WealthContent({
   snapshots: WealthSnapshotView[]
 }) {
   const latest = snapshots.at(-1)
-  const previous = snapshots.length > 1 ? snapshots.at(-2) : null
   const currency = latest?.currency ?? "CHF"
   const [assetRows, setAssetRows] = useState<InvestmentAssetDraft[]>(() => investmentAssets.map(investmentAssetToDraft))
   const investmentAssetsTotal = useMemo(
@@ -75,32 +71,18 @@ export function WealthContent({
   return (
     <div className="flex flex-col gap-5">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard description={latest ? `KW ${latest.weekKey}` : "Noch kein Eintrag"} icon={Vault} title="Gesamt" value={formatWealthCurrency(latest?.total ?? null, currency)} />
-        <KpiCard description={previous ? "Gegen vorherigen Eintrag" : "Keine Vorwoche"} icon={TrendingUp} title="Diff" tone={latest?.diff ?? 0} value={formatWealthCurrency(latest?.diff ?? null, currency)} />
-        <KpiCard description="Save + Anlagen" icon={Landmark} title="Stabil" value={formatWealthCurrency(latest ? latest.savings + latest.investments : null, currency)} />
-        <KpiCard description="Konto + Card + BAR_res" icon={WalletCards} title="Liquid" value={formatWealthCurrency(latest ? latest.bankAccount + latest.card + latest.cashReserve : null, currency)} />
+        <WealthKpiCard title="Gesamt (CHF)" value={formatWealthCurrency(latest?.total ?? null, currency)} />
+        <WealthKpiCard title="Diff" tone={latest?.diff ?? 0} value={formatWealthCurrency(latest?.diff ?? null, currency)} />
+        <WealthKpiCard title="Save" value={formatWealthCurrency(latest ? latest.savings + latest.investments : null, currency)} />
+        <WealthKpiCard title="Liquid" value={formatWealthCurrency(latest ? latest.bankAccount + latest.card + latest.cashReserve : null, currency)} />
       </section>
 
-      <div className="flex justify-end">
-        <WealthEntryDialog defaultInvestments={investmentAssetsTotal} defaultWeekKey={currentWeekKey()} />
-      </div>
-
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.7fr)]">
+      <section>
         <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
           <CardHeader>
-            <div>
-              <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-                Verlauf
-              </CardTitle>
-              <CardDescription className="mt-1 text-sm text-white/55">
-                Wöchentliche Vermögensentwicklung in CHF.
-              </CardDescription>
-            </div>
-            <CardAction>
-              <Badge className="bg-primary text-primary-foreground">
-                {snapshots.length} KWs
-              </Badge>
-            </CardAction>
+            <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+              Verlauf
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ChartContainer config={wealthChartConfig} className="h-[360px] w-full">
@@ -139,7 +121,9 @@ export function WealthContent({
             </ChartContainer>
           </CardContent>
         </Card>
+      </section>
 
+      <section>
         <InvestmentAssetsTable
           currency={currency}
           rows={assetRows}
@@ -148,8 +132,37 @@ export function WealthContent({
         />
       </section>
 
-      <WealthTable currency={currency} snapshots={snapshots} />
+      <WealthTable
+        currency={currency}
+        defaultInvestments={investmentAssetsTotal}
+        snapshots={snapshots}
+      />
     </div>
+  )
+}
+
+function WealthKpiCard({
+  title,
+  tone = 0,
+  value,
+}: {
+  title: string
+  tone?: number
+  value: string
+}) {
+  return (
+    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+      <CardHeader>
+        <CardTitle className="text-xs font-medium tracking-[0.14em] text-white/48 uppercase">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-3xl leading-none font-extrabold tracking-[0] ${tone === 0 ? "text-white" : valueTone(tone)}`}>
+          {value}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -178,9 +191,6 @@ function WealthEntryDialog({
       <DialogContent className="max-w-2xl border-white/10 bg-black text-white">
         <DialogHeader>
           <DialogTitle>Eintrag hinzufügen</DialogTitle>
-          <DialogDescription>
-            KW und CHF-Werte eintragen.
-          </DialogDescription>
         </DialogHeader>
         <form action={submitEntry} className="flex flex-col gap-4">
           <FieldGroup className="grid gap-3 sm:grid-cols-2">
@@ -259,115 +269,109 @@ function InvestmentAssetsTable({
   return (
     <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
       <CardHeader>
-        <div>
-          <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-            Anlagen
-          </CardTitle>
-          <CardDescription className="mt-1 text-sm text-white/55">
-            Aufstellung der Anlagen für den Wert im nächsten Eintrag.
-          </CardDescription>
-        </div>
+        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+          Anlagen
+        </CardTitle>
       </CardHeader>
       <CardContent className="px-0 pb-4">
         <form action={saveAssets} className="flex flex-col gap-4">
-          <Table className="min-w-[860px] text-white">
-            <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="px-4 text-white/45">Name</TableHead>
-                <TableHead className="text-right text-white/45">Wert</TableHead>
-                <TableHead className="text-right text-white/45">Gesamt Anlage</TableHead>
-                <TableHead className="text-right text-white/45">Anteile</TableHead>
-                <TableHead className="text-white/45">Datum</TableHead>
-                <TableHead className="w-10 pr-4 text-right text-white/45" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row, index) => (
-                <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.035]">
-                  <TableCell className="min-w-[230px] px-4">
-                    <Input
-                      aria-label={`Name Anlage ${index + 1}`}
-                      name="investmentAssetName"
-                      onChange={(event) => updateRow(row.key, "name", event.target.value)}
-                      required
-                      value={row.name}
-                    />
-                  </TableCell>
-                  <TableCell className="min-w-[120px]">
-                    <Input
-                      aria-label={`Wert Anlage ${index + 1}`}
-                      className="text-right tabular-nums"
-                      inputMode="numeric"
-                      name="investmentAssetValue"
-                      onChange={(event) => updateRow(row.key, "value", wholeNumberInputValue(event.target.value))}
-                      pattern="\\d*"
-                      required
-                      type="text"
-                      value={row.value}
-                    />
-                  </TableCell>
-                  <TableCell className="min-w-[140px]">
-                    <Input
-                      aria-label={`Gesamt Anlage ${index + 1}`}
-                      className="text-right tabular-nums"
-                      inputMode="numeric"
-                      name="investmentAssetTotalValue"
-                      onChange={(event) => updateRow(row.key, "totalValue", wholeNumberInputValue(event.target.value))}
-                      pattern="\\d*"
-                      type="text"
-                      value={row.totalValue}
-                    />
-                  </TableCell>
-                  <TableCell className="min-w-[100px]">
-                    <Input
-                      aria-label={`Anteile Anlage ${index + 1}`}
-                      className="text-right tabular-nums"
-                      inputMode="numeric"
-                      name="investmentAssetSharePercent"
-                      onChange={(event) => updateRow(row.key, "sharePercent", wholeNumberInputValue(event.target.value, 100))}
-                      pattern="\\d*"
-                      type="text"
-                      value={row.sharePercent}
-                    />
-                  </TableCell>
-                  <TableCell className="min-w-[140px]">
-                    <Input
-                      aria-label={`Datum Anlage ${index + 1}`}
-                      name="investmentAssetValuationDate"
-                      onChange={(event) => updateRow(row.key, "valuationDate", event.target.value)}
-                      type="date"
-                      value={row.valuationDate}
-                    />
-                  </TableCell>
-                  <TableCell className="pr-4 text-right">
-                    <Button
-                      aria-label={`${row.name || "Anlage"} entfernen`}
-                      onClick={() => removeRow(row.key)}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Trash2 />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[860px] text-white">
+              <TableHeader>
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="px-4 text-white/45">Name</TableHead>
+                  <TableHead className="text-right text-white/45">Wert</TableHead>
+                  <TableHead className="text-right text-white/45">Gesamt Anlage</TableHead>
+                  <TableHead className="text-right text-white/45">Anteile</TableHead>
+                  <TableHead className="text-white/45">Datum</TableHead>
+                  <TableHead className="w-10 pr-4 text-right text-white/45" />
                 </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter className="border-white/10 bg-white/[0.045]">
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableCell className="px-4 font-semibold text-white">Summe</TableCell>
-                <TableCell className="text-right font-semibold text-white tabular-nums">
-                  {formatWealthCurrency(total, currency)}
-                </TableCell>
-                <TableCell colSpan={4} />
-              </TableRow>
-            </TableFooter>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row, index) => (
+                  <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.035]">
+                    <TableCell className="min-w-[230px] px-4">
+                      <Input
+                        aria-label={`Name Anlage ${index + 1}`}
+                        name="investmentAssetName"
+                        onChange={(event) => updateRow(row.key, "name", event.target.value)}
+                        required
+                        value={row.name}
+                      />
+                    </TableCell>
+                    <TableCell className="min-w-[120px]">
+                      <Input
+                        aria-label={`Wert Anlage ${index + 1}`}
+                        className="text-right tabular-nums"
+                        inputMode="numeric"
+                        name="investmentAssetValue"
+                        onChange={(event) => updateRow(row.key, "value", wholeNumberInputValue(event.target.value))}
+                        pattern="\\d*"
+                        required
+                        type="text"
+                        value={row.value}
+                      />
+                    </TableCell>
+                    <TableCell className="min-w-[140px]">
+                      <Input
+                        aria-label={`Gesamt Anlage ${index + 1}`}
+                        className="text-right tabular-nums"
+                        inputMode="numeric"
+                        name="investmentAssetTotalValue"
+                        onChange={(event) => updateRow(row.key, "totalValue", wholeNumberInputValue(event.target.value))}
+                        pattern="\\d*"
+                        type="text"
+                        value={row.totalValue}
+                      />
+                    </TableCell>
+                    <TableCell className="min-w-[100px]">
+                      <Input
+                        aria-label={`Anteile Anlage ${index + 1}`}
+                        className="text-right tabular-nums"
+                        inputMode="numeric"
+                        name="investmentAssetSharePercent"
+                        onChange={(event) => updateRow(row.key, "sharePercent", wholeNumberInputValue(event.target.value, 100))}
+                        pattern="\\d*"
+                        type="text"
+                        value={row.sharePercent}
+                      />
+                    </TableCell>
+                    <TableCell className="min-w-[140px]">
+                      <Input
+                        aria-label={`Datum Anlage ${index + 1}`}
+                        name="investmentAssetValuationDate"
+                        onChange={(event) => updateRow(row.key, "valuationDate", event.target.value)}
+                        type="date"
+                        value={row.valuationDate}
+                      />
+                    </TableCell>
+                    <TableCell className="pr-4 text-right">
+                      <Button
+                        aria-label={`${row.name || "Anlage"} entfernen`}
+                        onClick={() => removeRow(row.key)}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Trash2 />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter className="border-white/10 bg-white/[0.045]">
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableCell className="px-4 font-semibold text-white">Summe</TableCell>
+                  <TableCell className="text-right font-semibold text-white tabular-nums">
+                    {formatWealthCurrency(total, currency)}
+                  </TableCell>
+                  <TableCell colSpan={4} />
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4">
-            <p className="text-xs text-white/55">
-              Diese Summe wird im neuen Eintrag für Anlagen vorbelegt.
-            </p>
+          <div className="flex flex-wrap items-center justify-end gap-2 px-4">
             <div className="flex items-center gap-2">
               <Button onClick={addRow} type="button" variant="outline">
                 <Plus data-icon="inline-start" />
@@ -417,48 +421,55 @@ function MoneyField({
   )
 }
 
-function WealthTable({ snapshots }: { currency: string; snapshots: WealthSnapshotView[] }) {
+function WealthTable({
+  defaultInvestments,
+  snapshots,
+}: {
+  currency: string
+  defaultInvestments: number
+  snapshots: WealthSnapshotView[]
+}) {
   return (
     <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
       <CardHeader>
-        <div>
-          <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-            Historie
-          </CardTitle>
-          <CardDescription className="mt-1 text-sm text-white/55">
-            Eine Zeile pro KW, neueste Einträge oben.
-          </CardDescription>
-        </div>
+        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+          Historie
+        </CardTitle>
+        <CardAction>
+          <WealthEntryDialog defaultInvestments={defaultInvestments} defaultWeekKey={currentWeekKey()} />
+        </CardAction>
       </CardHeader>
       <CardContent className="px-0 pb-2">
-        <Table className="min-w-[960px] text-white">
-          <TableHeader>
-            <TableRow className="border-white/10 hover:bg-transparent">
-              {["KW", "Gesamt", "Diff", "Save", "BAR", "Anlagen", "Mintos", "Bondora", "Alpaca", "Konto", "Card"].map((label) => (
-                <TableHead key={label} className={label === "KW" ? "px-4 text-white/45" : "text-right text-white/45"}>
-                  {label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[...snapshots].reverse().map((snapshot) => (
-              <TableRow key={snapshot.id} className="border-white/10 hover:bg-white/[0.045]">
-                <TableCell className="px-4 font-medium text-white">{snapshot.weekKey}</TableCell>
-                <TableCell className="text-right font-medium text-white">{formatWealthNumber(snapshot.total)}</TableCell>
-                <TableCell className={`text-right font-medium ${valueTone(snapshot.diff ?? 0)}`}>{formatWealthNumber(snapshot.diff)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.savings)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.cashReserve)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.investments)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.mintos)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.bondora)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.alpaca)}</TableCell>
-                <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.bankAccount)}</TableCell>
-                <TableCell className="pr-4 text-right text-white/70">{formatWealthNumber(snapshot.card)}</TableCell>
+        <div className="overflow-x-auto">
+          <Table className="min-w-[960px] text-white">
+            <TableHeader>
+              <TableRow className="border-white/10 hover:bg-transparent">
+                {["KW", "Gesamt", "Diff", "Save", "BAR", "Anlagen", "Mintos", "Bondora", "Alpaca", "Konto", "Card"].map((label) => (
+                  <TableHead key={label} className={label === "KW" ? "px-4 text-white/45" : "text-right text-white/45"}>
+                    {label}
+                  </TableHead>
+                ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {[...snapshots].reverse().map((snapshot) => (
+                <TableRow key={snapshot.id} className="border-white/10 hover:bg-white/[0.045]">
+                  <TableCell className="px-4 font-medium text-white">{snapshot.weekKey}</TableCell>
+                  <TableCell className="text-right font-medium text-white">{formatWealthNumber(snapshot.total)}</TableCell>
+                  <TableCell className={`text-right font-medium ${valueTone(snapshot.diff ?? 0)}`}>{formatWealthNumber(snapshot.diff)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.savings)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.cashReserve)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.investments)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.mintos)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.bondora)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.alpaca)}</TableCell>
+                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.bankAccount)}</TableCell>
+                  <TableCell className="pr-4 text-right text-white/70">{formatWealthNumber(snapshot.card)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )

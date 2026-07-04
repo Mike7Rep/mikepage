@@ -13,7 +13,7 @@ export function DashboardFrame({
   actions?: ReactNode
   activeSection?: DashboardSection
   children: ReactNode
-  subtitle: string
+  subtitle?: string
 }) {
   return (
     <main className="min-h-screen overflow-x-hidden bg-black px-6 py-10 text-white md:px-12">
@@ -27,7 +27,7 @@ export function DashboardFrame({
               <h1 className="text-4xl leading-none font-extrabold tracking-[0] uppercase sm:text-5xl md:text-7xl">
                 myDashboard
               </h1>
-              <p className="mt-3 text-sm leading-6 text-white/55">{subtitle}</p>
+              {subtitle ? <p className="mt-3 text-sm leading-6 text-white/55">{subtitle}</p> : null}
               <DashboardNavigation activeSection={activeSection} />
             </div>
           </div>

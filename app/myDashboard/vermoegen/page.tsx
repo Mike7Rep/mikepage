@@ -33,21 +33,9 @@ async function VermoegenContent() {
     return <LoginPanel loginFailed={false} />
   }
 
+  let data: Awaited<ReturnType<typeof getVermoegenData>>
   try {
-    const [snapshots, investmentAssets] = await Promise.all([
-      getWealthSnapshots(),
-      getInvestmentAssets(),
-    ])
-
-    return (
-      <DashboardFrame
-        actions={<DashboardActions refreshHref="/myDashboard/vermoegen" />}
-        activeSection="vermoegen"
-        subtitle={wealthSubtitle(snapshots.at(-1)?.weekKey)}
-      >
-        <WealthContent investmentAssets={investmentAssets} snapshots={snapshots} />
-      </DashboardFrame>
-    )
+    data = await getVermoegenData()
   } catch (error) {
     return (
       <DashboardError
@@ -58,8 +46,22 @@ async function VermoegenContent() {
       />
     )
   }
+
+  return (
+    <DashboardFrame
+      actions={<DashboardActions refreshHref="/myDashboard/vermoegen" />}
+      activeSection="vermoegen"
+    >
+      <WealthContent investmentAssets={data.investmentAssets} snapshots={data.snapshots} />
+    </DashboardFrame>
+  )
 }
 
-function wealthSubtitle(latestWeekKey?: string) {
-  return latestWeekKey ? `Letzter Eintrag: KW ${latestWeekKey}` : "Noch keine Vermögensdaten"
+async function getVermoegenData() {
+  const [snapshots, investmentAssets] = await Promise.all([
+    getWealthSnapshots(),
+    getInvestmentAssets(),
+  ])
+
+  return { investmentAssets, snapshots }
 }
