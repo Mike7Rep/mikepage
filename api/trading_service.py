@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-from .ai import analyze_with_ai
+from .ai import analyze_with_ai, evolve_strategy
 from .alpaca import AlpacaClient
 from .config import get_settings
 from .market_data import build_asset_context
 from .orders import build_buy_order, submit_order
 from .policy import decide_buy
 from .schemas import AssetAnalysis, AssetReviewResult, OneShotJobResult, OrderDecision, OrderResult, WeeklyJobResult
-from .storage import create_run, existing_run, finish_run, save_review
+from .storage import create_run, existing_run, finish_run, latest_strategy_version, review_history, save_review, save_strategy_version
 
 
 @dataclass(frozen=True)
@@ -56,18 +56,20 @@ async def evaluate_weekly(execute: bool = True, force: bool = False) -> WeeklyJo
     reviews: list[AssetReviewResult] = []
     spent = 0.0
     status = "completed"
+    strategy_version: Optional[int] = None
     try:
         for symbol in symbols:
             review = await analyze_asset(symbol, execute, run_id, spent)
             reviews.append(review)
             if review.decision.should_buy:
                 spent += review.decision.notional
+        strategy_version = await _evolve_run_strategy(run_id, reviews)
     except Exception:
         status = "failed"
         raise
     finally:
         finish_run(run_id, status)
-    return WeeklyJobResult(runId=run_id, status=status, symbols=symbols, reviews=reviews)
+    return WeeklyJobResult(runId=run_id, status=status, symbols=symbols, reviews=reviews, strategyVersion=strategy_version)
 
 
 async def evaluate_once(
@@ -121,6 +123,8 @@ async def _prepare_asset(
 ) -> PreparedReview:
     symbol = symbol.upper()
     context = await build_asset_context(symbol, client)
+    context["strategy"] = latest_strategy_version()
+    context["previous_reviews"] = review_history(symbol, limit=3)
     analysis = await analyze_with_ai(context)
     decision = decide_buy(analysis, context, run_spent=run_spent, max_notional=max_notional)
     return PreparedReview(symbol=symbol, analysis=analysis, decision=decision)
@@ -130,6 +134,68 @@ async def _symbols(client: AlpacaClient) -> list[str]:
     positions = await client.get_positions()
     held = {item["symbol"].upper() for item in positions if item.get("symbol")}
     return sorted(held | set(get_settings().watchlist))
+
+
+async def _evolve_run_strategy(run_id: int, reviews: list[AssetReviewResult]) -> Optional[int]:
+    if not reviews:
+        return None
+
+    symbols = [review.symbol for review in reviews]
+    history = {symbol: review_history(symbol, limit=3) for symbol in symbols}
+    update = await evolve_strategy(
+        {
+            "current_strategy": latest_strategy_version(),
+            "symbols": symbols,
+            "latest_reviews": [_review_summary(review) for review in reviews],
+            "performance_history": history,
+            "deviation_rules": {
+                "buy_good": "+2%",
+                "buy_bad": "-3%",
+                "hold_attention": "+/-5%",
+                "avoid_strategy_bad": "+5%",
+            },
+            "deviations": _deviations(history),
+        }
+    )
+    saved = save_strategy_version(run_id, update.strategy, update.rationale)
+    return int(saved["version"])
+
+
+def _review_summary(review: AssetReviewResult) -> dict:
+    return {
+        "symbol": review.symbol,
+        "action": review.analysis.action,
+        "rating": review.analysis.rating,
+        "confidence": review.analysis.confidence,
+        "decision": review.decision.model_dump(mode="json"),
+        "rationale": review.analysis.rationale,
+    }
+
+
+def _deviations(history: dict[str, list[dict]]) -> list[dict]:
+    deviations: list[dict] = []
+    for symbol, reviews in history.items():
+        for review in reviews:
+            change = review.get("priceChangePercent")
+            if change is None:
+                continue
+            action = review.get("action")
+            note = _deviation_note(action, float(change))
+            if note:
+                deviations.append({"symbol": symbol, "action": action, "priceChangePercent": change, "note": note})
+    return deviations
+
+
+def _deviation_note(action: object, change: float) -> Optional[str]:
+    if action == "buy" and change >= 0.02:
+        return "buy entwickelte sich positiv"
+    if action == "buy" and change <= -0.03:
+        return "buy entwickelte sich negativ"
+    if action == "hold" and abs(change) >= 0.05:
+        return "hold hatte auffaellige Bewegung"
+    if action == "avoid" and change >= 0.05:
+        return "avoid stieg stark und sollte geprueft werden"
+    return None
 
 
 def _best_candidate(reviews: list[PreparedReview]) -> Optional[PreparedReview]:

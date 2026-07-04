@@ -60,6 +60,42 @@ class Position(BaseModel):
     unrealizedPlPercent: float
 
 
+class StrategyData(BaseModel):
+    summary: str
+    principles: list[str] = Field(default_factory=list)
+    buySignals: list[str] = Field(default_factory=list)
+    holdSignals: list[str] = Field(default_factory=list)
+    avoidSignals: list[str] = Field(default_factory=list)
+    riskRules: list[str] = Field(default_factory=list)
+    learningNotes: list[str] = Field(default_factory=list)
+
+
+class StrategySnapshot(BaseModel):
+    version: int
+    summary: str
+    updatedAt: datetime
+    rationale: str
+
+
+class StrategyUpdate(BaseModel):
+    strategy: StrategyData
+    rationale: str = Field(min_length=1, max_length=1200)
+
+
+class ReviewPerformanceReview(BaseModel):
+    createdAt: str
+    action: Literal["buy", "hold", "avoid"]
+    rating: Optional[int] = None
+    priceChangePercent: Optional[float] = None
+    priceFrom: Optional[float] = None
+    priceTo: Optional[float] = None
+
+
+class ReviewPerformanceRow(BaseModel):
+    symbol: str
+    reviews: list[ReviewPerformanceReview]
+
+
 class PortfolioData(BaseModel):
     currency: str
     currentValue: float
@@ -72,6 +108,8 @@ class PortfolioData(BaseModel):
     totalPlPercent: Optional[float]
     positions: list[Position]
     latestReviews: list[dict] = Field(default_factory=list)
+    strategy: Optional[StrategySnapshot] = None
+    reviewPerformance: list[ReviewPerformanceRow] = Field(default_factory=list)
     updatedAt: datetime
     warnings: list[str] = Field(default_factory=list)
 
@@ -89,6 +127,7 @@ class WeeklyJobResult(BaseModel):
     status: str
     symbols: list[str]
     reviews: list[AssetReviewResult]
+    strategyVersion: Optional[int] = None
     skippedReason: Optional[str] = None
 
 

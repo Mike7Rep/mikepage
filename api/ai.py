@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from openai import OpenAI
 
 from .config import Settings, get_settings
-from .schemas import AssetAnalysis
+from .schemas import AssetAnalysis, StrategyData, StrategyUpdate
 
 
 SYSTEM_PROMPT = """
@@ -28,6 +28,17 @@ async def analyze_with_ai(context: dict, settings: Optional[Settings] = None) ->
     return await asyncio.to_thread(_parse_response, client, settings, context)
 
 
+async def evolve_strategy(context: dict, settings: Optional[Settings] = None) -> StrategyUpdate:
+    settings = settings or get_settings()
+    if settings.ai_mock:
+        return StrategyUpdate(strategy=_default_strategy(), rationale="Mock-Strategie fuer lokale Tests.")
+    if not settings.openai_api_key:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "OPENAI_API_KEY missing")
+
+    client = OpenAI(api_key=settings.openai_api_key)
+    return await asyncio.to_thread(_parse_strategy_response, client, settings, context)
+
+
 def _parse_response(client: OpenAI, settings: Settings, context: dict) -> AssetAnalysis:
     response = client.responses.parse(
         model=settings.openai_model,
@@ -43,11 +54,52 @@ def _parse_response(client: OpenAI, settings: Settings, context: dict) -> AssetA
     return analysis
 
 
+def _parse_strategy_response(client: OpenAI, settings: Settings, context: dict) -> StrategyUpdate:
+    response = client.responses.parse(
+        model=settings.openai_model,
+        input=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": _strategy_prompt(context)},
+        ],
+        text_format=StrategyUpdate,
+    )
+    update = response.output_parsed
+    if not update:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "OpenAI returned no parsed strategy")
+    return update
+
+
 def _prompt(context: dict) -> str:
     return (
         "Bewerte dieses Asset als JSON nach Schema. Ziel: Buy-and-Hold, "
-        "schnelles Kapitalwachstum, aber keine Spekulation ohne Daten.\n"
+        "schnelles Kapitalwachstum, aber keine Spekulation ohne Daten. "
+        "Nutze die aktuelle Strategie und bisherige Bewertungen, falls geliefert.\n"
         f"Kontext: {context}"
+    )
+
+
+def _strategy_prompt(context: dict) -> str:
+    return (
+        "Aktualisiere die Buy-and-Hold Bewertungsstrategie als JSON nach Schema. "
+        "Aendere die Strategie nur, wenn die letzten Bewertungen und Kursveraenderungen "
+        "eine klare Verbesserung begruenden. Sonst schreibe die bestehende Strategie "
+        "konservativ fort und erklaere warum.\n"
+        f"Kontext: {context}"
+    )
+
+
+def _default_strategy() -> StrategyData:
+    return StrategyData(
+        summary="Konservativ bewerten, Qualitaet und Risiko hoeher gewichten als kurzfristige Kursbewegungen.",
+        principles=[
+            "Nur kaufen, wenn Datenlage, Qualitaet und Risiko zusammenpassen.",
+            "Bestehende Positionen nicht wegen kurzfristiger Volatilitaet ueberreagieren.",
+        ],
+        buySignals=["Hohe Bewertung, positive Marktstruktur und tragbares Risiko."],
+        holdSignals=["Solide Position ohne klaren neuen Zukaufvorteil."],
+        avoidSignals=["Schwache Datenlage, hohes Risiko oder negative Marktstruktur."],
+        riskRules=["Grosse Abweichungen zwischen Empfehlung und Kursentwicklung pruefen."],
+        learningNotes=["Neue Runs vergleichen Empfehlung und nachfolgende Kursveraenderung."],
     )
 
 

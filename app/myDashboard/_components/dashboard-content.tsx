@@ -5,6 +5,7 @@ import { formatCurrency, formatDateTime, formatPercent } from "../format"
 import { AiReviews } from "./ai-reviews"
 import { DashboardInteractive } from "./dashboard-interactive"
 import { KpiCard } from "./kpi-card"
+import { StrategyDevelopment } from "./strategy-development"
 
 export function DashboardContent({ data }: { data: AlpacaDashboardData }) {
   const DepositIcon = data.totalDeposited === null ? AlertCircle : BadgeDollarSign
@@ -22,6 +23,7 @@ export function DashboardContent({ data }: { data: AlpacaDashboardData }) {
 
       {data.warnings.length > 0 ? <Warnings warnings={data.warnings} /> : null}
       <AiReviews reviews={data.latestReviews} />
+      <StrategyDevelopment data={data} />
       <DashboardInteractive data={data} />
     </div>
   )

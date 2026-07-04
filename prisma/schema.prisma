@@ -71,9 +71,24 @@ model Run {
   createdAt  DateTime  @default(now()) @map("created_at")
   finishedAt DateTime? @map("finished_at")
   reviews    Review[]
+  strategies StrategyVersion[]
 
   @@unique([runDate, kind])
   @@map("runs")
+}
+
+model StrategyVersion {
+  id           Int      @id @default(autoincrement())
+  version      Int      @unique
+  runId        Int?     @map("run_id")
+  run          Run?     @relation(fields: [runId], references: [id])
+  strategyJson Json     @map("strategy_json")
+  rationale    String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([runId])
+  @@index([createdAt])
+  @@map("strategy_versions")
 }
 
 model Review {

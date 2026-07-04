@@ -18,7 +18,7 @@ def start_scheduler() -> Optional[AsyncIOScheduler]:
     scheduler.add_job(
         evaluate_weekly,
         CronTrigger(
-            day_of_week="wed",
+            day_of_week="sun",
             hour=settings.schedule_hour,
             minute=settings.schedule_minute,
             timezone=settings.schedule_timezone,

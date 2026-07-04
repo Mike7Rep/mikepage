@@ -46,6 +46,23 @@ export type AlpacaDashboardData = {
   totalPlPercent: number | null
   positions: DashboardPosition[]
   latestReviews: LatestReview[]
+  strategy: {
+    version: number
+    summary: string
+    updatedAt: string
+    rationale: string
+  } | null
+  reviewPerformance: Array<{
+    symbol: string
+    reviews: Array<{
+      createdAt: string
+      action: "buy" | "hold" | "avoid"
+      rating?: number | null
+      priceChangePercent: number | null
+      priceFrom: number | null
+      priceTo: number | null
+    }>
+  }>
   updatedAt: string
   warnings: string[]
 }

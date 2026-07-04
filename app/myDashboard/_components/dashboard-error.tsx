@@ -7,14 +7,17 @@ import { DashboardFrame } from "./dashboard-frame"
 
 export function DashboardError({ message }: { message: string }) {
   return (
-    <DashboardFrame actions={<LogoutButton />} subtitle="Python API oder Alpaca-Daten konnten nicht geladen werden.">
+    <DashboardFrame actions={<LogoutButton />} subtitle="Login erfolgreich, Python API nicht erreichbar.">
       <Card className="border-destructive/30 bg-destructive/10 text-white ring-destructive/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-white">
             <AlertCircle className="size-4 text-destructive" aria-hidden="true" />
-            Verbindung prüfen
+            Depot-Daten konnten nicht geladen werden
           </CardTitle>
-          <CardDescription className="text-white/65">{message}</CardDescription>
+          <CardDescription className="text-white/65">
+            Die Anmeldung hat funktioniert. Bitte pruefe die Python API, `PYTHON_API_URL`,
+            `PYTHON_API_TOKEN` und die Alpaca-Verbindung. Detail: {message}
+          </CardDescription>
         </CardHeader>
       </Card>
     </DashboardFrame>

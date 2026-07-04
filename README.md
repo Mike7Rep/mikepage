@@ -6,15 +6,31 @@ Next.js homepage with the private `myDashboard` area for Depot and Vermögen.
 
 ```bash
 pnpm install
-docker compose up db api
 pnpm dev
 ```
 
-The web app expects the Python API at `PYTHON_API_URL`. For local Docker Compose this can be:
+Set the web app URL in `.env.local`:
 
 ```bash
-PYTHON_API_URL=http://localhost:8000
-DATABASE_URL=postgresql://mikepage:mikepage@localhost:5432/mikepage
+PYTHON_API_URL=http://127.0.0.1:8000
+PYTHON_API_TOKEN=<shared secret>
+```
+
+Start the Python API in a second terminal. The API needs the same `DATABASE_URL`
+and `PYTHON_API_TOKEN`, plus Alpaca/OpenAI variables when AI reviews should run:
+
+```bash
+cd /Users/mikerepolusk/Coding/mikepage
+DATABASE_URL=postgresql://mikepage:mikepage@localhost:5432/mikepage \
+PYTHON_API_TOKEN=<shared secret> \
+hypercorn api.main:app --bind 0.0.0.0:8000
+```
+
+Health checks:
+
+```bash
+curl http://localhost:3102/health
+curl http://127.0.0.1:8000/health
 ```
 
 ## Database

@@ -4,8 +4,9 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .alpaca import AlpacaClient
+from .config import get_settings
 from .schemas import PortfolioData, Position
-from .storage import latest_reviews
+from .storage import latest_reviews, latest_review_symbols, latest_strategy_version, review_performance
 
 
 async def get_portfolio(client: Optional[AlpacaClient] = None) -> PortfolioData:
@@ -22,6 +23,12 @@ async def get_portfolio(client: Optional[AlpacaClient] = None) -> PortfolioData:
     current = _num(account.get("portfolio_value") or account.get("equity"), market)
     basis = deposited if deposited and deposited > 0 else None
     total_pl = current - basis if basis else unrealized
+    review_symbols = sorted(
+        {item.asset for item in positions}
+        | set(get_settings().watchlist)
+        | set(latest_review_symbols())
+    )
+    strategy = latest_strategy_version()
     return PortfolioData(
         currency=(account.get("currency") or "USD").upper(),
         currentValue=current,
@@ -34,6 +41,8 @@ async def get_portfolio(client: Optional[AlpacaClient] = None) -> PortfolioData:
         totalPlPercent=total_pl / basis if basis else None,
         positions=positions,
         latestReviews=latest_reviews(),
+        strategy=_strategy_snapshot(strategy),
+        reviewPerformance=review_performance(review_symbols),
         updatedAt=datetime.now(timezone.utc),
         warnings=warnings,
     )
@@ -73,6 +82,17 @@ def _position(raw: dict, name: str) -> Position:
         unrealizedPl=_num(raw.get("unrealized_pl")),
         unrealizedPlPercent=_num(raw.get("unrealized_plpc")),
     )
+
+
+def _strategy_snapshot(row: Optional[dict]) -> Optional[dict]:
+    if not row:
+        return None
+    return {
+        "version": row["version"],
+        "summary": row["summary"],
+        "updatedAt": row["createdAt"],
+        "rationale": row["rationale"],
+    }
 
 
 def _num(value: object, fallback: float = 0) -> float:

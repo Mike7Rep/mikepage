@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from .alpaca import AlpacaClient
 from .indicators import summarize_bars
+from .storage import upsert_asset_bars
 
 
 async def build_asset_context(symbol: str, client: AlpacaClient) -> dict:
@@ -33,4 +34,6 @@ async def _load_bars(symbol: str, asset: dict, client: AlpacaClient) -> list[dic
         return []
     start = (datetime.now(timezone.utc) - timedelta(days=370)).date().isoformat()
     data = await client.get_stock_bars([symbol], start)
-    return data.get("bars", {}).get(symbol, [])
+    bars = data.get("bars", {}).get(symbol, [])
+    upsert_asset_bars(symbol, bars)
+    return bars
