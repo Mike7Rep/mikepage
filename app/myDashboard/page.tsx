@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { connection } from "next/server"
 import { Suspense } from "react"
 
 import { hasDashboardSession } from "@/lib/dashboard-auth"
@@ -22,6 +23,8 @@ export default function MyDashboardPage({ searchParams }: { searchParams?: Searc
 }
 
 async function MyDashboardGate({ searchParams }: { searchParams?: SearchParams }) {
+  await connection()
+
   const params = searchParams ? await searchParams : {}
   const authenticated = await hasDashboardSession()
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { connection } from "next/server"
 import { Suspense } from "react"
 
 import { hasDashboardSession } from "@/lib/dashboard-auth"
@@ -24,6 +25,8 @@ export default function DepotPage() {
 }
 
 async function DepotContent() {
+  await connection()
+
   const authenticated = await hasDashboardSession()
 
   if (!authenticated) {
