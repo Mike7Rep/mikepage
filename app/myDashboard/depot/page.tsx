@@ -46,8 +46,8 @@ async function DepotContent() {
     return (
       <DashboardError
         detail={errorMessage || "Unbekannter Fehler"}
-        help="Die Anmeldung hat funktioniert. Bitte pruefe die Python API, PYTHON_API_URL, PYTHON_API_TOKEN und die Alpaca-Verbindung."
-        subtitle="Login erfolgreich, Python API nicht erreichbar."
+        help="Die Anmeldung hat funktioniert. Bitte pruefe ALPACA_ENDPOINT, ALPACA_DATA_ENDPOINT, ALPACA_KEY, ALPACA_SECRET und die Alpaca-Verbindung."
+        subtitle="Login erfolgreich, Alpaca-Daten nicht erreichbar."
         title="Depot-Daten konnten nicht geladen werden"
       />
     )
