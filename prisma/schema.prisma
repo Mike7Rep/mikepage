@@ -45,6 +45,19 @@ model InvestmentAsset {
   @@map("investment_assets")
 }
 
+model HealthEntry {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @unique @db.Date
+  bloodPressure1 Int      @map("blood_pressure_1")
+  bloodPressure2 Int      @map("blood_pressure_2")
+  waistCm        Decimal  @map("waist_cm") @db.Decimal(5, 1)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([date])
+  @@map("health_entries")
+}
+
 model AssetPriceBar {
   id        Int      @id @default(autoincrement())
   symbol    String

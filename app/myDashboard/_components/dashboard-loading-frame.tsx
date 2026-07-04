@@ -5,7 +5,7 @@ export function DashboardLoadingFrame({
   activeSection,
   subtitle = "Dashboard wird geladen.",
 }: {
-  activeSection?: "depot" | "vermoegen"
+  activeSection?: "depot" | "health" | "vermoegen"
   subtitle?: string
 }) {
   return (

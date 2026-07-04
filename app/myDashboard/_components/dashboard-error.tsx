@@ -5,23 +5,41 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { logoutDashboardAction } from "../actions"
 import { DashboardFrame } from "./dashboard-frame"
 
-export function DashboardError({ message }: { message: string }) {
+export function DashboardError({
+  detail,
+  help,
+  subtitle = "Login erfolgreich, Datenquelle nicht erreichbar.",
+  title,
+}: {
+  detail?: string
+  help: string
+  subtitle?: string
+  title: string
+}) {
   return (
-    <DashboardFrame actions={<LogoutButton />} subtitle="Login erfolgreich, Python API nicht erreichbar.">
+    <DashboardFrame actions={<LogoutButton />} subtitle={subtitle}>
       <Card className="border-destructive/30 bg-destructive/10 text-white ring-destructive/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-white">
             <AlertCircle className="size-4 text-destructive" aria-hidden="true" />
-            Depot-Daten konnten nicht geladen werden
+            {title}
           </CardTitle>
           <CardDescription className="text-white/65">
-            Die Anmeldung hat funktioniert. Bitte pruefe die Python API, `PYTHON_API_URL`,
-            `PYTHON_API_TOKEN` und die Alpaca-Verbindung. Detail: {message}
+            {help}
+            {detail ? (
+              <span className="mt-2 block break-words text-white/45">
+                Detail: {compactDetail(detail)}
+              </span>
+            ) : null}
           </CardDescription>
         </CardHeader>
       </Card>
     </DashboardFrame>
   )
+}
+
+function compactDetail(detail: string) {
+  return detail.replace(/\s+/g, " ").trim().slice(0, 260)
 }
 
 function LogoutButton() {

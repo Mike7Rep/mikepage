@@ -11,6 +11,11 @@ import {
 } from "@/lib/dashboard-auth"
 import { getAssetChart } from "@/lib/python-api"
 import {
+  deleteHealthEntry,
+  parseHealthEntryForm,
+  upsertHealthEntry,
+} from "@/lib/health-data"
+import {
   parseInvestmentAssetsForm,
   parseWealthSnapshotForm,
   replaceInvestmentAssets,
@@ -72,4 +77,29 @@ export async function updateInvestmentAssetsAction(formData: FormData) {
   await replaceInvestmentAssets(parseInvestmentAssetsForm(formData))
   updateTag("dashboard:investment-assets")
   revalidatePath("/myDashboard/vermoegen")
+}
+
+export async function createOrUpdateHealthEntryAction(formData: FormData) {
+  if (!(await hasDashboardSession())) {
+    throw new Error("Nicht angemeldet.")
+  }
+
+  await upsertHealthEntry(parseHealthEntryForm(formData))
+  updateTag("dashboard:health")
+  revalidatePath("/myDashboard/health")
+}
+
+export async function deleteHealthEntryAction(formData: FormData) {
+  if (!(await hasDashboardSession())) {
+    throw new Error("Nicht angemeldet.")
+  }
+
+  const id = Number(formData.get("id"))
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("Health-Eintrag konnte nicht gelöscht werden.")
+  }
+
+  await deleteHealthEntry(id)
+  updateTag("dashboard:health")
+  revalidatePath("/myDashboard/health")
 }

@@ -11,7 +11,7 @@ export function DashboardFrame({
   subtitle,
 }: {
   actions?: ReactNode
-  activeSection?: "depot" | "vermoegen"
+  activeSection?: DashboardSection
   children: ReactNode
   subtitle: string
 }) {
@@ -39,7 +39,9 @@ export function DashboardFrame({
   )
 }
 
-function DashboardNavigation({ activeSection }: { activeSection?: "depot" | "vermoegen" }) {
+type DashboardSection = "depot" | "health" | "vermoegen"
+
+function DashboardNavigation({ activeSection }: { activeSection?: DashboardSection }) {
   return (
     <nav aria-label="myDashboard Navigation" className="mt-5 flex w-fit rounded-md border border-white/10 bg-white/[0.035] p-1">
       <DashboardNavLink active={activeSection === "vermoegen"} href="/myDashboard/vermoegen">
@@ -47,6 +49,9 @@ function DashboardNavigation({ activeSection }: { activeSection?: "depot" | "ver
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
         Depot
+      </DashboardNavLink>
+      <DashboardNavLink active={activeSection === "health"} href="/myDashboard/health">
+        Health
       </DashboardNavLink>
     </nav>
   )
