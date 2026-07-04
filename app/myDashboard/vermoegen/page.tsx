@@ -48,7 +48,10 @@ async function VermoegenContent() {
   } catch (error) {
     return (
       <DashboardError
-        message={error instanceof Error ? error.message : "Vermögensdaten konnten nicht geladen werden."}
+        detail={error instanceof Error ? error.message : "Vermögensdaten konnten nicht geladen werden."}
+        help="Die Anmeldung hat funktioniert. Bitte pruefe DATABASE_URL und ob die lokale Postgres-Datenbank läuft."
+        subtitle="Login erfolgreich, Postgres nicht erreichbar."
+        title="Vermögensdaten konnten nicht geladen werden"
       />
     )
   }
