@@ -1,6 +1,6 @@
 "use client"
 
-import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react"
+import { type Dispatch, type ReactNode, type SetStateAction, useEffect, useId, useMemo, useState } from "react"
 import { Plus, Save, Trash2 } from "lucide-react"
 import {
   Area,
@@ -17,6 +17,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,7 +27,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { InvestmentAssetView, WealthSnapshotView } from "@/lib/wealth-data"
-import { createOrUpdateWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
+import { createOrUpdateWealthSnapshotAction, deleteWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
 import { valueTone } from "../format"
 
 const wealthTooltipLabels: Record<string, string> = {
@@ -169,52 +170,101 @@ function WealthKpiCard({
 function WealthEntryDialog({
   defaultInvestments,
   defaultWeekKey,
+  onOpenChange,
+  open: controlledOpen,
+  snapshot,
+  trigger,
 }: {
   defaultInvestments: number
   defaultWeekKey: string
+  onOpenChange?: (open: boolean) => void
+  open?: boolean
+  snapshot?: WealthSnapshotView | null
+  trigger?: ReactNode
 }) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const formId = useId()
+  const deleteFormId = useId()
+  const descriptionId = useId()
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
+  const isEditing = Boolean(snapshot)
+  const fieldDefaults = snapshot ? {
+    alpaca: snapshot.alpaca,
+    bankAccount: snapshot.bankAccount,
+    bondora: snapshot.bondora,
+    card: snapshot.card,
+    cashReserve: snapshot.cashReserve,
+    investments: snapshot.investments,
+    mintos: snapshot.mintos,
+    savings: snapshot.savings,
+    weekKey: snapshot.weekKey,
+  } : {
+    alpaca: 0,
+    bankAccount: 0,
+    bondora: 0,
+    card: 0,
+    cashReserve: 0,
+    investments: defaultInvestments,
+    mintos: 0,
+    savings: 0,
+    weekKey: defaultWeekKey,
+  }
 
   async function submitEntry(formData: FormData) {
     await createOrUpdateWealthSnapshotAction(formData)
     setOpen(false)
   }
 
+  async function deleteEntry(formData: FormData) {
+    await deleteWealthSnapshotAction(formData)
+    setOpen(false)
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
-          Eintrag hinzufügen
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl border-white/10 bg-black text-white">
+      {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
+      <DialogContent aria-describedby={descriptionId} className="max-w-2xl border-white/10 bg-black text-white">
         <DialogHeader>
-          <DialogTitle>Eintrag hinzufügen</DialogTitle>
+          <DialogTitle>{isEditing ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}</DialogTitle>
+          <DialogDescription id={descriptionId} className="sr-only">
+            Vermögenseintrag bearbeiten.
+          </DialogDescription>
         </DialogHeader>
-        <form action={submitEntry} className="flex flex-col gap-4">
+        <form id={formId} key={fieldDefaults.weekKey} action={submitEntry} className="flex flex-col gap-4">
           <FieldGroup className="grid gap-3 sm:grid-cols-2">
-            <MoneyField defaultValue={defaultWeekKey} label="KW" name="weekKey" kind="week" />
-            <MoneyField label="save" name="savings" />
-            <MoneyField label="BAR_res" name="cashReserve" />
-            <MoneyField defaultValue={formatMoneyInput(defaultInvestments)} label="Anlagen" name="investments" />
-            <MoneyField label="mintos" name="mintos" />
-            <MoneyField label="bondora" name="bondora" />
-            <MoneyField label="Alpaca" name="alpaca" />
-            <MoneyField label="konto" name="bankAccount" />
-            <MoneyField label="card" name="card" />
+            <MoneyField defaultValue={fieldDefaults.weekKey} label="KW" name="weekKey" kind="week" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.savings)} label="save" name="savings" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.cashReserve)} label="BAR_res" name="cashReserve" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.investments)} label="Anlagen" name="investments" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.mintos)} label="mintos" name="mintos" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.bondora)} label="bondora" name="bondora" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.alpaca)} label="Alpaca" name="alpaca" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.bankAccount)} label="konto" name="bankAccount" />
+            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.card)} label="card" name="card" />
           </FieldGroup>
-          <DialogFooter>
+        </form>
+        <DialogFooter className="gap-2 sm:justify-between">
+          {snapshot ? (
+            <form id={deleteFormId} action={deleteEntry}>
+              <input name="id" type="hidden" value={snapshot.id} />
+              <Button type="submit" variant="destructive">
+                <Trash2 data-icon="inline-start" />
+                Löschen
+              </Button>
+            </form>
+          ) : <span />}
+          <div className="flex flex-wrap justify-end gap-2">
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Abbrechen
               </Button>
             </DialogClose>
-            <Button type="submit">
+            <Button form={formId} type="submit">
               Speichern
             </Button>
-          </DialogFooter>
-        </form>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
@@ -231,6 +281,8 @@ function InvestmentAssetsTable({
   setRows: Dispatch<SetStateAction<InvestmentAssetDraft[]>>
   total: number
 }) {
+  const formId = useId()
+
   async function saveAssets(formData: FormData) {
     await updateInvestmentAssetsAction(formData)
   }
@@ -272,9 +324,21 @@ function InvestmentAssetsTable({
         <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
           Anlagen
         </CardTitle>
+        <CardAction>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button onClick={addRow} type="button" variant="outline">
+              <Plus data-icon="inline-start" />
+              Zeile
+            </Button>
+            <Button form={formId} type="submit">
+              <Save data-icon="inline-start" />
+              Speichern
+            </Button>
+          </div>
+        </CardAction>
       </CardHeader>
       <CardContent className="px-0 pb-4">
-        <form action={saveAssets} className="flex flex-col gap-4">
+        <form id={formId} action={saveAssets} className="flex flex-col gap-4">
           <div className="overflow-x-auto">
             <Table className="min-w-[860px] text-white">
               <TableHeader>
@@ -371,18 +435,6 @@ function InvestmentAssetsTable({
             </Table>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 px-4">
-            <div className="flex items-center gap-2">
-              <Button onClick={addRow} type="button" variant="outline">
-                <Plus data-icon="inline-start" />
-                Zeile
-              </Button>
-              <Button type="submit">
-                <Save data-icon="inline-start" />
-                Speichern
-              </Button>
-            </div>
-          </div>
         </form>
       </CardContent>
     </Card>
@@ -429,6 +481,8 @@ function WealthTable({
   defaultInvestments: number
   snapshots: WealthSnapshotView[]
 }) {
+  const [editingSnapshot, setEditingSnapshot] = useState<WealthSnapshotView | null>(null)
+
   return (
     <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
       <CardHeader>
@@ -436,7 +490,16 @@ function WealthTable({
           Historie
         </CardTitle>
         <CardAction>
-          <WealthEntryDialog defaultInvestments={defaultInvestments} defaultWeekKey={currentWeekKey()} />
+          <WealthEntryDialog
+            defaultInvestments={defaultInvestments}
+            defaultWeekKey={currentWeekKey()}
+            trigger={(
+              <Button>
+                <Plus data-icon="inline-start" />
+                Eintrag hinzufügen
+              </Button>
+            )}
+          />
         </CardAction>
       </CardHeader>
       <CardContent className="px-0 pb-2">
@@ -453,7 +516,19 @@ function WealthTable({
             </TableHeader>
             <TableBody>
               {[...snapshots].reverse().map((snapshot) => (
-                <TableRow key={snapshot.id} className="border-white/10 hover:bg-white/[0.045]">
+                <TableRow
+                  key={snapshot.id}
+                  className="cursor-pointer border-white/10 hover:bg-white/[0.045]"
+                  onClick={() => setEditingSnapshot(snapshot)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      setEditingSnapshot(snapshot)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
                   <TableCell className="px-4 font-medium text-white">{snapshot.weekKey}</TableCell>
                   <TableCell className="text-right font-medium text-white">{formatWealthNumber(snapshot.total)}</TableCell>
                   <TableCell className={`text-right font-medium ${valueTone(snapshot.diff ?? 0)}`}>{formatWealthNumber(snapshot.diff)}</TableCell>
@@ -471,6 +546,15 @@ function WealthTable({
           </Table>
         </div>
       </CardContent>
+      <WealthEntryDialog
+        defaultInvestments={defaultInvestments}
+        defaultWeekKey={currentWeekKey()}
+        onOpenChange={(open) => {
+          if (!open) setEditingSnapshot(null)
+        }}
+        open={Boolean(editingSnapshot)}
+        snapshot={editingSnapshot}
+      />
     </Card>
   )
 }

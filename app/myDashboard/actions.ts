@@ -16,6 +16,7 @@ import {
   upsertHealthEntry,
 } from "@/lib/health-data"
 import {
+  deleteWealthSnapshot,
   parseInvestmentAssetsForm,
   parseWealthSnapshotForm,
   replaceInvestmentAssets,
@@ -65,6 +66,21 @@ export async function createOrUpdateWealthSnapshotAction(formData: FormData) {
   }
 
   await upsertWealthSnapshot(parseWealthSnapshotForm(formData))
+  updateTag("dashboard:wealth")
+  revalidatePath("/myDashboard/vermoegen")
+}
+
+export async function deleteWealthSnapshotAction(formData: FormData) {
+  if (!(await hasDashboardSession())) {
+    throw new Error("Nicht angemeldet.")
+  }
+
+  const id = Number(formData.get("id"))
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("Vermögenseintrag konnte nicht gelöscht werden.")
+  }
+
+  await deleteWealthSnapshot(id)
   updateTag("dashboard:wealth")
   revalidatePath("/myDashboard/vermoegen")
 }

@@ -140,6 +140,12 @@ export async function upsertWealthSnapshot(input: WealthSnapshotInput) {
   })
 }
 
+export async function deleteWealthSnapshot(id: number) {
+  return prisma.wealthSnapshot.delete({
+    where: { id },
+  })
+}
+
 export async function replaceInvestmentAssets(inputs: InvestmentAssetInput[]) {
   return prisma.$transaction(async (tx) => {
     await tx.investmentAsset.deleteMany()
