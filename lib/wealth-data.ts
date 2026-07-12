@@ -182,31 +182,35 @@ export function parseWealthSnapshotForm(formData: FormData): WealthSnapshotInput
 
 export function parseInvestmentAssetsForm(formData: FormData): InvestmentAssetInput[] {
   const names = formData.getAll("investmentAssetName")
-  const values = formData.getAll("investmentAssetValue")
   const totalValues = formData.getAll("investmentAssetTotalValue")
   const sharePercents = formData.getAll("investmentAssetSharePercent")
   const valuationDates = formData.getAll("investmentAssetValuationDate")
 
   return names.flatMap((rawName, index) => {
     const name = String(rawName ?? "").trim()
-    const rawValue = String(values[index] ?? "").trim()
     const rawTotalValue = String(totalValues[index] ?? "").trim()
     const rawSharePercent = String(sharePercents[index] ?? "").trim()
     const rawValuationDate = String(valuationDates[index] ?? "").trim()
 
-    if (!name && !rawValue && !rawTotalValue && !rawSharePercent && !rawValuationDate) {
+    if (!name && !rawTotalValue && !rawSharePercent) {
       return []
     }
 
     if (!name) {
       throw new Error("Anlagen-Zeilen brauchen einen Namen.")
     }
+    if (!rawTotalValue || !rawSharePercent) {
+      throw new Error("Anlagen-Zeilen brauchen Gesamt Anlage und Anteile.")
+    }
+
+    const totalValue = parseOptionalMoneyString(rawTotalValue)
+    const sharePercent = parseOptionalPercentString(rawSharePercent)
 
     return [{
       name,
-      value: parseMoneyString(rawValue || "0"),
-      totalValue: parseOptionalMoneyString(rawTotalValue),
-      sharePercent: parseOptionalPercentString(rawSharePercent),
+      value: Math.round(((totalValue ?? 0) * (sharePercent ?? 0)) / 100),
+      totalValue,
+      sharePercent,
       valuationDate: parseOptionalDateString(rawValuationDate),
       sortOrder: index,
     }]

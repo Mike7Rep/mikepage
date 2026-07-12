@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { connection } from "next/server"
 import { Suspense } from "react"
 
-import { hasDashboardSession } from "@/lib/dashboard-auth"
+import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getInvestmentAssets, getWealthSnapshots } from "@/lib/wealth-data"
 import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
@@ -10,6 +10,7 @@ import { DashboardFrame } from "../_components/dashboard-frame"
 import { DashboardLoadingFrame } from "../_components/dashboard-loading-frame"
 import { LoginPanel } from "../_components/login-panel"
 import { WealthContent } from "../_components/wealth-content"
+import { formatDateTime } from "../format"
 
 export const metadata: Metadata = {
   title: "Vermögen | myDashboard",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function VermoegenPage() {
   return (
-    <Suspense fallback={<DashboardLoadingFrame activeSection="vermoegen" subtitle="Vermögen wird geladen." />}>
+    <Suspense fallback={<DashboardLoadingFrame activeSection="vermoegen" />}>
       <VermoegenContent />
     </Suspense>
   )
@@ -27,10 +28,15 @@ export default function VermoegenPage() {
 async function VermoegenContent() {
   await connection()
 
-  const authenticated = await hasDashboardSession()
+  const sessionStatus = await getDashboardSessionStatus()
 
-  if (!authenticated) {
-    return <LoginPanel loginFailed={false} />
+  if (sessionStatus !== "authenticated") {
+    return (
+      <LoginPanel
+        loginError={sessionStatus === "unavailable" ? "unavailable" : undefined}
+        nextPath="/myDashboard/vermoegen"
+      />
+    )
   }
 
   let data: Awaited<ReturnType<typeof getVermoegenData>>
@@ -49,12 +55,16 @@ async function VermoegenContent() {
 
   return (
     <DashboardFrame
-      actions={<DashboardActions refreshHref="/myDashboard/vermoegen" />}
+      actions={<DashboardActions status={wealthUpdatedLabel(data.snapshots.at(-1)?.updatedAt)} />}
       activeSection="vermoegen"
     >
       <WealthContent investmentAssets={data.investmentAssets} snapshots={data.snapshots} />
     </DashboardFrame>
   )
+}
+
+function wealthUpdatedLabel(updatedAt?: string) {
+  return updatedAt ? `Aktualisiert: ${formatDateTime(updatedAt)}` : "Noch keine Vermögensdaten"
 }
 
 async function getVermoegenData() {

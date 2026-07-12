@@ -2,13 +2,13 @@ import type { Metadata } from "next"
 import { connection } from "next/server"
 import { Suspense } from "react"
 
-import { hasDashboardSession } from "@/lib/dashboard-auth"
-import { getHealthEntries } from "@/lib/health-data"
+import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
+import { getHealthEntries, getHealthGoals } from "@/lib/health-data"
 import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
 import { DashboardLoadingFrame } from "../_components/dashboard-loading-frame"
-import { HealthContent } from "../_components/health-content"
+import { HealthContent, HealthEntryDialog } from "../_components/health-content"
 import { LoginPanel } from "../_components/login-panel"
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function HealthPage() {
   return (
-    <Suspense fallback={<DashboardLoadingFrame activeSection="health" subtitle="Health wird geladen." />}>
+    <Suspense fallback={<DashboardLoadingFrame activeSection="health" />}>
       <HealthDashboardContent />
     </Suspense>
   )
@@ -27,22 +27,34 @@ export default function HealthPage() {
 async function HealthDashboardContent() {
   await connection()
 
-  const authenticated = await hasDashboardSession()
+  const sessionStatus = await getDashboardSessionStatus()
 
-  if (!authenticated) {
-    return <LoginPanel loginFailed={false} />
+  if (sessionStatus !== "authenticated") {
+    return (
+      <LoginPanel
+        loginError={sessionStatus === "unavailable" ? "unavailable" : undefined}
+        nextPath="/myDashboard/health"
+      />
+    )
   }
 
   try {
-    const entries = await getHealthEntries()
+    const [entries, goals] = await Promise.all([
+      getHealthEntries(),
+      getHealthGoals(),
+    ])
 
     return (
       <DashboardFrame
-        actions={<DashboardActions refreshHref="/myDashboard/health" />}
+        actions={
+          <>
+            <HealthEntryDialog />
+            <DashboardActions status={healthStatus(entries.at(-1)?.date)} />
+          </>
+        }
         activeSection="health"
-        subtitle={healthSubtitle(entries.at(-1)?.date)}
       >
-        <HealthContent entries={entries} />
+        <HealthContent entries={entries} goals={goals} />
       </DashboardFrame>
     )
   } catch (error) {
@@ -57,6 +69,6 @@ async function HealthDashboardContent() {
   }
 }
 
-function healthSubtitle(latestDate?: string) {
+function healthStatus(latestDate?: string) {
   return latestDate ? `Letzter Eintrag: ${latestDate}` : "Noch keine Health-Daten"
 }

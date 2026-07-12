@@ -46,16 +46,33 @@ model InvestmentAsset {
 }
 
 model HealthEntry {
-  id             Int      @id @default(autoincrement())
-  date           DateTime @unique @db.Date
-  bloodPressure1 Int      @map("blood_pressure_1")
-  bloodPressure2 Int      @map("blood_pressure_2")
-  waistCm        Decimal  @map("waist_cm") @db.Decimal(5, 1)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement())
+  date           DateTime  @unique @db.Date
+  bloodPressure1 Int       @map("blood_pressure_1")
+  bloodPressure2 Int       @map("blood_pressure_2")
+  waistCm        Decimal   @map("waist_cm") @db.Decimal(5, 1)
+  bodyFatPercent Decimal?  @map("body_fat_percent") @db.Decimal(4, 1)
+  weightKg       Decimal?  @map("weight_kg") @db.Decimal(5, 1)
+  pulse          Int?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([date])
   @@map("health_entries")
+}
+
+model HealthGoal {
+  id             Int      @id @default(1)
+  bloodPressure1 Int?     @map("blood_pressure_1")
+  bloodPressure2 Int?     @map("blood_pressure_2")
+  waistCm        Decimal? @map("waist_cm") @db.Decimal(5, 1)
+  bodyFatPercent Decimal? @map("body_fat_percent") @db.Decimal(4, 1)
+  weightKg       Decimal? @map("weight_kg") @db.Decimal(5, 1)
+  pulse          Int?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("health_goals")
 }
 
 model AssetPriceBar {

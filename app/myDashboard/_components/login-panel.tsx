@@ -7,12 +7,20 @@ import { Input } from "@/components/ui/input"
 import { getDashboardAuthConfig } from "@/lib/dashboard-auth"
 import { loginDashboardAction } from "../actions"
 
-export function LoginPanel({ loginFailed }: { loginFailed: boolean }) {
+type LoginError = "failed" | "limited" | "unavailable"
+
+export function LoginPanel({
+  loginError,
+  nextPath = "/myDashboard/vermoegen",
+}: {
+  loginError?: LoginError
+  nextPath?: string
+}) {
   const config = getDashboardAuthConfig()
 
   return (
-    <main className="flex min-h-screen items-center justify-center overflow-x-hidden bg-black px-6 py-16 text-white">
-      <Card className="w-full max-w-md border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <main className="flex min-h-screen w-full min-w-0 items-center justify-center overflow-x-clip bg-black px-0 py-12 text-white sm:px-6 sm:py-16">
+      <Card className="w-full max-w-md rounded-none border-white/10 bg-white/[0.035] text-white ring-white/10 sm:rounded-lg">
         <CardHeader className="gap-5">
           <div className="flex size-12 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary">
             <LockKeyhole className="size-5" aria-hidden="true" />
@@ -25,16 +33,19 @@ export function LoginPanel({ loginFailed }: { loginFailed: boolean }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {config.configured ? <LoginForm loginFailed={loginFailed} /> : <MissingConfig missing={config.missing} />}
+          {config.configured
+            ? <LoginForm loginError={loginError} nextPath={nextPath} />
+            : <MissingConfig missing={config.missing} />}
         </CardContent>
       </Card>
     </main>
   )
 }
 
-function LoginForm({ loginFailed }: { loginFailed: boolean }) {
+function LoginForm({ loginError, nextPath }: { loginError?: LoginError; nextPath: string }) {
   return (
     <form action={loginDashboardAction} className="flex flex-col gap-5">
+      <input name="next" type="hidden" value={nextPath} />
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="dashboard-user" className="text-white/75">User</FieldLabel>
@@ -43,7 +54,9 @@ function LoginForm({ loginFailed }: { loginFailed: boolean }) {
         <Field>
           <FieldLabel htmlFor="dashboard-password" className="text-white/75">Passwort</FieldLabel>
           <Input id="dashboard-password" name="password" type="password" required autoComplete="current-password" className="border-white/10 bg-black/35 text-white" />
-          {loginFailed ? <FieldError>User oder Passwort stimmt nicht.</FieldError> : <FieldDescription className="text-white/45">Die Prüfung läuft serverseitig gegen ENV.</FieldDescription>}
+          {loginError
+            ? <FieldError>{loginErrorMessage(loginError)}</FieldError>
+            : <FieldDescription className="text-white/45">Die Session bleibt auf diesem Gerät 10 Tage aktiv.</FieldDescription>}
         </Field>
       </FieldGroup>
       <Button className="h-9 uppercase tracking-[0.08em]" type="submit">
@@ -52,6 +65,18 @@ function LoginForm({ loginFailed }: { loginFailed: boolean }) {
       </Button>
     </form>
   )
+}
+
+function loginErrorMessage(error: LoginError) {
+  if (error === "limited") {
+    return "Zu viele Versuche. Bitte in 15 Minuten erneut versuchen."
+  }
+
+  if (error === "unavailable") {
+    return "Der Login-Service ist momentan nicht erreichbar. Bitte versuche es später erneut."
+  }
+
+  return "User oder Passwort stimmt nicht."
 }
 
 function MissingConfig({ missing }: { missing: string[] }) {

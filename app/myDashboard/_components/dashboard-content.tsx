@@ -1,36 +1,36 @@
-import { AlertCircle, ArrowDownRight, ArrowUpRight, BadgeDollarSign, WalletCards } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 
 import type { AlpacaDashboardData } from "@/lib/python-api"
-import { formatCurrency, formatDateTime, formatPercent } from "../format"
-import { AiReviews } from "./ai-reviews"
+import { formatDateTime } from "../format"
 import { DashboardInteractive } from "./dashboard-interactive"
 import { KpiCard } from "./kpi-card"
-import { StrategyDevelopment } from "./strategy-development"
 
 export function DashboardContent({ data }: { data: AlpacaDashboardData }) {
-  const DepositIcon = data.totalDeposited === null ? AlertCircle : BadgeDollarSign
-  const TotalTrendIcon = trendIcon(data.totalPl)
-  const PercentTrendIcon = trendIcon(data.totalPlPercent ?? data.totalUnrealizedPlPercent ?? 0)
-
   return (
     <div className="flex flex-col gap-5">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard description="Portfolio Value" icon={WalletCards} title="Aktueller Wert" value={formatCurrency(data.currentValue, data.currency)} />
-        <KpiCard description="CSD - CSW" icon={DepositIcon} muted={data.totalDeposited === null} title="Total einbezahltes Geld" value={formatCurrency(data.totalDeposited, data.currency)} />
-        <KpiCard description={data.totalDeposited && data.totalDeposited > 0 ? "Gegen Einzahlungsbasis" : "Offene Positionen"} icon={TotalTrendIcon} title="W/L" tone={data.totalPl} value={formatCurrency(data.totalPl, data.currency)} />
-        <KpiCard description={data.totalPlPercent === null ? "Positionsbasis" : "Gegen Einzahlungsbasis"} icon={PercentTrendIcon} title="W/L (%)" tone={data.totalPlPercent ?? data.totalUnrealizedPlPercent ?? 0} value={formatPercent(data.totalPlPercent ?? data.totalUnrealizedPlPercent)} />
+        <KpiCard title={`Aktueller Wert (${data.currency})`} value={formatKpiNumber(data.currentValue, 0)} />
+        <KpiCard muted={data.totalDeposited === null} title={`Total einbezahlt (${data.currency})`} value={formatKpiNumber(data.totalDeposited, 0)} />
+        <KpiCard title={`W/L (${data.currency})`} tone={data.totalPl} value={formatKpiNumber(data.totalPl, 1)} />
+        <KpiCard title="W/L (%)" tone={data.totalPlPercent ?? data.totalUnrealizedPlPercent ?? 0} value={formatKpiNumber((data.totalPlPercent ?? data.totalUnrealizedPlPercent) === null ? null : (data.totalPlPercent ?? data.totalUnrealizedPlPercent)! * 100, 1)} />
       </section>
 
       {data.warnings.length > 0 ? <Warnings warnings={data.warnings} /> : null}
-      <AiReviews reviews={data.latestReviews} />
-      <StrategyDevelopment data={data} />
       <DashboardInteractive data={data} />
     </div>
   )
 }
 
-export function dashboardSubtitle(data: AlpacaDashboardData) {
+export function dashboardUpdatedLabel(data: AlpacaDashboardData) {
   return `Aktualisiert: ${formatDateTime(data.updatedAt)}`
+}
+
+function formatKpiNumber(value: number | null, fractionDigits: number) {
+  if (value === null || Number.isNaN(value)) return "–"
+  return new Intl.NumberFormat("de-CH", {
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
+  }).format(value).replace(/\u2019/g, "'")
 }
 
 function Warnings({ warnings }: { warnings: string[] }) {
@@ -42,8 +42,4 @@ function Warnings({ warnings }: { warnings: string[] }) {
       </div>
     </div>
   )
-}
-
-function trendIcon(value: number) {
-  return value < 0 ? ArrowDownRight : ArrowUpRight
 }

@@ -29,6 +29,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import type { InvestmentAssetView, WealthSnapshotView } from "@/lib/wealth-data"
 import { createOrUpdateWealthSnapshotAction, deleteWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
 import { valueTone } from "../format"
+import { DashboardDatePicker, todayInputValue } from "./dashboard-date-picker"
 
 const wealthTooltipLabels: Record<string, string> = {
   total: "Gesamt",
@@ -44,7 +45,6 @@ const wealthChartConfig = {
 type InvestmentAssetDraft = {
   key: string
   name: string
-  value: string
   totalValue: string
   sharePercent: string
   valuationDate: string
@@ -61,7 +61,7 @@ export function WealthContent({
   const currency = latest?.currency ?? "CHF"
   const [assetRows, setAssetRows] = useState<InvestmentAssetDraft[]>(() => investmentAssets.map(investmentAssetToDraft))
   const investmentAssetsTotal = useMemo(
-    () => assetRows.reduce((sum, row) => sum + draftNumber(row.value), 0),
+    () => assetRows.reduce((sum, row) => sum + draftNumber(calculatedInvestmentAssetValue(row)), 0),
     [assetRows]
   )
 
@@ -293,10 +293,9 @@ function InvestmentAssetsTable({
       {
         key: `new-${Date.now()}`,
         name: "",
-        value: "0",
         totalValue: "",
         sharePercent: "",
-        valuationDate: currentDateInputValue(),
+        valuationDate: todayInputValue(),
       },
     ])
   }
@@ -308,13 +307,7 @@ function InvestmentAssetsTable({
   function updateRow(key: string, field: keyof Omit<InvestmentAssetDraft, "key">, value: string) {
     setRows((current) => current.map((row) => {
       if (row.key !== key) return row
-
-      const next = { ...row, [field]: value }
-      if (field === "totalValue" || field === "sharePercent") {
-        next.value = valueFromTotalAndShare(next.totalValue, next.sharePercent) ?? next.value
-      }
-
-      return next
+      return { ...row, [field]: value }
     }))
   }
 
@@ -352,76 +345,72 @@ function InvestmentAssetsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row, index) => (
-                  <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.035]">
-                    <TableCell className="min-w-[230px] px-4">
-                      <Input
-                        aria-label={`Name Anlage ${index + 1}`}
-                        name="investmentAssetName"
-                        onChange={(event) => updateRow(row.key, "name", event.target.value)}
-                        required
-                        value={row.name}
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[120px]">
-                      <Input
-                        aria-label={`Wert Anlage ${index + 1}`}
-                        className="text-right tabular-nums"
-                        inputMode="numeric"
-                        name="investmentAssetValue"
-                        onChange={(event) => updateRow(row.key, "value", wholeNumberInputValue(event.target.value))}
-                        pattern="\\d*"
-                        required
-                        type="text"
-                        value={row.value}
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[140px]">
-                      <Input
-                        aria-label={`Gesamt Anlage ${index + 1}`}
-                        className="text-right tabular-nums"
-                        inputMode="numeric"
-                        name="investmentAssetTotalValue"
-                        onChange={(event) => updateRow(row.key, "totalValue", wholeNumberInputValue(event.target.value))}
-                        pattern="\\d*"
-                        type="text"
-                        value={row.totalValue}
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[100px]">
-                      <Input
-                        aria-label={`Anteile Anlage ${index + 1}`}
-                        className="text-right tabular-nums"
-                        inputMode="numeric"
-                        name="investmentAssetSharePercent"
-                        onChange={(event) => updateRow(row.key, "sharePercent", wholeNumberInputValue(event.target.value, 100))}
-                        pattern="\\d*"
-                        type="text"
-                        value={row.sharePercent}
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[140px]">
-                      <Input
-                        aria-label={`Datum Anlage ${index + 1}`}
-                        name="investmentAssetValuationDate"
-                        onChange={(event) => updateRow(row.key, "valuationDate", event.target.value)}
-                        type="date"
-                        value={row.valuationDate}
-                      />
-                    </TableCell>
-                    <TableCell className="pr-4 text-right">
-                      <Button
-                        aria-label={`${row.name || "Anlage"} entfernen`}
-                        onClick={() => removeRow(row.key)}
-                        size="icon"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {rows.map((row, index) => {
+                  const calculatedValue = calculatedInvestmentAssetValue(row)
+
+                  return (
+                    <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.035]">
+                      <TableCell className="min-w-[230px] px-4">
+                        <Input
+                          aria-label={`Name Anlage ${index + 1}`}
+                          name="investmentAssetName"
+                          onChange={(event) => updateRow(row.key, "name", event.target.value)}
+                          required
+                          value={row.name}
+                        />
+                      </TableCell>
+                      <TableCell className="min-w-[120px] text-right font-medium text-white tabular-nums">
+                        {formatWealthNumber(draftNumber(calculatedValue))}
+                      </TableCell>
+                      <TableCell className="min-w-[140px]">
+                        <Input
+                          aria-label={`Gesamt Anlage ${index + 1}`}
+                          className="text-right tabular-nums"
+                          inputMode="numeric"
+                          name="investmentAssetTotalValue"
+                          onChange={(event) => updateRow(row.key, "totalValue", wholeNumberInputValue(event.target.value))}
+                          pattern="\\d*"
+                          required
+                          type="text"
+                          value={row.totalValue}
+                        />
+                      </TableCell>
+                      <TableCell className="min-w-[100px]">
+                        <Input
+                          aria-label={`Anteile Anlage ${index + 1}`}
+                          className="text-right tabular-nums"
+                          inputMode="numeric"
+                          name="investmentAssetSharePercent"
+                          onChange={(event) => updateRow(row.key, "sharePercent", wholeNumberInputValue(event.target.value, 100))}
+                          pattern="\\d*"
+                          required
+                          type="text"
+                          value={row.sharePercent}
+                        />
+                      </TableCell>
+                      <TableCell className="min-w-[160px]">
+                        <DashboardDatePicker
+                          ariaLabel={`Datum Anlage ${index + 1}`}
+                          id={`investment-asset-date-${row.key}`}
+                          name="investmentAssetValuationDate"
+                          onChange={(nextValue) => updateRow(row.key, "valuationDate", nextValue)}
+                          value={row.valuationDate}
+                        />
+                      </TableCell>
+                      <TableCell className="pr-4 text-right">
+                        <Button
+                          aria-label={`${row.name || "Anlage"} entfernen`}
+                          onClick={() => removeRow(row.key)}
+                          size="icon"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
               <TableFooter className="border-white/10 bg-white/[0.045]">
                 <TableRow className="border-white/10 hover:bg-transparent">
@@ -570,12 +559,13 @@ function currentWeekKey() {
 }
 
 function investmentAssetToDraft(asset: InvestmentAssetView): InvestmentAssetDraft {
+  const hasCalculationBasis = asset.totalValue !== null && asset.sharePercent !== null
+
   return {
     key: String(asset.id),
     name: asset.name,
-    value: formatMoneyInput(asset.value),
-    totalValue: formatMoneyInput(asset.totalValue),
-    sharePercent: formatPlainInput(asset.sharePercent),
+    totalValue: formatMoneyInput(hasCalculationBasis ? asset.totalValue : asset.value),
+    sharePercent: formatPlainInput(hasCalculationBasis ? asset.sharePercent : 100),
     valuationDate: asset.valuationDate ?? "",
   }
 }
@@ -603,8 +593,8 @@ function valueFromTotalAndShare(totalValue: string, sharePercent: string) {
   return formatMoneyInput((total * share) / 100)
 }
 
-function currentDateInputValue() {
-  return new Date().toISOString().slice(0, 10)
+function calculatedInvestmentAssetValue(row: InvestmentAssetDraft) {
+  return valueFromTotalAndShare(row.totalValue, row.sharePercent) ?? "0"
 }
 
 function wealthTooltipLabel(key: string) {

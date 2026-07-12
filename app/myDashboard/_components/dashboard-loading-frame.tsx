@@ -3,13 +3,11 @@ import { DashboardFrame } from "./dashboard-frame"
 
 export function DashboardLoadingFrame({
   activeSection,
-  subtitle = "Dashboard wird geladen.",
 }: {
   activeSection?: "depot" | "health" | "vermoegen"
-  subtitle?: string
 }) {
   return (
-    <DashboardFrame activeSection={activeSection} subtitle={subtitle}>
+    <DashboardFrame activeSection={activeSection}>
       <div className="flex flex-col gap-5" aria-busy="true" aria-live="polite">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (

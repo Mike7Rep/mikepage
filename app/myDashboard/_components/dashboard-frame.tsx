@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -16,13 +15,10 @@ export function DashboardFrame({
   subtitle?: string
 }) {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-black px-6 py-10 text-white md:px-12">
-      <section className="mx-auto flex max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+    <main className="min-h-screen w-full min-w-0 overflow-x-clip bg-black px-0 py-8 text-white sm:px-6 sm:py-10 md:px-12">
+      <section className="mx-auto flex min-w-0 max-w-7xl flex-col gap-8">
+        <header className="flex min-w-0 flex-col gap-5 px-3 sm:px-0 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-4">
-            <div className="flex size-12 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary">
-              <ShieldCheck className="size-5" aria-hidden="true" />
-            </div>
             <div>
               <h1 className="text-4xl leading-none font-extrabold tracking-[0] uppercase sm:text-5xl md:text-7xl">
                 myDashboard
@@ -31,7 +27,7 @@ export function DashboardFrame({
               <DashboardNavigation activeSection={activeSection} />
             </div>
           </div>
-          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          {actions ? <div className="flex flex-wrap gap-2 md:pt-1">{actions}</div> : null}
         </header>
         {children}
       </section>
@@ -47,11 +43,11 @@ function DashboardNavigation({ activeSection }: { activeSection?: DashboardSecti
       <DashboardNavLink active={activeSection === "vermoegen"} href="/myDashboard/vermoegen">
         Vermögen
       </DashboardNavLink>
-      <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
-        Depot
-      </DashboardNavLink>
       <DashboardNavLink active={activeSection === "health"} href="/myDashboard/health">
         Health
+      </DashboardNavLink>
+      <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
+        Depot
       </DashboardNavLink>
     </nav>
   )
@@ -69,7 +65,7 @@ function DashboardNavLink({
   return (
     <Link
       className={cn(
-        "rounded-sm px-3 py-1.5 text-xs font-medium text-white/55 transition hover:text-white",
+        "w-20 rounded-sm px-2 py-1.5 text-center text-xs font-medium text-white/55 transition hover:text-white",
         active && "bg-primary text-primary-foreground hover:text-primary-foreground"
       )}
       href={href}

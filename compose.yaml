@@ -10,10 +10,11 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  api:
+  web:
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: Dockerfile
+    command: sh -c "pnpm install --frozen-lockfile && pnpm prisma migrate deploy && pnpm dev --hostname 0.0.0.0"
     depends_on:
       - db
     env_file:
@@ -22,27 +23,8 @@ services:
       - path: .env.local
         required: false
     environment:
-      DATABASE_URL: postgresql://mikepage:mikepage@db:5432/mikepage
-      AI_MOCK_RESPONSES: ${AI_MOCK_RESPONSES:-false}
-    ports:
-      - "8000:8000"
-
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: sh -c "pnpm install --frozen-lockfile && pnpm prisma migrate deploy && pnpm dev --hostname 0.0.0.0"
-    depends_on:
-      - api
-    env_file:
-      - path: .env
-        required: false
-      - path: .env.local
-        required: false
-    environment:
       CI: "true"
       DATABASE_URL: postgresql://mikepage:mikepage@db:5432/mikepage
-      PYTHON_API_URL: http://api:8000
     ports:
       - "3000:3000"
     volumes:

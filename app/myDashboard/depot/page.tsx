@@ -2,10 +2,10 @@ import type { Metadata } from "next"
 import { connection } from "next/server"
 import { Suspense } from "react"
 
-import { hasDashboardSession } from "@/lib/dashboard-auth"
+import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getDashboardPortfolio } from "@/lib/python-api"
 import { DashboardActions } from "../_components/dashboard-actions"
-import { DashboardContent, dashboardSubtitle } from "../_components/dashboard-content"
+import { DashboardContent, dashboardUpdatedLabel } from "../_components/dashboard-content"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
 import { DashboardLoadingFrame } from "../_components/dashboard-loading-frame"
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function DepotPage() {
   return (
-    <Suspense fallback={<DashboardLoadingFrame activeSection="depot" subtitle="Depot wird geladen." />}>
+    <Suspense fallback={<DashboardLoadingFrame activeSection="depot" />}>
       <DepotContent />
     </Suspense>
   )
@@ -27,10 +27,15 @@ export default function DepotPage() {
 async function DepotContent() {
   await connection()
 
-  const authenticated = await hasDashboardSession()
+  const sessionStatus = await getDashboardSessionStatus()
 
-  if (!authenticated) {
-    return <LoginPanel loginFailed={false} />
+  if (sessionStatus !== "authenticated") {
+    return (
+      <LoginPanel
+        loginError={sessionStatus === "unavailable" ? "unavailable" : undefined}
+        nextPath="/myDashboard/depot"
+      />
+    )
   }
 
   let data: Awaited<ReturnType<typeof getDashboardPortfolio>> | null = null
@@ -55,9 +60,8 @@ async function DepotContent() {
 
   return (
     <DashboardFrame
-      actions={<DashboardActions refreshHref="/myDashboard/depot" />}
+      actions={<DashboardActions status={dashboardUpdatedLabel(data)} />}
       activeSection="depot"
-      subtitle={dashboardSubtitle(data)}
     >
       <DashboardContent data={data} />
     </DashboardFrame>

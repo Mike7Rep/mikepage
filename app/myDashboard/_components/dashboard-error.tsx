@@ -45,7 +45,7 @@ function compactDetail(detail: string) {
 function LogoutButton() {
   return (
     <form action={logoutDashboardAction}>
-      <Button variant="ghost" className="text-white/70 hover:bg-white/10 hover:text-white" type="submit">
+      <Button type="submit">
         <LogOut data-icon="inline-start" />
         Logout
       </Button>
