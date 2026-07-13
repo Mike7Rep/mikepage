@@ -26,6 +26,7 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 import type { InvestmentAssetView, WealthSnapshotView } from "@/lib/wealth-data"
 import { createOrUpdateWealthSnapshotAction, deleteWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
 import { valueTone } from "../format"
@@ -64,6 +65,7 @@ export function WealthContent({
     () => assetRows.reduce((sum, row) => sum + draftNumber(calculatedInvestmentAssetValue(row)), 0),
     [assetRows]
   )
+  const monthlyDiff = useMemo(() => monthlyWealthSlope(snapshots), [snapshots])
 
   useEffect(() => {
     setAssetRows(investmentAssets.map(investmentAssetToDraft))
@@ -71,23 +73,24 @@ export function WealthContent({
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <WealthKpiCard title="Gesamt (CHF)" value={formatWealthCurrency(latest?.total ?? null, currency)} />
-        <WealthKpiCard title="Diff" tone={latest?.diff ?? 0} value={formatWealthCurrency(latest?.diff ?? null, currency)} />
-        <WealthKpiCard title="Save" value={formatWealthCurrency(latest ? latest.savings + latest.investments : null, currency)} />
-        <WealthKpiCard title="Liquid" value={formatWealthCurrency(latest ? latest.bankAccount + latest.card + latest.cashReserve : null, currency)} />
+      <section className="sm:max-w-sm">
+        <WealthKpiCard
+          title="DIFF (CHF/m)"
+          tone={monthlyDiff ?? 0}
+          value={monthlyDiff === null ? "–" : formatWealthNumber(monthlyDiff)}
+        />
       </section>
 
       <section>
-        <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+        <Card className="bg-white/[0.035] text-white">
           <CardHeader>
             <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
               Verlauf
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={wealthChartConfig} className="h-[360px] w-full">
-              <AreaChart accessibilityLayer data={snapshots} margin={{ top: 12, right: 18, bottom: 4, left: 0 }}>
+            <ChartContainer config={wealthChartConfig} className="h-[280px] w-full sm:h-[360px]">
+              <AreaChart accessibilityLayer data={snapshots} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                 <defs>
                   <linearGradient id="wealth-total-fill" x1="0" x2="0" y1="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-total)" stopOpacity={0.45} />
@@ -96,7 +99,7 @@ export function WealthContent({
                 </defs>
                 <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
                 <XAxis axisLine={false} dataKey="weekKey" minTickGap={32} tickLine={false} tickMargin={10} />
-                <YAxis axisLine={false} tickFormatter={(value) => compactCurrency(Number(value), currency)} tickLine={false} width={58} />
+                <YAxis axisLine={false} tickFormatter={(value) => compactNumber(Number(value))} tickLine={false} width={52} />
                 <ChartTooltip
                   cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
                   content={
@@ -134,7 +137,6 @@ export function WealthContent({
       </section>
 
       <WealthTable
-        currency={currency}
         defaultInvestments={investmentAssetsTotal}
         snapshots={snapshots}
       />
@@ -152,14 +154,14 @@ function WealthKpiCard({
   value: string
 }) {
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white" size="sm">
       <CardHeader>
         <CardTitle className="text-xs font-medium tracking-[0.14em] text-white/48 uppercase">
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className={`text-3xl leading-none font-extrabold tracking-[0] ${tone === 0 ? "text-white" : valueTone(tone)}`}>
+        <div className={cn("text-3xl leading-none font-extrabold tracking-[0] tabular-nums", tone === 0 ? "text-white" : valueTone(tone))}>
           {value}
         </div>
       </CardContent>
@@ -312,7 +314,7 @@ function InvestmentAssetsTable({
   }
 
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white">
       <CardHeader>
         <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
           Anlagen
@@ -332,9 +334,9 @@ function InvestmentAssetsTable({
       </CardHeader>
       <CardContent className="px-0 pb-4">
         <form id={formId} action={saveAssets} className="flex flex-col gap-4">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[860px] text-white">
-              <TableHeader>
+          <div className="overflow-x-hidden">
+            <Table className="block min-w-0 text-white md:table md:min-w-[860px]">
+              <TableHeader className="hidden md:table-header-group">
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="px-4 text-white/45">Name</TableHead>
                   <TableHead className="text-right text-white/45">Wert</TableHead>
@@ -344,13 +346,13 @@ function InvestmentAssetsTable({
                   <TableHead className="w-10 pr-4 text-right text-white/45" />
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="flex flex-col gap-3 px-3 md:table-row-group md:px-0">
                 {rows.map((row, index) => {
                   const calculatedValue = calculatedInvestmentAssetValue(row)
 
                   return (
-                    <TableRow key={row.key} className="border-white/10 hover:bg-white/[0.035]">
-                      <TableCell className="min-w-[230px] px-4">
+                    <TableRow key={row.key} className="relative grid grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] md:table-row md:rounded-none md:bg-transparent md:p-0">
+                      <ResponsiveTableCell className="col-span-2 pr-10 md:min-w-[230px] md:px-4" label="Name">
                         <Input
                           aria-label={`Name Anlage ${index + 1}`}
                           name="investmentAssetName"
@@ -358,11 +360,11 @@ function InvestmentAssetsTable({
                           required
                           value={row.name}
                         />
-                      </TableCell>
-                      <TableCell className="min-w-[120px] text-right font-medium text-white tabular-nums">
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="col-span-2 grid-cols-[1fr_auto] items-end font-medium text-white md:min-w-[120px]" label="Wert">
                         {formatWealthNumber(draftNumber(calculatedValue))}
-                      </TableCell>
-                      <TableCell className="min-w-[140px]">
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="md:min-w-[140px]" label="Gesamt Anlage">
                         <Input
                           aria-label={`Gesamt Anlage ${index + 1}`}
                           className="text-right tabular-nums"
@@ -374,8 +376,8 @@ function InvestmentAssetsTable({
                           type="text"
                           value={row.totalValue}
                         />
-                      </TableCell>
-                      <TableCell className="min-w-[100px]">
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="md:min-w-[100px]" label="Anteile">
                         <Input
                           aria-label={`Anteile Anlage ${index + 1}`}
                           className="text-right tabular-nums"
@@ -387,8 +389,8 @@ function InvestmentAssetsTable({
                           type="text"
                           value={row.sharePercent}
                         />
-                      </TableCell>
-                      <TableCell className="min-w-[160px]">
+                      </ResponsiveTableCell>
+                      <ResponsiveTableCell className="col-span-2 md:min-w-[160px]" label="Datum">
                         <DashboardDatePicker
                           ariaLabel={`Datum Anlage ${index + 1}`}
                           id={`investment-asset-date-${row.key}`}
@@ -396,8 +398,8 @@ function InvestmentAssetsTable({
                           onChange={(nextValue) => updateRow(row.key, "valuationDate", nextValue)}
                           value={row.valuationDate}
                         />
-                      </TableCell>
-                      <TableCell className="pr-4 text-right">
+                      </ResponsiveTableCell>
+                      <TableCell className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4">
                         <Button
                           aria-label={`${row.name || "Anlage"} entfernen`}
                           onClick={() => removeRow(row.key)}
@@ -412,7 +414,7 @@ function InvestmentAssetsTable({
                   )
                 })}
               </TableBody>
-              <TableFooter className="border-white/10 bg-white/[0.045]">
+              <TableFooter className="hidden border-white/10 bg-white/[0.045] md:table-footer-group">
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableCell className="px-4 font-semibold text-white">Summe</TableCell>
                   <TableCell className="text-right font-semibold text-white tabular-nums">
@@ -422,6 +424,10 @@ function InvestmentAssetsTable({
                 </TableRow>
               </TableFooter>
             </Table>
+            <div className="flex items-center justify-between px-3 pt-4 text-sm md:hidden">
+              <span className="font-semibold text-white">Summe</span>
+              <span className="font-semibold text-white tabular-nums">{formatWealthCurrency(total, currency)}</span>
+            </div>
           </div>
 
         </form>
@@ -466,14 +472,13 @@ function WealthTable({
   defaultInvestments,
   snapshots,
 }: {
-  currency: string
   defaultInvestments: number
   snapshots: WealthSnapshotView[]
 }) {
   const [editingSnapshot, setEditingSnapshot] = useState<WealthSnapshotView | null>(null)
 
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white">
       <CardHeader>
         <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
           Historie
@@ -492,9 +497,9 @@ function WealthTable({
         </CardAction>
       </CardHeader>
       <CardContent className="px-0 pb-2">
-        <div className="overflow-x-auto">
-          <Table className="min-w-[960px] text-white">
-            <TableHeader>
+        <div className="overflow-x-hidden">
+          <Table className="block min-w-0 text-white md:table md:min-w-[960px]">
+            <TableHeader className="hidden md:table-header-group">
               <TableRow className="border-white/10 hover:bg-transparent">
                 {["KW", "Gesamt", "Diff", "Save", "BAR", "Anlagen", "Mintos", "Bondora", "Alpaca", "Konto", "Card"].map((label) => (
                   <TableHead key={label} className={label === "KW" ? "px-4 text-white/45" : "text-right text-white/45"}>
@@ -503,11 +508,11 @@ function WealthTable({
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
               {[...snapshots].reverse().map((snapshot) => (
                 <TableRow
                   key={snapshot.id}
-                  className="cursor-pointer border-white/10 hover:bg-white/[0.045]"
+                  className="grid cursor-pointer grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] focus-visible:bg-white/[0.06] focus-visible:outline-none md:table-row md:rounded-none md:bg-transparent md:p-0"
                   onClick={() => setEditingSnapshot(snapshot)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -518,17 +523,17 @@ function WealthTable({
                   role="button"
                   tabIndex={0}
                 >
-                  <TableCell className="px-4 font-medium text-white">{snapshot.weekKey}</TableCell>
-                  <TableCell className="text-right font-medium text-white">{formatWealthNumber(snapshot.total)}</TableCell>
-                  <TableCell className={`text-right font-medium ${valueTone(snapshot.diff ?? 0)}`}>{formatWealthNumber(snapshot.diff)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.savings)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.cashReserve)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.investments)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.mintos)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.bondora)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.alpaca)}</TableCell>
-                  <TableCell className="text-right text-white/70">{formatWealthNumber(snapshot.bankAccount)}</TableCell>
-                  <TableCell className="pr-4 text-right text-white/70">{formatWealthNumber(snapshot.card)}</TableCell>
+                  <ResponsiveTableCell className="col-span-2 text-base font-medium text-white md:px-4 md:text-xs/relaxed" label="KW">{snapshot.weekKey}</ResponsiveTableCell>
+                  <ResponsiveTableCell className="font-medium text-white" label="Gesamt">{formatWealthNumber(snapshot.total)}</ResponsiveTableCell>
+                  <ResponsiveTableCell className={cn("font-medium", valueTone(snapshot.diff ?? 0))} label="Diff">{formatWealthNumber(snapshot.diff)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="Save">{formatWealthNumber(snapshot.savings)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="BAR">{formatWealthNumber(snapshot.cashReserve)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="Anlagen">{formatWealthNumber(snapshot.investments)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="Mintos">{formatWealthNumber(snapshot.mintos)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="Bondora">{formatWealthNumber(snapshot.bondora)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="Alpaca">{formatWealthNumber(snapshot.alpaca)}</ResponsiveTableCell>
+                  <ResponsiveTableCell label="Konto">{formatWealthNumber(snapshot.bankAccount)}</ResponsiveTableCell>
+                  <ResponsiveTableCell className="md:pr-4" label="Card">{formatWealthNumber(snapshot.card)}</ResponsiveTableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -545,6 +550,28 @@ function WealthTable({
         snapshot={editingSnapshot}
       />
     </Card>
+  )
+}
+
+function ResponsiveTableCell({
+  children,
+  className,
+  label,
+}: {
+  children: ReactNode
+  className?: string
+  label: string
+}) {
+  return (
+    <TableCell
+      className={cn(
+        "grid gap-1 p-0 text-left text-white/70 tabular-nums before:text-[0.625rem] before:font-medium before:tracking-[0.08em] before:text-white/40 before:uppercase before:content-[attr(data-label)] md:table-cell md:p-2 md:text-right md:before:hidden",
+        className
+      )}
+      data-label={label}
+    >
+      {children}
+    </TableCell>
   )
 }
 
@@ -635,13 +662,40 @@ function formatWealthNumber(value: number | null) {
   }).format(Math.round(value)))
 }
 
-function compactCurrency(value: number, currency: string) {
+function compactNumber(value: number) {
   return new Intl.NumberFormat("de-CH", {
-    currency,
     maximumFractionDigits: 0,
     notation: "compact",
-    style: "currency",
   }).format(value)
+}
+
+function monthlyWealthSlope(snapshots: WealthSnapshotView[]) {
+  if (snapshots.length < 2) return null
+
+  const weekMs = 7 * 24 * 60 * 60 * 1000
+  const points = snapshots.map((snapshot) => {
+    const januaryFourth = new Date(Date.UTC(snapshot.year, 0, 4))
+    const januaryFourthDay = januaryFourth.getUTCDay() || 7
+    const week = januaryFourth.getTime() - (januaryFourthDay - 1) * 24 * 60 * 60 * 1000
+      + (snapshot.week - 1) * weekMs
+    return { total: snapshot.total, week }
+  })
+  const latestWeek = points.at(-1)!.week
+  const recent = points.filter((point) => latestWeek - point.week < 48 * weekMs)
+  if (recent.length < 2) return null
+
+  const firstWeek = recent[0].week
+  const meanX = recent.reduce((sum, point) => sum + (point.week - firstWeek) / weekMs, 0) / recent.length
+  const meanY = recent.reduce((sum, point) => sum + point.total, 0) / recent.length
+  const { covariance, variance } = recent.reduce((result, point) => {
+    const x = (point.week - firstWeek) / weekMs - meanX
+    return {
+      covariance: result.covariance + x * (point.total - meanY),
+      variance: result.variance + x * x,
+    }
+  }, { covariance: 0, variance: 0 })
+
+  return variance === 0 ? null : covariance / variance * 4
 }
 
 function normalizeSwissNumber(value: string) {

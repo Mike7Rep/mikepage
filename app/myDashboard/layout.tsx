@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react"
+import type { Viewport } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -10,11 +11,22 @@ import { DashboardLoadingFrame } from "./_components/dashboard-loading-frame"
 
 const DASHBOARD_ROOT = "/myDashboard"
 
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#000000",
+  userScalable: false,
+  width: "device-width",
+}
+
 export default function MyDashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <Suspense fallback={<DashboardLoadingFrame />}>
-      <DashboardGuard>{children}</DashboardGuard>
-    </Suspense>
+    <div className="min-h-screen w-full max-w-full touch-pan-y overflow-x-hidden overscroll-x-none md:touch-auto">
+      <Suspense fallback={<DashboardLoadingFrame />}>
+        <DashboardGuard>{children}</DashboardGuard>
+      </Suspense>
+    </div>
   )
 }
 

@@ -87,7 +87,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
   if (!symbol) return null
 
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white">
       <CardHeader>
         <div>
           <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
@@ -105,13 +105,13 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="h-[320px] w-full">
+          <div className="h-[260px] w-full sm:h-[320px]">
             {state === "loading" ? <LoadingState /> : null}
             {state === "error" ? <ErrorState message={error} /> : null}
             {state === "ready" && chartRows.length === 0 ? <EmptyState /> : null}
             {state === "ready" && chartRows.length > 0 && chart ? (
-              <ChartContainer config={assetChartConfig} className="h-[320px] w-full">
-                <ComposedChart accessibilityLayer data={chartRows} margin={{ top: 12, right: 18, bottom: 4, left: 0 }}>
+              <ChartContainer config={assetChartConfig} className="h-[260px] w-full sm:h-[320px]">
+                <ComposedChart accessibilityLayer data={chartRows} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                   <defs>
                     <linearGradient id="asset-close-fill" x1="0" x2="0" y1="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-close)" stopOpacity={0.45} />
@@ -200,8 +200,8 @@ function EmptyState() {
 
 function FillList({ currency, fills }: { currency: string; fills: AssetChartFill[] }) {
   return (
-    <div className="flex h-[320px] flex-col rounded-md border border-white/10 bg-black/20">
-      <div className="border-b border-white/10 px-3 py-2">
+    <div className="flex h-[320px] flex-col rounded-md bg-black/20">
+      <div className="px-3 py-2">
         <div className="text-xs font-semibold tracking-[0.14em] text-white/55 uppercase">Käufe & Verkäufe</div>
       </div>
       {fills.length === 0 ? (
@@ -211,7 +211,7 @@ function FillList({ currency, fills }: { currency: string; fills: AssetChartFill
       ) : (
         <div className="flex flex-1 flex-col overflow-y-auto">
           {fills.map((fill) => (
-            <div key={fill.id} className="grid gap-1 border-b border-white/10 px-3 py-2 last:border-b-0">
+            <div key={fill.id} className="grid gap-1 px-3 py-2 even:bg-white/[0.025]">
               <div className="flex items-center justify-between gap-3">
                 <span className={fill.side === "buy" ? "text-primary" : "text-destructive"}>
                   {fill.side === "buy" ? "Kauf" : "Verkauf"}

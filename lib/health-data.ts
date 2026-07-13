@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma"
 export type HealthEntryView = {
   id: number
   date: string
-  bloodPressure1: number
-  bloodPressure2: number
-  waistCm: number
+  bloodPressure1: number | null
+  bloodPressure2: number | null
+  waistCm: number | null
   bodyFatPercent: number | null
   weightKg: number | null
   pulse: number | null
@@ -32,21 +32,21 @@ export type HealthGoalMetric =
 
 type HealthEntryInput = {
   date: Date
-  bloodPressure1: number
-  bloodPressure2: number
-  waistCm: number
-  bodyFatPercent: number
-  weightKg: number
-  pulse: number
+  bloodPressure1: number | null
+  bloodPressure2: number | null
+  waistCm: number | null
+  bodyFatPercent: number | null
+  weightKg: number | null
+  pulse: number | null
 }
 
 type HealthGoalInput = Partial<{
-  bloodPressure1: number
-  bloodPressure2: number
-  waistCm: number
-  bodyFatPercent: number
-  weightKg: number
-  pulse: number
+  bloodPressure1: number | null
+  bloodPressure2: number | null
+  waistCm: number | null
+  bodyFatPercent: number | null
+  weightKg: number | null
+  pulse: number | null
 }>
 
 const emptyGoals: HealthGoalsView = {
@@ -72,7 +72,7 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
     date: row.date.toISOString().slice(0, 10),
     bloodPressure1: row.bloodPressure1,
     bloodPressure2: row.bloodPressure2,
-    waistCm: Number(row.waistCm),
+    waistCm: row.waistCm === null ? null : Number(row.waistCm),
     bodyFatPercent: row.bodyFatPercent === null ? null : Number(row.bodyFatPercent),
     weightKg: row.weightKg === null ? null : Number(row.weightKg),
     pulse: row.pulse,
@@ -130,12 +130,12 @@ export async function deleteHealthEntry(id: number) {
 export function parseHealthEntryForm(formData: FormData): HealthEntryInput {
   return {
     date: parseDate(String(formData.get("date") ?? "")),
-    bloodPressure1: parsePositiveInt(formData, "bloodPressure1", "Blutdruck 1"),
-    bloodPressure2: parsePositiveInt(formData, "bloodPressure2", "Blutdruck 2"),
-    waistCm: parsePositiveDecimal(formData, "waistCm", "Bauchumfang"),
-    bodyFatPercent: parsePositiveDecimal(formData, "bodyFatPercent", "Fettgehalt"),
-    weightKg: parsePositiveDecimal(formData, "weightKg", "Gewicht"),
-    pulse: parsePositiveInt(formData, "pulse", "Puls"),
+    bloodPressure1: parsePositiveInt(formData, "bloodPressure1", "Blutdruck 1", true),
+    bloodPressure2: parsePositiveInt(formData, "bloodPressure2", "Blutdruck 2", true),
+    waistCm: parsePositiveDecimal(formData, "waistCm", "Bauchumfang", true),
+    bodyFatPercent: parsePositiveDecimal(formData, "bodyFatPercent", "Fettgehalt", true),
+    weightKg: parsePositiveDecimal(formData, "weightKg", "Gewicht", true),
+    pulse: parsePositiveInt(formData, "pulse", "Puls", true),
   }
 }
 
@@ -174,8 +174,10 @@ function parseDate(raw: string) {
   return new Date(`${value}T00:00:00.000Z`)
 }
 
-function parsePositiveInt(formData: FormData, key: string, label: string) {
+function parsePositiveInt(formData: FormData, key: string, label: string, optional = false) {
   const raw = String(formData.get(key) ?? "").trim()
+  if (!raw && optional) return null
+
   if (!/^\d+$/.test(raw)) {
     throw new Error(`${label} muss eine positive ganze Zahl sein.`)
   }
@@ -188,8 +190,10 @@ function parsePositiveInt(formData: FormData, key: string, label: string) {
   return value
 }
 
-function parsePositiveDecimal(formData: FormData, key: string, label: string) {
+function parsePositiveDecimal(formData: FormData, key: string, label: string, optional = false) {
   const raw = String(formData.get(key) ?? "").trim().replace(",", ".")
+  if (!raw && optional) return null
+
   if (!/^\d+(\.\d)?$/.test(raw)) {
     throw new Error(`${label} muss eine positive Zahl mit maximal einer Dezimalstelle sein.`)
   }

@@ -8,7 +8,7 @@ import { KpiCard } from "./kpi-card"
 export function DashboardContent({ data }: { data: AlpacaDashboardData }) {
   return (
     <div className="flex flex-col gap-5">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-4">
         <KpiCard title={`Aktueller Wert (${data.currency})`} value={formatKpiNumber(data.currentValue, 0)} />
         <KpiCard muted={data.totalDeposited === null} title={`Total einbezahlt (${data.currency})`} value={formatKpiNumber(data.totalDeposited, 0)} />
         <KpiCard title={`W/L (${data.currency})`} tone={data.totalPl} value={formatKpiNumber(data.totalPl, 1)} />
@@ -35,7 +35,7 @@ function formatKpiNumber(value: number | null, fractionDigits: number) {
 
 function Warnings({ warnings }: { warnings: string[] }) {
   return (
-    <div className="flex gap-3 rounded-md border border-primary/25 bg-primary/10 p-4 text-sm leading-6 text-white/72">
+    <div className="flex gap-3 rounded-md bg-primary/10 p-4 text-sm leading-6 text-white/72">
       <AlertCircle className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <div className="flex flex-col gap-1">
         {warnings.map((warning) => <p key={warning}>{warning}</p>)}

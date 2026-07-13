@@ -14,7 +14,7 @@ export function KpiCard({
   value: string
 }) {
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white" size="sm">
       <CardHeader>
         <CardTitle className="text-xs font-medium tracking-[0.14em] text-white/48 uppercase">
           {title}
@@ -23,7 +23,7 @@ export function KpiCard({
       <CardContent>
         <div
           className={cn(
-            "text-4xl leading-none font-bold tracking-[0] md:text-5xl",
+            "text-2xl leading-none font-bold tracking-[0] tabular-nums sm:text-4xl md:text-5xl",
             muted ? "text-white/45" : tone === 0 ? "text-white" : valueTone(tone)
           )}
         >

@@ -15,9 +15,9 @@ export function DashboardFrame({
   subtitle?: string
 }) {
   return (
-    <main className="min-h-screen w-full min-w-0 overflow-x-clip bg-black px-0 py-8 text-white sm:px-6 sm:py-10 md:px-12">
-      <section className="mx-auto flex min-w-0 max-w-7xl flex-col gap-8">
-        <header className="flex min-w-0 flex-col gap-5 px-3 sm:px-0 md:flex-row md:items-start md:justify-between">
+    <main className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden overscroll-x-none bg-black px-0 py-6 text-white touch-pan-y [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:ring-0 [&_[data-slot=table-container]]:overflow-x-hidden [&_[data-slot=table-footer]]:border-0 [&_[data-slot=table-row]]:border-0 sm:px-6 sm:py-10 sm:[&_[data-slot=card]]:rounded-lg md:touch-auto md:px-12 md:[&_[data-slot=table-container]]:overflow-x-auto [&_[data-slot=input]]:text-base md:[&_[data-slot=input]]:text-xs/relaxed">
+      <section className="mx-auto flex min-w-0 max-w-7xl flex-col gap-5 sm:gap-8">
+        <header className="flex min-w-0 flex-col gap-5 px-4 sm:px-0 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-4">
             <div>
               <h1 className="text-4xl leading-none font-extrabold tracking-[0] uppercase sm:text-5xl md:text-7xl">
@@ -27,7 +27,7 @@ export function DashboardFrame({
               <DashboardNavigation activeSection={activeSection} />
             </div>
           </div>
-          {actions ? <div className="flex flex-wrap gap-2 md:pt-1">{actions}</div> : null}
+          {actions ? <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:justify-end md:pt-1">{actions}</div> : null}
         </header>
         {children}
       </section>
@@ -39,7 +39,7 @@ type DashboardSection = "depot" | "health" | "vermoegen"
 
 function DashboardNavigation({ activeSection }: { activeSection?: DashboardSection }) {
   return (
-    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-fit rounded-md border border-white/10 bg-white/[0.035] p-1">
+    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-full max-w-sm rounded-lg bg-white/[0.055] p-1">
       <DashboardNavLink active={activeSection === "vermoegen"} href="/myDashboard/vermoegen">
         Vermögen
       </DashboardNavLink>
@@ -65,7 +65,7 @@ function DashboardNavLink({
   return (
     <Link
       className={cn(
-        "w-20 rounded-sm px-2 py-1.5 text-center text-xs font-medium text-white/55 transition hover:text-white",
+        "min-w-0 flex-1 rounded-md px-2 py-2 text-center text-xs font-medium text-white/55 transition hover:text-white",
         active && "bg-primary text-primary-foreground hover:text-primary-foreground"
       )}
       href={href}

@@ -1,12 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { ArrowDown, ArrowUp, ArrowUpDown, LineChart } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 import type { AlpacaDashboardData, DashboardPosition } from "@/lib/python-api"
 import { formatCurrency, formatPercent, formatQuantity, valueTone } from "../format"
 
@@ -40,7 +41,7 @@ export function PositionsTable({
   const positions = useMemo(() => sortPositions(data.positions, sort), [data.positions, sort])
 
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white">
       <CardHeader>
         <div>
           <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
@@ -98,8 +99,8 @@ function TableRows({
   onPrefetch?: (symbol: string) => void
 }) {
   return (
-    <Table className="min-w-[820px] text-white">
-      <TableHeader>
+    <Table className="block min-w-0 text-white md:table md:min-w-[820px]">
+      <TableHeader className="hidden md:table-header-group">
         <TableRow className="border-white/10 hover:bg-transparent">
           {columns.map((column, index) => (
             <TableHead key={column.key} className={column.align === "right" ? "text-right text-white/45" : "px-4 text-white/45"}>
@@ -108,11 +109,11 @@ function TableRows({
           ))}
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
         {positions.map((position) => (
           <TableRow
             key={position.asset}
-            className="cursor-pointer border-white/10 hover:bg-white/[0.045] focus-visible:bg-white/[0.06] focus-visible:outline-none data-[state=selected]:bg-primary/10"
+            className="relative grid cursor-pointer grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] focus-visible:bg-white/[0.06] focus-visible:outline-none data-[state=selected]:bg-primary/10 md:table-row md:rounded-none md:bg-transparent md:p-0"
             data-state={selectedSymbol === position.asset ? "selected" : undefined}
             role="button"
             tabIndex={0}
@@ -126,13 +127,13 @@ function TableRows({
             }}
             onMouseEnter={() => onPrefetch?.(position.asset)}
           >
-            <TableCell className="px-4 font-medium text-white">{position.asset}</TableCell>
-            <TableCell className="max-w-[280px] truncate text-white/70" title={position.name}>{position.name}</TableCell>
-            <TableCell className="text-right text-white/70">{formatQuantity(position.qty)}</TableCell>
-            <TableCell className="text-right text-white/70">{formatCurrency(position.entryPrice, currency)}</TableCell>
-            <TableCell className="text-right text-white/70">{formatCurrency(position.currentPrice, currency)}</TableCell>
-            <TableCell className={`text-right font-medium ${valueTone(position.unrealizedPl)}`}>{formatCurrency(position.unrealizedPl, currency)}</TableCell>
-            <TableCell className="pr-4 text-right">
+            <TableCell className="col-span-2 p-0 pr-24 text-lg font-semibold text-white md:table-cell md:px-4 md:py-2 md:text-xs/relaxed">{position.asset}</TableCell>
+            <TableCell className="col-span-2 max-w-none truncate p-0 text-white/55 md:table-cell md:max-w-[280px] md:p-2 md:text-white/70" title={position.name}>{position.name}</TableCell>
+            <PositionMetricCell label="QTY">{formatQuantity(position.qty)}</PositionMetricCell>
+            <PositionMetricCell label="EK">{formatCurrency(position.entryPrice, currency)}</PositionMetricCell>
+            <PositionMetricCell label="VK">{formatCurrency(position.currentPrice, currency)}</PositionMetricCell>
+            <PositionMetricCell className={valueTone(position.unrealizedPl)} label="W/L">{formatCurrency(position.unrealizedPl, currency)}</PositionMetricCell>
+            <TableCell className="absolute top-3 right-3 p-0 text-right md:static md:table-cell md:p-2 md:pr-4">
               <Badge variant={position.unrealizedPl < 0 ? "destructive" : "default"}>
                 {formatPercent(position.unrealizedPlPercent)}
               </Badge>
@@ -141,6 +142,28 @@ function TableRows({
         ))}
       </TableBody>
     </Table>
+  )
+}
+
+function PositionMetricCell({
+  children,
+  className,
+  label,
+}: {
+  children: ReactNode
+  className?: string
+  label: string
+}) {
+  return (
+    <TableCell
+      className={cn(
+        "grid gap-0.5 p-0 text-left text-white/70 tabular-nums before:text-[0.625rem] before:font-medium before:tracking-[0.08em] before:text-white/40 before:uppercase before:content-[attr(data-label)] md:table-cell md:p-2 md:text-right md:before:hidden",
+        className
+      )}
+      data-label={label}
+    >
+      {children}
+    </TableCell>
   )
 }
 

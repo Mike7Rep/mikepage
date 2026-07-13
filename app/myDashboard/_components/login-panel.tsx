@@ -20,9 +20,9 @@ export function LoginPanel({
 
   return (
     <main className="flex min-h-screen w-full min-w-0 items-center justify-center overflow-x-clip bg-black px-0 py-12 text-white sm:px-6 sm:py-16">
-      <Card className="w-full max-w-md rounded-none border-white/10 bg-white/[0.035] text-white ring-white/10 sm:rounded-lg">
+      <Card className="w-full max-w-md rounded-none border-0 bg-white/[0.035] text-white ring-0 sm:rounded-lg">
         <CardHeader className="gap-5">
-          <div className="flex size-12 items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary">
+          <div className="flex size-12 items-center justify-center rounded-md bg-primary/10 text-primary">
             <LockKeyhole className="size-5" aria-hidden="true" />
           </div>
           <CardTitle className="text-3xl leading-none font-extrabold tracking-[0] uppercase">
@@ -81,7 +81,7 @@ function loginErrorMessage(error: LoginError) {
 
 function MissingConfig({ missing }: { missing: string[] }) {
   return (
-    <div className="flex gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm leading-6 text-white/75">
+    <div className="flex gap-3 rounded-md bg-destructive/10 p-4 text-sm leading-6 text-white/75">
       <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
       <div>
         <p className="font-medium text-white">Dashboard-Login ist nicht konfiguriert.</p>

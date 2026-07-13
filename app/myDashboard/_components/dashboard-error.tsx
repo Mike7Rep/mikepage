@@ -18,7 +18,7 @@ export function DashboardError({
 }) {
   return (
     <DashboardFrame actions={<LogoutButton />} subtitle={subtitle}>
-      <Card className="border-destructive/30 bg-destructive/10 text-white ring-destructive/20">
+      <Card className="bg-destructive/10 text-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-white">
             <AlertCircle className="size-4 text-destructive" aria-hidden="true" />

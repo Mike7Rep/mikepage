@@ -9,7 +9,7 @@ export function DashboardLoadingFrame({
   return (
     <DashboardFrame activeSection={activeSection}>
       <div className="flex flex-col gap-5" aria-busy="true" aria-live="polite">
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
             <LoadingCard key={index} />
           ))}
@@ -23,7 +23,7 @@ export function DashboardLoadingFrame({
 
 function LoadingCard() {
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white">
       <CardHeader className="gap-3">
         <div className="h-3 w-20 animate-pulse rounded-sm bg-white/10" />
         <div className="h-8 w-32 animate-pulse rounded-sm bg-white/15" />
@@ -35,7 +35,7 @@ function LoadingCard() {
 
 function LoadingPanel({ tall = false }: { tall?: boolean }) {
   return (
-    <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="bg-white/[0.035] text-white">
       <CardHeader className="gap-3">
         <div className="h-5 w-44 animate-pulse rounded-sm bg-white/15" />
         <div className="h-3 w-56 animate-pulse rounded-sm bg-white/10" />

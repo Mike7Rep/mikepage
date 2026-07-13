@@ -63,10 +63,10 @@ type SingleMetricDefinition = {
 }
 
 const singleMetrics: SingleMetricDefinition[] = [
+  { key: "pulse", title: "Verlauf Puls", unit: "bpm", color: "#45C456", offset: 5 },
   { key: "waistCm", title: "Verlauf Bauchumfang", unit: "cm", color: "#f5c778", offset: 2 },
   { key: "weightKg", title: "Verlauf Gewicht", unit: "kg", color: "#8bc7ff", offset: 2 },
   { key: "bodyFatPercent", title: "Verlauf Fettgehalt", unit: "%", color: "#c4a7ff", offset: 2 },
-  { key: "pulse", title: "Verlauf Puls", unit: "bpm", color: "#45C456", offset: 5 },
 ]
 
 const decimalFormatter = new Intl.NumberFormat("de-CH", {
@@ -96,8 +96,8 @@ export function HealthContent({
           }
           title="Verlauf Blutdruck"
         >
-          <ChartContainer config={bloodPressureChartConfig} className="h-[320px] w-full">
-            <LineChart accessibilityLayer data={entries} margin={{ top: 12, right: 18, bottom: 4, left: 0 }}>
+          <ChartContainer config={bloodPressureChartConfig} className="h-[260px] w-full sm:h-[320px]">
+            <LineChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
               <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
               <YAxis axisLine={false} domain={["dataMin - 5", "dataMax + 5"]} tickLine={false} width={40} />
@@ -107,8 +107,8 @@ export function HealthContent({
               />
               {goals.bloodPressure1 !== null ? <GoalLine color="#ef4444" value={goals.bloodPressure1} /> : null}
               {goals.bloodPressure2 !== null ? <GoalLine color="#fb7185" value={goals.bloodPressure2} /> : null}
-              <Line dataKey="bloodPressure1" dot={false} stroke="var(--color-bloodPressure1)" strokeWidth={2.5} type="monotone" />
-              <Line dataKey="bloodPressure2" dot={false} stroke="var(--color-bloodPressure2)" strokeWidth={2.5} type="monotone" />
+              <Line connectNulls dataKey="bloodPressure1" dot={false} stroke="var(--color-bloodPressure1)" strokeWidth={2.5} type="monotone" />
+              <Line connectNulls dataKey="bloodPressure2" dot={false} stroke="var(--color-bloodPressure2)" strokeWidth={2.5} type="monotone" />
             </LineChart>
           </ChartContainer>
         </HealthChartCard>
@@ -124,45 +124,43 @@ export function HealthContent({
         ))}
       </section>
 
-      <Card className="border-white/10 bg-white/[0.035] text-white ring-white/10">
+      <Card className="bg-white/[0.035] text-white">
         <CardHeader>
           <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
             Verlauf
           </CardTitle>
         </CardHeader>
         <CardContent className="px-0 pb-2">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[1180px] text-white">
-              <TableHeader>
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="px-4 text-white/45">Datum</TableHead>
-                  <TableHead className="text-right text-white/45">Blutdruck 1</TableHead>
-                  <TableHead className="text-right text-white/45">Blutdruck 2</TableHead>
-                  <TableHead className="text-right text-white/45">Puls</TableHead>
-                  <TableHead className="text-right text-white/45">Gewicht (kg)</TableHead>
-                  <TableHead className="text-right text-white/45">Fettgehalt (%)</TableHead>
-                  <TableHead className="text-right text-white/45">Bauchumfang (cm)</TableHead>
-                  <TableHead className="w-10 pr-4 text-right text-white/45" />
+          <Table className="block min-w-0 text-white md:table md:min-w-[1180px]">
+            <TableHeader className="hidden md:table-header-group">
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHead className="px-4 text-white/45">Datum</TableHead>
+                <TableHead className="text-right text-white/45">Blutdruck 1</TableHead>
+                <TableHead className="text-right text-white/45">Blutdruck 2</TableHead>
+                <TableHead className="text-right text-white/45">Puls</TableHead>
+                <TableHead className="text-right text-white/45">Bauchumfang (cm)</TableHead>
+                <TableHead className="text-right text-white/45">Gewicht (kg)</TableHead>
+                <TableHead className="text-right text-white/45">Fettgehalt (%)</TableHead>
+                <TableHead className="w-10 pr-4 text-right text-white/45" />
+              </TableRow>
+            </TableHeader>
+            <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
+              {newestFirst.map((entry) => (
+                <TableRow key={entry.id} className="relative grid grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] md:table-row md:rounded-none md:bg-transparent md:p-0">
+                  <TableCell className="col-span-2 p-0 pr-10 font-medium text-white md:table-cell md:px-4 md:py-2">{formatDate(entry.date)}</TableCell>
+                  <MetricCell label="Blutdruck 1" unit="mmHg" value={entry.bloodPressure1} />
+                  <MetricCell label="Blutdruck 2" unit="mmHg" value={entry.bloodPressure2} />
+                  <MetricCell label="Puls" unit="bpm" value={entry.pulse} />
+                  <MetricCell label="Bauchumfang" unit="cm" value={entry.waistCm} />
+                  <MetricCell label="Gewicht" unit="kg" value={entry.weightKg} />
+                  <MetricCell label="Fettgehalt" unit="%" value={entry.bodyFatPercent} />
+                  <TableCell className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4">
+                    <DeleteHealthEntryDialog entry={entry} />
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {newestFirst.map((entry) => (
-                  <TableRow key={entry.id} className="border-white/10 hover:bg-white/[0.045]">
-                    <TableCell className="px-4 font-medium text-white">{formatDate(entry.date)}</TableCell>
-                    <MetricCell value={entry.bloodPressure1} />
-                    <MetricCell value={entry.bloodPressure2} />
-                    <MetricCell value={entry.pulse} />
-                    <MetricCell value={entry.weightKg} />
-                    <MetricCell value={entry.bodyFatPercent} />
-                    <MetricCell value={entry.waistCm} />
-                    <TableCell className="pr-4 text-right">
-                      <DeleteHealthEntryDialog entry={entry} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
@@ -184,8 +182,8 @@ function SingleMetricChart({
   const gradientId = `${metric.key}-fill`
 
   return (
-    <ChartContainer config={config} className="h-[320px] w-full">
-      <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 18, bottom: 4, left: 0 }}>
+    <ChartContainer config={config} className="h-[260px] w-full sm:h-[320px]">
+      <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="5%" stopColor={`var(--color-${metric.key})`} stopOpacity={0.42} />
@@ -244,7 +242,7 @@ function HealthChartCard({
   title: string
 }) {
   return (
-    <Card className="w-full border-white/10 bg-white/[0.035] text-white ring-white/10">
+    <Card className="w-full bg-white/[0.035] text-white">
       <CardHeader>
         <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
           {title}
@@ -274,10 +272,10 @@ export function HealthEntryDialog() {
           Eintrag hinzufügen
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100vh-2rem)] max-w-md overflow-y-auto border-white/10 bg-black text-white">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-md overflow-y-auto border-0 bg-black text-white">
         <DialogHeader>
           <DialogTitle>Eintrag hinzufügen</DialogTitle>
-          <DialogDescription>Messwerte vom Morgen eintragen.</DialogDescription>
+          <DialogDescription>Nur vorhandene Messwerte eintragen. Alle Werte sind optional.</DialogDescription>
         </DialogHeader>
         <form action={submitEntry} className="flex flex-col gap-4">
           <FieldGroup>
@@ -285,12 +283,12 @@ export function HealthEntryDialog() {
               <FieldLabel htmlFor="health-date">Datum</FieldLabel>
               <DashboardDatePicker id="health-date" name="date" value={date} onChange={setDate} />
             </Field>
-            <HealthNumberField label="Blutdruck 1 (mmHg)" name="bloodPressure1" />
-            <HealthNumberField label="Blutdruck 2 (mmHg)" name="bloodPressure2" />
-            <HealthNumberField label="Puls (bpm)" name="pulse" />
-            <HealthNumberField decimal label="Gewicht (kg)" name="weightKg" />
-            <HealthNumberField decimal label="Fettgehalt (%)" name="bodyFatPercent" />
-            <HealthNumberField decimal label="Bauchumfang (cm)" name="waistCm" />
+            <HealthNumberField label="Blutdruck 1 (mmHg)" name="bloodPressure1" optional />
+            <HealthNumberField label="Blutdruck 2 (mmHg)" name="bloodPressure2" optional />
+            <HealthNumberField label="Puls (bpm)" name="pulse" optional />
+            <HealthNumberField decimal label="Bauchumfang (cm)" name="waistCm" optional />
+            <HealthNumberField decimal label="Gewicht (kg)" name="weightKg" optional />
+            <HealthNumberField decimal label="Fettgehalt (%)" name="bodyFatPercent" optional />
           </FieldGroup>
           <DialogFooter>
             <DialogClose asChild>
@@ -366,12 +364,14 @@ function HealthNumberField({
   id,
   label,
   name,
+  optional = false,
 }: {
   decimal?: boolean
   defaultValue?: number | null
   id?: string
   label: string
   name: string
+  optional?: boolean
 }) {
   const inputId = id ?? name
 
@@ -379,13 +379,15 @@ function HealthNumberField({
     <Field>
       <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
       <Input
+        className="h-10 text-base sm:h-7 sm:text-xs/relaxed"
         defaultValue={defaultValue ?? undefined}
         id={inputId}
         inputMode={decimal ? "decimal" : "numeric"}
         min="0"
         name={name}
         pattern={decimal ? "\\d+([\\.,]\\d)?" : "\\d*"}
-        required
+        placeholder={optional ? "Optional" : undefined}
+        required={!optional}
         step={decimal ? "0.1" : "1"}
         type="text"
       />
@@ -423,10 +425,24 @@ function goalButtonLabel(metric: HealthGoalMetric, goals: HealthGoalsView) {
   return value === null ? "Zielwert" : `Ziel ${decimalFormatter.format(value)} ${units[metric]}`
 }
 
-function MetricCell({ value }: { value: number | null }) {
+function MetricCell({
+  label,
+  unit,
+  value,
+}: {
+  label: string
+  unit: string
+  value: number | null
+}) {
   return (
-    <TableCell className="text-right text-white/70 tabular-nums">
-      {value === null ? "–" : decimalFormatter.format(value)}
+    <TableCell
+      className="grid gap-0.5 p-0 text-left text-white/70 tabular-nums before:text-[0.625rem] before:font-medium before:tracking-[0.08em] before:text-white/40 before:uppercase before:content-[attr(data-label)] md:table-cell md:p-2 md:text-right md:before:hidden"
+      data-label={label}
+    >
+      <span>
+        {value === null ? "–" : decimalFormatter.format(value)}
+        {value === null ? null : <span className="text-white/40 md:hidden"> {unit}</span>}
+      </span>
     </TableCell>
   )
 }
