@@ -57,16 +57,14 @@ type SingleMetric = Exclude<HealthGoalMetric, "bloodPressure">
 type SingleMetricDefinition = {
   key: SingleMetric
   title: string
-  unit: string
   color: string
-  offset: number
 }
 
 const singleMetrics: SingleMetricDefinition[] = [
-  { key: "pulse", title: "Verlauf Puls", unit: "bpm", color: "#45C456", offset: 5 },
-  { key: "waistCm", title: "Verlauf Bauchumfang", unit: "cm", color: "#f5c778", offset: 2 },
-  { key: "weightKg", title: "Verlauf Gewicht", unit: "kg", color: "#8bc7ff", offset: 2 },
-  { key: "bodyFatPercent", title: "Verlauf Fettgehalt", unit: "%", color: "#c4a7ff", offset: 2 },
+  { key: "pulse", title: "Verlauf Puls", color: "#45C456" },
+  { key: "waistCm", title: "Verlauf Bauchumfang", color: "#f5c778" },
+  { key: "weightKg", title: "Verlauf Gewicht", color: "#8bc7ff" },
+  { key: "bodyFatPercent", title: "Verlauf Fettgehalt", color: "#c4a7ff" },
 ]
 
 const decimalFormatter = new Intl.NumberFormat("de-CH", {
@@ -82,6 +80,12 @@ export function HealthContent({
   goals: HealthGoalsView
 }) {
   const newestFirst = useMemo(() => [...entries].reverse(), [entries])
+  const [editingEntry, setEditingEntry] = useState<HealthEntryView | null>(null)
+  const bloodPressureScale = chartScale([
+    ...entries.flatMap((entry) => [entry.bloodPressure1, entry.bloodPressure2]),
+    goals.bloodPressure1,
+    goals.bloodPressure2,
+  ], 10)
 
   return (
     <div className="flex flex-col gap-5">
@@ -96,11 +100,18 @@ export function HealthContent({
           }
           title="Verlauf Blutdruck"
         >
-          <ChartContainer config={bloodPressureChartConfig} className="h-[260px] w-full sm:h-[320px]">
+          <ChartContainer config={bloodPressureChartConfig} className="aspect-video w-full">
             <LineChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
               <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
-              <YAxis axisLine={false} domain={["dataMin - 5", "dataMax + 5"]} tickLine={false} width={40} />
+              <YAxis
+                allowDecimals={false}
+                axisLine={false}
+                domain={bloodPressureScale.domain}
+                ticks={bloodPressureScale.ticks}
+                tickLine={false}
+                width={40}
+              />
               <ChartTooltip
                 cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
                 content={<ChartTooltipContent className="border-white/10 bg-background/95" indicator="line" labelFormatter={formatChartDate} />}
@@ -146,7 +157,19 @@ export function HealthContent({
             </TableHeader>
             <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
               {newestFirst.map((entry) => (
-                <TableRow key={entry.id} className="relative grid grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] md:table-row md:rounded-none md:bg-transparent md:p-0">
+                <TableRow
+                  key={entry.id}
+                  className="relative grid cursor-pointer grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] focus-visible:bg-white/[0.06] focus-visible:outline-none md:table-row md:rounded-none md:bg-transparent md:p-0"
+                  onClick={() => setEditingEntry(entry)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      setEditingEntry(entry)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
                   <TableCell className="col-span-2 p-0 pr-10 font-medium text-white md:table-cell md:px-4 md:py-2">{formatDate(entry.date)}</TableCell>
                   <MetricCell label="Blutdruck 1" unit="mmHg" value={entry.bloodPressure1} />
                   <MetricCell label="Blutdruck 2" unit="mmHg" value={entry.bloodPressure2} />
@@ -154,7 +177,11 @@ export function HealthContent({
                   <MetricCell label="Bauchumfang" unit="cm" value={entry.waistCm} />
                   <MetricCell label="Gewicht" unit="kg" value={entry.weightKg} />
                   <MetricCell label="Fettgehalt" unit="%" value={entry.bodyFatPercent} />
-                  <TableCell className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4">
+                  <TableCell
+                    className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4"
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
                     <DeleteHealthEntryDialog entry={entry} />
                   </TableCell>
                 </TableRow>
@@ -162,6 +189,15 @@ export function HealthContent({
             </TableBody>
           </Table>
         </CardContent>
+        <HealthEntryDialog
+          entries={entries}
+          entry={editingEntry}
+          key={editingEntry?.id ?? "health-entry-editor"}
+          onOpenChange={(open) => {
+            if (!open) setEditingEntry(null)
+          }}
+          open={Boolean(editingEntry)}
+        />
       </Card>
     </div>
   )
@@ -180,9 +216,13 @@ function SingleMetricChart({
     [metric.key]: { label: metric.title.replace("Verlauf ", ""), color: metric.color },
   } satisfies ChartConfig
   const gradientId = `${metric.key}-fill`
+  const scale = chartScale([
+    ...entries.map((entry) => entry[metric.key]),
+    goal,
+  ], 5)
 
   return (
-    <ChartContainer config={config} className="h-[260px] w-full sm:h-[320px]">
+    <ChartContainer config={config} className="aspect-video w-full">
       <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -193,11 +233,12 @@ function SingleMetricChart({
         <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
         <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
         <YAxis
+          allowDecimals={false}
           axisLine={false}
-          domain={[`dataMin - ${metric.offset}`, `dataMax + ${metric.offset}`]}
-          tickFormatter={(value) => `${decimalFormatter.format(Number(value))} ${metric.unit}`}
+          domain={scale.domain}
+          ticks={scale.ticks}
           tickLine={false}
-          width={62}
+          width={40}
         />
         <ChartTooltip
           cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
@@ -254,41 +295,64 @@ function HealthChartCard({
   )
 }
 
-export function HealthEntryDialog() {
-  const [open, setOpen] = useState(false)
-  const [date, setDate] = useState(todayInputValue())
+export function HealthEntryDialog({
+  entries,
+  entry = null,
+  onOpenChange,
+  open: controlledOpen,
+}: {
+  entries: HealthEntryView[]
+  entry?: HealthEntryView | null
+  onOpenChange?: (open: boolean) => void
+  open?: boolean
+}) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const [date, setDate] = useState(entry?.date ?? todayInputValue())
+  const open = controlledOpen ?? uncontrolledOpen
+  const setOpen = onOpenChange ?? setUncontrolledOpen
+  const selectedEntry = entries.find((candidate) => candidate.date === date)
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) setDate(entry?.date ?? todayInputValue())
+    setOpen(nextOpen)
+  }
 
   async function submitEntry(formData: FormData) {
     await createOrUpdateHealthEntryAction(formData)
     setOpen(false)
-    setDate(todayInputValue())
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
-          Eintrag hinzufügen
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {controlledOpen === undefined ? (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus data-icon="inline-start" />
+            Eintrag hinzufügen
+          </Button>
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-md overflow-y-auto border-0 bg-black text-white">
         <DialogHeader>
-          <DialogTitle>Eintrag hinzufügen</DialogTitle>
-          <DialogDescription>Nur vorhandene Messwerte eintragen. Alle Werte sind optional.</DialogDescription>
+          <DialogTitle>{selectedEntry ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}</DialogTitle>
+          <DialogDescription>
+            {selectedEntry
+              ? "Vorhandene Messwerte ergänzen oder ändern. Leere Felder bleiben erhalten."
+              : "Nur vorhandene Messwerte eintragen."}
+          </DialogDescription>
         </DialogHeader>
-        <form action={submitEntry} className="flex flex-col gap-4">
+        <form action={submitEntry} className="flex flex-col gap-4" key={`${date}-${selectedEntry?.updatedAt ?? "new"}`}>
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="health-date">Datum</FieldLabel>
               <DashboardDatePicker id="health-date" name="date" value={date} onChange={setDate} />
             </Field>
-            <HealthNumberField label="Blutdruck 1 (mmHg)" name="bloodPressure1" optional />
-            <HealthNumberField label="Blutdruck 2 (mmHg)" name="bloodPressure2" optional />
-            <HealthNumberField label="Puls (bpm)" name="pulse" optional />
-            <HealthNumberField decimal label="Bauchumfang (cm)" name="waistCm" optional />
-            <HealthNumberField decimal label="Gewicht (kg)" name="weightKg" optional />
-            <HealthNumberField decimal label="Fettgehalt (%)" name="bodyFatPercent" optional />
+            <HealthNumberField defaultValue={selectedEntry?.bloodPressure1} label="Blutdruck 1 (mmHg)" name="bloodPressure1" optional />
+            <HealthNumberField defaultValue={selectedEntry?.bloodPressure2} label="Blutdruck 2 (mmHg)" name="bloodPressure2" optional />
+            <HealthNumberField defaultValue={selectedEntry?.pulse} label="Puls (bpm)" name="pulse" optional />
+            <HealthNumberField decimal defaultValue={selectedEntry?.waistCm} label="Bauchumfang (cm)" name="waistCm" optional />
+            <HealthNumberField decimal defaultValue={selectedEntry?.weightKg} label="Gewicht (kg)" name="weightKg" optional />
+            <HealthNumberField decimal defaultValue={selectedEntry?.bodyFatPercent} label="Fettgehalt (%)" name="bodyFatPercent" optional />
           </FieldGroup>
           <DialogFooter>
             <DialogClose asChild>
@@ -379,14 +443,13 @@ function HealthNumberField({
     <Field>
       <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
       <Input
-        className="h-10 text-base sm:h-7 sm:text-xs/relaxed"
+        className="h-auto min-h-10 px-4 py-2 text-base sm:min-h-9 sm:text-sm/5"
         defaultValue={defaultValue ?? undefined}
         id={inputId}
         inputMode={decimal ? "decimal" : "numeric"}
         min="0"
         name={name}
         pattern={decimal ? "\\d+([\\.,]\\d)?" : "\\d*"}
-        placeholder={optional ? "Optional" : undefined}
         required={!optional}
         step={decimal ? "0.1" : "1"}
         type="text"
@@ -478,4 +541,23 @@ function formatDate(value: string) {
 
 function formatChartDate(value: ReactNode) {
   return formatDate(String(value))
+}
+
+function chartScale(values: Array<number | null | undefined>, step: number) {
+  const numbers = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+
+  if (numbers.length === 0) {
+    return {
+      domain: [0, step * 4] as [number, number],
+      ticks: Array.from({ length: 5 }, (_, index) => index * step),
+    }
+  }
+
+  const minimum = Math.max(0, Math.floor(Math.min(...numbers) / step) * step - step)
+  const maximum = Math.ceil(Math.max(...numbers) / step) * step + step
+
+  return {
+    domain: [minimum, maximum] as [number, number],
+    ticks: Array.from({ length: (maximum - minimum) / step + 1 }, (_, index) => minimum + index * step),
+  }
 }

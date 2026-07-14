@@ -105,12 +105,12 @@ export async function upsertHealthEntry(input: HealthEntryInput) {
     where: { date: input.date },
     create: input,
     update: {
-      bloodPressure1: input.bloodPressure1,
-      bloodPressure2: input.bloodPressure2,
-      waistCm: input.waistCm,
-      bodyFatPercent: input.bodyFatPercent,
-      weightKg: input.weightKg,
-      pulse: input.pulse,
+      ...(input.bloodPressure1 === null ? {} : { bloodPressure1: input.bloodPressure1 }),
+      ...(input.bloodPressure2 === null ? {} : { bloodPressure2: input.bloodPressure2 }),
+      ...(input.waistCm === null ? {} : { waistCm: input.waistCm }),
+      ...(input.bodyFatPercent === null ? {} : { bodyFatPercent: input.bodyFatPercent }),
+      ...(input.weightKg === null ? {} : { weightKg: input.weightKg }),
+      ...(input.pulse === null ? {} : { pulse: input.pulse }),
     },
   })
 }

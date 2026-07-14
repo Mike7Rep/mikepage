@@ -48,7 +48,7 @@ async function HealthDashboardContent() {
       <DashboardFrame
         actions={
           <>
-            <HealthEntryDialog />
+            <HealthEntryDialog entries={entries} />
             <DashboardActions status={healthStatus(entries.at(-1)?.date)} />
           </>
         }
