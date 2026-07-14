@@ -35,16 +35,19 @@ export function DashboardFrame({
   )
 }
 
-type DashboardSection = "depot" | "health" | "vermoegen"
+type DashboardSection = "depot" | "health" | "pullUps" | "vermoegen"
 
 function DashboardNavigation({ activeSection }: { activeSection?: DashboardSection }) {
   return (
-    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-full max-w-sm rounded-lg bg-white/[0.055] p-1">
+    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-full max-w-md rounded-lg bg-white/[0.055] p-1">
       <DashboardNavLink active={activeSection === "vermoegen"} href="/myDashboard/vermoegen">
         Vermögen
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "health"} href="/myDashboard/health">
         Health
+      </DashboardNavLink>
+      <DashboardNavLink active={activeSection === "pullUps"} href="/myDashboard/pullUps">
+        Pullups
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
         Depot

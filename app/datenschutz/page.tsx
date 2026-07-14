@@ -11,7 +11,11 @@ const sections = [
   },
   {
     title: "Zweck der Website",
-    text: "Diese Website informiert über berufliche Stationen, Projekte und Kontaktmöglichkeiten. Es gibt kein eigenes Nutzerkonto, kein eigenes Kontaktformular und keine eigene Datenbank für Besucherprofile.",
+    text: "Diese Website informiert über berufliche Stationen, Projekte und Kontaktmöglichkeiten. Für öffentliche Besucher gibt es kein eigenes Nutzerkonto, kein eigenes Kontaktformular und keine Datenbank für Besucherprofile. Ein separat geschützter Dashboardbereich verarbeitet ausschliesslich persönliche Daten des Betreibers.",
+  },
+  {
+    title: "Privates Dashboard und Google Health",
+    text: "Nach ausdrücklicher OAuth-Freigabe liest das private Dashboard ausschliesslich Herzfrequenzdaten aus der Google Health API. Messzeitpunkt und Herzfrequenz werden in der privaten Dashboard-Datenbank beim Hosting-Anbieter gespeichert und nur zur persönlichen Verlaufsdarstellung verwendet; eine Weitergabe für Werbung oder Analysen findet nicht statt. Das Google-Refresh-Token wird verschlüsselt gespeichert. Die Daten bleiben bis zu ihrer Löschung gespeichert. Die Freigabe kann jederzeit im Google-Konto widerrufen werden; eine Löschung der lokal gespeicherten Daten kann über die unten angegebene Kontaktadresse verlangt werden.",
   },
   {
     title: "Server- und Zugriffsdaten",
@@ -47,7 +51,7 @@ export default function DatenschutzPage() {
             Datenschutz
           </h1>
           <p className="max-w-2xl text-base leading-7 text-white/65">
-            Stand: 28. Mai 2026. Diese Erklärung beschreibt die Datenbearbeitung auf dieser schlanken statischen Website.
+            Stand: 14. Juli 2026. Diese Erklärung beschreibt die Datenbearbeitung auf dieser Website und im geschützten privaten Dashboardbereich.
           </p>
         </div>
 

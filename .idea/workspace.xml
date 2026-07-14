@@ -5,7 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12c6a851-1b11-440a-8cd0-38da75f5ff7d" name="Changes" comment="Optimierungen">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/asset-chart-panel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/asset-chart-panel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-frame.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-frame.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-loading-frame.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/dashboard-loading-frame.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/health-content.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/health-content.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/_components/wealth-content.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/_components/wealth-content.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/myDashboard/actions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app/myDashboard/actions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/prisma/schema.prisma" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,7 +19,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="176" />
+    <option name="cachedIndexableFilesCount" value="162" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="Git.Settings">
@@ -235,6 +241,7 @@
       <workItem from="1782214115274" duration="2072000" />
       <workItem from="1783157657489" duration="20000" />
       <workItem from="1783168603267" duration="318000" />
+      <workItem from="1784059445602" duration="29000" />
     </task>
     <task id="LOCAL-00001" summary="mikePage -- v0.00.01 --&gt; initial Comit">
       <option name="closed" value="true" />

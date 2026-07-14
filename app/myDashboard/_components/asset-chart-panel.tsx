@@ -18,6 +18,12 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import type { AssetChartData, AssetChartFill } from "@/lib/python-api"
 import { getAssetChartAction } from "../actions"
 import { formatCurrency, formatDate, formatQuantity } from "../format"
+import {
+  ChartRangeToggle,
+  dashboardChartClassName,
+  filterChartRange,
+  type ChartRange,
+} from "./chart-range-toggle"
 
 type LoadState = "idle" | "loading" | "ready" | "error"
 type ChartActionResult = Awaited<ReturnType<typeof getAssetChartAction>>
@@ -43,6 +49,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
   const [chart, setChart] = useState<AssetChartData | null>(null)
   const [state, setState] = useState<LoadState>("idle")
   const [error, setError] = useState<string | null>(null)
+  const [chartRange, setChartRange] = useState<ChartRange>("max")
 
   useEffect(() => {
     if (!symbol) return
@@ -75,13 +82,21 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
     }
   }, [symbol])
 
-  const chartRows = useMemo(
+  const allChartRows = useMemo(
     () => chart?.bars.map((bar) => ({ ...bar, averageEntryPrice: bar.averageEntryPrice ?? null })) ?? [],
     [chart]
   )
+  const chartRows = useMemo(
+    () => filterChartRange(allChartRows, chartRange, (bar) => bar.date),
+    [allChartRows, chartRange]
+  )
   const fills = useMemo(
-    () => chart?.fills.toSorted((left, right) => right.transactionTime.localeCompare(left.transactionTime)) ?? [],
-    [chart]
+    () => filterChartRange(
+      chart?.fills.toSorted((left, right) => left.date.localeCompare(right.date)) ?? [],
+      chartRange,
+      (fill) => fill.date
+    ).toSorted((left, right) => right.transactionTime.localeCompare(left.transactionTime)),
+    [chart, chartRange]
   )
 
   if (!symbol) return null
@@ -94,7 +109,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
             {chart?.symbol ?? symbol} Verlauf
           </CardTitle>
           <CardDescription className="mt-1 text-sm text-white/55">
-            {chart ? `${chart.name} · ${formatDate(chart.periodStart)} bis ${formatDate(chart.periodEnd)}` : "2 Jahre Tagesdaten"}
+            {chart ? `${chart.name} · ${formatDate(chartRows.at(0)?.date ?? chart.periodStart)} bis ${formatDate(chartRows.at(-1)?.date ?? chart.periodEnd)}` : "2 Jahre Tagesdaten"}
           </CardDescription>
         </div>
         <CardAction>
@@ -103,14 +118,15 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
+        <ChartRangeToggle className="self-end" onRangeChange={setChartRange} range={chartRange} />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="h-[260px] w-full sm:h-[320px]">
+          <div className={dashboardChartClassName}>
             {state === "loading" ? <LoadingState /> : null}
             {state === "error" ? <ErrorState message={error} /> : null}
             {state === "ready" && chartRows.length === 0 ? <EmptyState /> : null}
             {state === "ready" && chartRows.length > 0 && chart ? (
-              <ChartContainer config={assetChartConfig} className="h-[260px] w-full sm:h-[320px]">
+              <ChartContainer config={assetChartConfig} className="size-full min-h-0 aspect-auto">
                 <ComposedChart accessibilityLayer data={chartRows} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                   <defs>
                     <linearGradient id="asset-close-fill" x1="0" x2="0" y1="0" y2="1">
@@ -143,7 +159,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
                   />
                   <Area dataKey="close" dot={false} fill="url(#asset-close-fill)" fillOpacity={1} stroke="var(--color-close)" strokeWidth={2.25} type="monotone" />
                   <Line connectNulls={false} dataKey="averageEntryPrice" dot={false} isAnimationActive={false} stroke="var(--color-averageEntryPrice)" strokeDasharray="6 5" strokeWidth={2} type="stepAfter" />
-                  {chart.fills.map((fill) => (
+                  {fills.map((fill) => (
                     <ReferenceDot key={fill.id} x={fill.date} y={fill.price} r={4} fill={fill.side === "buy" ? "#2dd4bf" : "#fb7185"} stroke="#050505" strokeWidth={1.5} />
                   ))}
                 </ComposedChart>

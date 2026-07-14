@@ -1,7 +1,7 @@
 "use client"
 
-import { type ReactNode, useMemo, useState } from "react"
-import { Plus, Target, Trash2 } from "lucide-react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
+import { HeartPulse, Loader2, Plus, Target, Trash2 } from "lucide-react"
 import {
   Area,
   AreaChart,
@@ -24,8 +24,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import {
   Dialog,
@@ -40,17 +41,30 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import type { GoogleHealthStatus, HeartRateChartSeries } from "@/lib/google-health"
 import type { HealthEntryView, HealthGoalMetric, HealthGoalsView } from "@/lib/health-data"
+import { cn } from "@/lib/utils"
 import {
   createOrUpdateHealthEntryAction,
   deleteHealthEntryAction,
+  syncGoogleHeartRateAction,
   updateHealthGoalsAction,
 } from "../actions"
+import {
+  ChartRangeToggle,
+  dashboardChartClassName,
+  filterChartRange,
+  type ChartRange,
+} from "./chart-range-toggle"
 import { DashboardDatePicker, formatDashboardDate, todayInputValue } from "./dashboard-date-picker"
 
 const bloodPressureChartConfig = {
   bloodPressure1: { label: "Blutdruck 1", color: "#8bc7ff" },
   bloodPressure2: { label: "Blutdruck 2", color: "#45C456" },
+} satisfies ChartConfig
+
+const heartRateChartConfig = {
+  bpm: { label: "Herzfrequenz", color: "#fb7185" },
 } satisfies ChartConfig
 
 type SingleMetric = Exclude<HealthGoalMetric, "bloodPressure">
@@ -72,67 +86,150 @@ const decimalFormatter = new Intl.NumberFormat("de-CH", {
   minimumFractionDigits: 0,
 })
 
+const heartRateAxisFormatter = new Intl.DateTimeFormat("de-CH", {
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Zurich",
+})
+
+const heartRateDateFormatter = new Intl.DateTimeFormat("de-CH", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Zurich",
+  year: "2-digit",
+})
+
+const heartRateTooltipFormatter = new Intl.DateTimeFormat("de-CH", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Europe/Zurich",
+})
+
+type GoogleHealthSyncState = "idle" | "syncing" | "synced" | "error"
+
 export function HealthContent({
   entries,
   goals,
+  googleHealthResult,
+  googleHealthStatus: initialGoogleHealthStatus,
+  initialHeartRateSeries,
 }: {
   entries: HealthEntryView[]
   goals: HealthGoalsView
+  googleHealthResult?: string
+  googleHealthStatus: GoogleHealthStatus
+  initialHeartRateSeries: HeartRateChartSeries
 }) {
   const newestFirst = useMemo(() => [...entries].reverse(), [entries])
   const [editingEntry, setEditingEntry] = useState<HealthEntryView | null>(null)
+  const [chartRange, setChartRange] = useState<ChartRange>("max")
+  const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
+  const [heartRateSeries, setHeartRateSeries] = useState(initialHeartRateSeries)
+  const [googleHealthSyncState, setGoogleHealthSyncState] = useState<GoogleHealthSyncState>(
+    initialGoogleHealthStatus.state === "connected" ? "syncing" : "idle"
+  )
+  const [googleHealthSyncMessage, setGoogleHealthSyncMessage] = useState<string | null>(
+    initialGoogleHealthStatus.state === "connected"
+      ? "Neue Herzfrequenzdaten werden geladen …"
+      : null
+  )
+  const syncStarted = useRef(false)
+  const chartEntries = useMemo(
+    () => filterChartRange(entries, chartRange, (entry) => entry.date),
+    [chartRange, entries]
+  )
   const bloodPressureScale = chartScale([
-    ...entries.flatMap((entry) => [entry.bloodPressure1, entry.bloodPressure2]),
+    ...chartEntries.flatMap((entry) => [entry.bloodPressure1, entry.bloodPressure2]),
     goals.bloodPressure1,
     goals.bloodPressure2,
   ], 10)
 
+  useEffect(() => {
+    if (googleHealthStatus.state !== "connected" || syncStarted.current) return
+    syncStarted.current = true
+
+    void syncGoogleHeartRateAction().then((result) => {
+      if (!result.ok) {
+        setGoogleHealthSyncState("error")
+        setGoogleHealthSyncMessage(result.error)
+        return
+      }
+
+      setHeartRateSeries(result.series)
+      setGoogleHealthStatus(result.status)
+      setGoogleHealthSyncState("synced")
+      setGoogleHealthSyncMessage(
+        result.skipped
+          ? "Herzfrequenzdaten sind bereits aktuell."
+          : result.inserted > 0
+            ? `${result.inserted} neue Minutenwerte gespeichert.`
+            : "Keine neuen Herzfrequenzdaten gefunden."
+      )
+    })
+  }, [googleHealthStatus.state])
+
   return (
     <div className="flex flex-col gap-5">
-      <section className="flex w-full flex-col gap-4">
-        <HealthChartCard
-          goalAction={
-            <HealthGoalDialog
-              goals={goals}
-              metric="bloodPressure"
-              title="Zielwert Blutdruck"
-            />
-          }
-          title="Verlauf Blutdruck"
-        >
-          <ChartContainer config={bloodPressureChartConfig} className="aspect-video w-full">
-            <LineChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-              <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
-              <YAxis
-                allowDecimals={false}
-                axisLine={false}
-                domain={bloodPressureScale.domain}
-                ticks={bloodPressureScale.ticks}
-                tickLine={false}
-                width={40}
-              />
-              <ChartTooltip
-                cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
-                content={<ChartTooltipContent className="border-white/10 bg-background/95" indicator="line" labelFormatter={formatChartDate} />}
-              />
-              {goals.bloodPressure1 !== null ? <GoalLine color="#ef4444" value={goals.bloodPressure1} /> : null}
-              {goals.bloodPressure2 !== null ? <GoalLine color="#fb7185" value={goals.bloodPressure2} /> : null}
-              <Line connectNulls dataKey="bloodPressure1" dot={false} stroke="var(--color-bloodPressure1)" strokeWidth={2.5} type="monotone" />
-              <Line connectNulls dataKey="bloodPressure2" dot={false} stroke="var(--color-bloodPressure2)" strokeWidth={2.5} type="monotone" />
-            </LineChart>
-          </ChartContainer>
-        </HealthChartCard>
+      <section className="flex w-full flex-col gap-6">
+        <div className="flex justify-end px-4 sm:px-0">
+          <ChartRangeToggle onRangeChange={setChartRange} range={chartRange} />
+        </div>
+        <div className="flex flex-col gap-8 sm:gap-10">
+          <HeartRateChartCard
+            entries={heartRateSeries[chartRange]}
+            googleHealthResult={googleHealthResult}
+            range={chartRange}
+            status={googleHealthStatus}
+            syncMessage={googleHealthSyncMessage}
+            syncState={googleHealthSyncState}
+          />
 
-        {singleMetrics.map((metric) => (
           <HealthChartCard
-            goalAction={<HealthGoalDialog goals={goals} metric={metric.key} title={`Zielwert ${metric.title.replace("Verlauf ", "")}`} />}
-            key={metric.key}
-            title={metric.title}
+            goalAction={
+              <HealthGoalDialog
+                goals={goals}
+                metric="bloodPressure"
+                title="Zielwert Blutdruck"
+              />
+            }
+            title="Verlauf Blutdruck"
           >
-            <SingleMetricChart entries={entries} goal={goals[metric.key]} metric={metric} />
+            <ChartContainer config={bloodPressureChartConfig} className={dashboardChartClassName}>
+              <LineChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+                <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
+                <YAxis
+                  allowDecimals={false}
+                  axisLine={false}
+                  domain={bloodPressureScale.domain}
+                  ticks={bloodPressureScale.ticks}
+                  tickLine={false}
+                  width={40}
+                />
+                <ChartTooltip
+                  cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+                  content={<ChartTooltipContent className="border-white/10 bg-background/95" indicator="line" labelFormatter={formatChartDate} />}
+                />
+                {goals.bloodPressure1 !== null ? <GoalLine color="#ef4444" value={goals.bloodPressure1} /> : null}
+                {goals.bloodPressure2 !== null ? <GoalLine color="#fb7185" value={goals.bloodPressure2} /> : null}
+                <Line connectNulls dataKey="bloodPressure1" dot={false} stroke="var(--color-bloodPressure1)" strokeWidth={2.5} type="monotone" />
+                <Line connectNulls dataKey="bloodPressure2" dot={false} stroke="var(--color-bloodPressure2)" strokeWidth={2.5} type="monotone" />
+              </LineChart>
+            </ChartContainer>
           </HealthChartCard>
-        ))}
+
+          {singleMetrics.map((metric) => (
+            <HealthChartCard
+              goalAction={<HealthGoalDialog goals={goals} metric={metric.key} title={`Zielwert ${metric.title.replace("Verlauf ", "")}`} />}
+              key={metric.key}
+              title={metric.title}
+            >
+              <SingleMetricChart entries={chartEntries} goal={goals[metric.key]} metric={metric} />
+            </HealthChartCard>
+          ))}
+        </div>
       </section>
 
       <Card className="bg-white/[0.035] text-white">
@@ -222,7 +319,7 @@ function SingleMetricChart({
   ], 5)
 
   return (
-    <ChartContainer config={config} className="aspect-video w-full">
+    <ChartContainer config={config} className={dashboardChartClassName}>
       <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -258,6 +355,131 @@ function SingleMetricChart({
       </AreaChart>
     </ChartContainer>
   )
+}
+
+function HeartRateChartCard({
+  entries,
+  googleHealthResult,
+  range,
+  status,
+  syncMessage,
+  syncState,
+}: {
+  entries: HeartRateChartSeries[ChartRange]
+  googleHealthResult?: string
+  range: ChartRange
+  status: GoogleHealthStatus
+  syncMessage: string | null
+  syncState: GoogleHealthSyncState
+}) {
+  const scale = chartScale(entries.map((entry) => entry.bpm), 5)
+  const resultMessage = googleHealthResultMessage(googleHealthResult)
+  const statusMessage = syncMessage ?? resultMessage ?? googleHealthStatusMessage(status)
+  const hasError = syncState === "error" || googleHealthResultIsError(googleHealthResult)
+
+  return (
+    <Card className="w-full bg-white/[0.035] text-white">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+          Herzfrequenz
+        </CardTitle>
+        <CardDescription className="flex flex-col gap-1">
+          <span>
+            myDashboard liest ausschließlich deine Herzfrequenzdaten aus Google Health,
+            speichert sie in deiner privaten Dashboard-Datenbank und verwendet sie nur für dieses Diagramm.
+          </span>
+          <span aria-live="polite" className={cn(hasError ? "text-destructive" : "text-white/50")}>
+            {statusMessage}
+          </span>
+        </CardDescription>
+        <CardAction>
+          <GoogleHealthAction status={status} syncState={syncState} />
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={heartRateChartConfig} className={dashboardChartClassName}>
+          <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="heart-rate-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-bpm)" stopOpacity={0.42} />
+                <stop offset="95%" stopColor="var(--color-bpm)" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="measuredAt"
+              minTickGap={42}
+              tickFormatter={range === "1m" || range === "3m" ? formatHeartRateAxis : formatHeartRateDate}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              allowDecimals={false}
+              axisLine={false}
+              domain={scale.domain}
+              ticks={scale.ticks}
+              tickLine={false}
+              width={40}
+            />
+            <ChartTooltip
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+              content={(
+                <ChartTooltipContent
+                  className="border-white/10 bg-background/95"
+                  indicator="line"
+                  labelFormatter={formatHeartRateTooltip}
+                />
+              )}
+            />
+            <Area
+              dataKey="bpm"
+              dot={false}
+              fill="url(#heart-rate-fill)"
+              fillOpacity={1}
+              stroke="var(--color-bpm)"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  )
+}
+
+function GoogleHealthAction({
+  status,
+  syncState,
+}: {
+  status: GoogleHealthStatus
+  syncState: GoogleHealthSyncState
+}) {
+  if (status.state === "configuration_missing") {
+    return <Badge variant="destructive">OAuth fehlt</Badge>
+  }
+
+  if (status.state === "not_connected" || status.state === "expired" || syncState === "error") {
+    return (
+      <Button asChild variant="outline">
+        <a href="/myDashboard/google-health/connect">
+          <HeartPulse data-icon="inline-start" />
+          {status.state === "not_connected" ? "Verbinden" : "Neu verbinden"}
+        </a>
+      </Button>
+    )
+  }
+
+  if (syncState === "syncing") {
+    return (
+      <Badge variant="secondary">
+        <Loader2 className="animate-spin" data-icon="inline-start" />
+        Synchronisiert
+      </Badge>
+    )
+  }
+
+  return <Badge>Google Health verbunden</Badge>
 }
 
 function GoalLine({ color, value }: { color: string; value: number }) {
@@ -541,6 +763,47 @@ function formatDate(value: string) {
 
 function formatChartDate(value: ReactNode) {
   return formatDate(String(value))
+}
+
+function formatHeartRateAxis(value: string) {
+  return heartRateAxisFormatter.format(new Date(value))
+}
+
+function formatHeartRateDate(value: string) {
+  return heartRateDateFormatter.format(new Date(value))
+}
+
+function formatHeartRateTooltip(value: ReactNode) {
+  return heartRateTooltipFormatter.format(new Date(String(value)))
+}
+
+function googleHealthStatusMessage(status: GoogleHealthStatus) {
+  if (status.state === "configuration_missing") {
+    return `OAuth-Konfiguration fehlt: ${status.missing.join(", ")}.`
+  }
+  if (status.state === "not_connected") {
+    return "Verbinde einmal dein Google-Konto, danach werden neue Messwerte beim Öffnen der Seite geladen."
+  }
+  if (status.state === "expired") {
+    return "Die Google-Health-Freigabe ist abgelaufen und muss erneuert werden."
+  }
+  if (status.lastSyncedAt) {
+    return `Zuletzt synchronisiert: ${heartRateTooltipFormatter.format(new Date(status.lastSyncedAt))}.`
+  }
+  return "Google Health ist verbunden. Die erste Synchronisierung startet automatisch."
+}
+
+function googleHealthResultMessage(result?: string) {
+  if (result === "connected") return "Google Health wurde verbunden. Die erste Synchronisierung startet automatisch."
+  if (result === "denied") return "Der Zugriff auf Google Health wurde nicht freigegeben."
+  if (result === "invalid_state") return "Die OAuth-Sicherheitsprüfung ist abgelaufen. Bitte die Verbindung erneut starten."
+  if (result === "oauth_error") return "Google OAuth konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+  if (result === "configuration_missing") return "Die Google-Health-Umgebungsvariablen sind noch nicht vollständig gesetzt."
+  return null
+}
+
+function googleHealthResultIsError(result?: string) {
+  return Boolean(result && result !== "connected")
 }
 
 function chartScale(values: Array<number | null | undefined>, step: number) {

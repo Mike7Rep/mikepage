@@ -23,6 +23,12 @@ import {
   upsertHealthGoals,
 } from "@/lib/health-data"
 import {
+  getGoogleHealthStatus,
+  getHeartRateChartSeries,
+  syncGoogleHeartRate,
+} from "@/lib/google-health"
+import { incrementPullUps } from "@/lib/pull-up-data"
+import {
   deleteWealthSnapshot,
   parseInvestmentAssetsForm,
   parseWealthSnapshotForm,
@@ -154,6 +160,41 @@ export async function updateHealthGoalsAction(formData: FormData) {
   await upsertHealthGoals(parseHealthGoalsForm(formData))
   updateTag("dashboard:health-goals")
   revalidatePath("/myDashboard/health")
+}
+
+export async function syncGoogleHeartRateAction() {
+  await requireDashboardSession()
+
+  try {
+    const sync = await syncGoogleHeartRate()
+    const [series, status] = await Promise.all([
+      getHeartRateChartSeries(),
+      getGoogleHealthStatus(),
+    ])
+    revalidatePath("/myDashboard/health")
+    return { ok: true, series, status, ...sync } as const
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error
+        ? error.message
+        : "Google Health konnte nicht synchronisiert werden.",
+    } as const
+  }
+}
+
+export async function incrementPullUpsAction(amount: number) {
+  await requireDashboardSession()
+
+  if (!Number.isInteger(amount) || amount <= 0 || amount > 1_000) {
+    throw new Error("Pullups konnten nicht gespeichert werden.")
+  }
+
+  const entry = await incrementPullUps(amount)
+  updateTag("dashboard:pull-ups")
+  revalidatePath("/myDashboard/pullUps")
+
+  return { count: entry.count }
 }
 
 async function requireDashboardSession() {

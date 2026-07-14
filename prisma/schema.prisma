@@ -75,6 +75,38 @@ model HealthGoal {
   @@map("health_goals")
 }
 
+model GoogleHealthConnection {
+  id                     Int       @id @default(1)
+  refreshTokenCiphertext String    @map("refresh_token_ciphertext")
+  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  grantedScopes          String    @default("") @map("granted_scopes")
+  lastSyncedAt           DateTime? @map("last_synced_at") @db.Timestamptz(3)
+  backfillBefore         DateTime? @map("backfill_before") @db.Timestamptz(3)
+  connectedAt            DateTime  @default(now()) @map("connected_at") @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("google_health_connections")
+}
+
+model HeartRateSample {
+  id             Int      @id @default(autoincrement())
+  measuredAt     DateTime @unique @map("measured_at") @db.Timestamptz(3)
+  beatsPerMinute Int      @map("beats_per_minute")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("heart_rate_samples")
+}
+
+model PullUpEntry {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pull_up_entries")
+}
+
 model AssetPriceBar {
   id        Int      @id @default(autoincrement())
   symbol    String

@@ -4,6 +4,7 @@ import { Suspense } from "react"
 
 import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getHealthEntries, getHealthGoals } from "@/lib/health-data"
+import { getGoogleHealthStatus, getHeartRateChartSeries } from "@/lib/google-health"
 import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
@@ -16,15 +17,23 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function HealthPage() {
+export default function HealthPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ googleHealth?: string | string[] }>
+}) {
   return (
     <Suspense fallback={<DashboardLoadingFrame activeSection="health" />}>
-      <HealthDashboardContent />
+      <HealthDashboardContent searchParams={searchParams} />
     </Suspense>
   )
 }
 
-async function HealthDashboardContent() {
+async function HealthDashboardContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ googleHealth?: string | string[] }>
+}) {
   await connection()
 
   const sessionStatus = await getDashboardSessionStatus()
@@ -39,10 +48,16 @@ async function HealthDashboardContent() {
   }
 
   try {
-    const [entries, goals] = await Promise.all([
+    const [entries, goals, heartRateSeries, googleHealthStatus, params] = await Promise.all([
       getHealthEntries(),
       getHealthGoals(),
+      getHeartRateChartSeries(),
+      getGoogleHealthStatus(),
+      searchParams,
     ])
+    const googleHealthResult = Array.isArray(params.googleHealth)
+      ? params.googleHealth[0]
+      : params.googleHealth
 
     return (
       <DashboardFrame
@@ -54,7 +69,13 @@ async function HealthDashboardContent() {
         }
         activeSection="health"
       >
-        <HealthContent entries={entries} goals={goals} />
+        <HealthContent
+          entries={entries}
+          goals={goals}
+          googleHealthResult={googleHealthResult}
+          googleHealthStatus={googleHealthStatus}
+          initialHeartRateSeries={heartRateSeries}
+        />
       </DashboardFrame>
     )
   } catch (error) {

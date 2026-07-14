@@ -30,6 +30,12 @@ import { cn } from "@/lib/utils"
 import type { InvestmentAssetView, WealthSnapshotView } from "@/lib/wealth-data"
 import { createOrUpdateWealthSnapshotAction, deleteWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
 import { valueTone } from "../format"
+import {
+  ChartRangeToggle,
+  dashboardChartClassName,
+  filterChartRange,
+  type ChartRange,
+} from "./chart-range-toggle"
 import { DashboardDatePicker, todayInputValue } from "./dashboard-date-picker"
 
 const wealthTooltipLabels: Record<string, string> = {
@@ -60,12 +66,17 @@ export function WealthContent({
 }) {
   const latest = snapshots.at(-1)
   const currency = latest?.currency ?? "CHF"
+  const [chartRange, setChartRange] = useState<ChartRange>("max")
   const [assetRows, setAssetRows] = useState<InvestmentAssetDraft[]>(() => investmentAssets.map(investmentAssetToDraft))
   const investmentAssetsTotal = useMemo(
     () => assetRows.reduce((sum, row) => sum + draftNumber(calculatedInvestmentAssetValue(row)), 0),
     [assetRows]
   )
   const monthlyDiff = useMemo(() => monthlyWealthSlope(snapshots), [snapshots])
+  const chartSnapshots = useMemo(
+    () => filterChartRange(snapshots, chartRange, wealthSnapshotDate),
+    [chartRange, snapshots]
+  )
 
   useEffect(() => {
     setAssetRows(investmentAssets.map(investmentAssetToDraft))
@@ -88,9 +99,10 @@ export function WealthContent({
               Verlauf
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={wealthChartConfig} className="h-[280px] w-full sm:h-[360px]">
-              <AreaChart accessibilityLayer data={snapshots} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+          <CardContent className="flex flex-col gap-4">
+            <ChartRangeToggle className="self-end" onRangeChange={setChartRange} range={chartRange} />
+            <ChartContainer config={wealthChartConfig} className={dashboardChartClassName}>
+              <AreaChart accessibilityLayer data={chartSnapshots} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                 <defs>
                   <linearGradient id="wealth-total-fill" x1="0" x2="0" y1="0" y2="1">
                     <stop offset="5%" stopColor="var(--color-total)" stopOpacity={0.45} />
@@ -583,6 +595,13 @@ function currentWeekKey() {
   const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1))
   const week = Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
   return `${String(target.getUTCFullYear()).slice(-2)}_${String(week).padStart(2, "0")}`
+}
+
+function wealthSnapshotDate(snapshot: WealthSnapshotView) {
+  const januaryFourth = new Date(Date.UTC(snapshot.year, 0, 4))
+  const januaryFourthDay = januaryFourth.getUTCDay() || 7
+  januaryFourth.setUTCDate(januaryFourth.getUTCDate() - januaryFourthDay + 1 + (snapshot.week - 1) * 7)
+  return januaryFourth.toISOString().slice(0, 10)
 }
 
 function investmentAssetToDraft(asset: InvestmentAssetView): InvestmentAssetDraft {
