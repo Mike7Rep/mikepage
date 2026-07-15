@@ -1,7 +1,11 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
+import { LogOut } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { logoutDashboardAction } from "../actions"
 
 export function DashboardFrame({
   actions,
@@ -20,9 +24,12 @@ export function DashboardFrame({
         <header className="flex min-w-0 flex-col gap-5 px-4 sm:px-0 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-4">
             <div>
-              <h1 className="text-4xl leading-none font-extrabold tracking-[0] uppercase sm:text-5xl md:text-7xl">
-                myDashboard
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="min-w-0 text-[clamp(1.5rem,9vw,2.25rem)] leading-none font-extrabold tracking-[0] uppercase sm:text-5xl md:text-7xl">
+                  myDashboard
+                </h1>
+                <DashboardLogoutButton />
+              </div>
               {subtitle ? <p className="mt-3 text-sm leading-6 text-white/55">{subtitle}</p> : null}
               <DashboardNavigation activeSection={activeSection} />
             </div>
@@ -32,6 +39,23 @@ export function DashboardFrame({
         {children}
       </section>
     </main>
+  )
+}
+
+function DashboardLogoutButton() {
+  return (
+    <form action={logoutDashboardAction}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button aria-label="Logout" className="size-11" size="icon-lg" type="submit" variant="ghost">
+            <LogOut className="size-5" aria-hidden="true" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={8}>
+          Logout
+        </TooltipContent>
+      </Tooltip>
+    </form>
   )
 }
 

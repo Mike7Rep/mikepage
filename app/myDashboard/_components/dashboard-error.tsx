@@ -1,8 +1,6 @@
-import { AlertCircle, LogOut } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { logoutDashboardAction } from "../actions"
 import { DashboardFrame } from "./dashboard-frame"
 
 export function DashboardError({
@@ -17,7 +15,7 @@ export function DashboardError({
   title: string
 }) {
   return (
-    <DashboardFrame actions={<LogoutButton />} subtitle={subtitle}>
+    <DashboardFrame subtitle={subtitle}>
       <Card className="bg-destructive/10 text-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg text-white">
@@ -40,15 +38,4 @@ export function DashboardError({
 
 function compactDetail(detail: string) {
   return detail.replace(/\s+/g, " ").trim().slice(0, 260)
-}
-
-function LogoutButton() {
-  return (
-    <form action={logoutDashboardAction}>
-      <Button type="submit">
-        <LogOut data-icon="inline-start" />
-        Logout
-      </Button>
-    </form>
-  )
 }

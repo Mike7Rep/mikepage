@@ -4,6 +4,7 @@ import type {Metadata} from "next";
 import {Geist, Geist_Mono, Outfit} from "next/font/google";
 import "./globals.css";
 import {ThemeProvider} from "@/components/theme-provider";
+import {TooltipProvider} from "@/components/ui/tooltip";
 import Navigation from "./Navigation"
 
 
@@ -31,10 +32,12 @@ export default function RootLayout({
   return (
     <html lang="de" className={outfit.variable} suppressHydrationWarning>
     <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-    <ThemeProvider>
-      <Navigation />
-      {children}
-    </ThemeProvider>
+    <TooltipProvider>
+      <ThemeProvider>
+        <Navigation />
+        {children}
+      </ThemeProvider>
+    </TooltipProvider>
     </body>
     </html>
   );

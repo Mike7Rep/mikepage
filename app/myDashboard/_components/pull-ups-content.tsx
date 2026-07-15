@@ -18,7 +18,6 @@ import { incrementPullUpsAction } from "../actions"
 import {
   ChartRangeToggle,
   chartRangeStart,
-  dashboardChartClassName,
   type ChartRange,
 } from "./chart-range-toggle"
 
@@ -50,7 +49,8 @@ export function PullUpsContent({
   today: string
 }) {
   const initialTotal = entries.find((entry) => entry.date === today)?.count ?? 0
-  const [todayTotal, setTodayTotal] = useState(initialTotal)
+  const [persistedTodayTotal, setPersistedTodayTotal] = useState(initialTotal)
+  const [currentSetCount, setCurrentSetCount] = useState(0)
   const [range, setRange] = useState<ChartRange>("1m")
   const [saveState, setSaveState] = useState<SaveState>("idle")
   const pendingCount = useRef(0)
@@ -58,6 +58,7 @@ export function PullUpsContent({
   const saving = useRef(false)
 
   const displayedEntries = useMemo(() => {
+    const todayTotal = persistedTodayTotal + currentSetCount
     const nextEntries = entries.map((entry) => (
       entry.date === today ? { ...entry, count: todayTotal } : entry
     ))
@@ -67,7 +68,7 @@ export function PullUpsContent({
     }
 
     return nextEntries
-  }, [entries, today, todayTotal])
+  }, [currentSetCount, entries, persistedTodayTotal, today])
 
   const chartRows = useMemo(
     () => dailyChartRows(displayedEntries, today, range),
@@ -100,7 +101,8 @@ export function PullUpsContent({
 
     try {
       const entry = await incrementPullUpsAction(amount)
-      setTodayTotal(entry.count + pendingCount.current)
+      setPersistedTodayTotal(entry.count)
+      setCurrentSetCount(pendingCount.current)
       setSaveState("saved")
     } catch {
       failed = true
@@ -114,7 +116,7 @@ export function PullUpsContent({
 
   function addPullUp() {
     pendingCount.current += 1
-    setTodayTotal((current) => current + 1)
+    setCurrentSetCount((current) => current + 1)
     setSaveState("queued")
     scheduleSave()
   }
@@ -132,7 +134,7 @@ export function PullUpsContent({
           +1
         </Button>
         <p className="text-xl font-normal text-white tabular-nums" id="pull-up-count">
-          {todayTotal} Pullups
+          {currentSetCount} Pullups
         </p>
         <p aria-live="polite" className="sr-only">
           {saveStatusMessage(saveState)}
@@ -163,7 +165,7 @@ export function PullUpsContent({
           <CardContent className="flex flex-col gap-4">
             <ChartRangeToggle className="self-end" onRangeChange={setRange} range={range} />
 
-            <ChartContainer config={pullUpChartConfig} className={dashboardChartClassName}>
+            <ChartContainer config={pullUpChartConfig} className="aspect-[8/5] min-h-[440px] w-full">
               <AreaChart accessibilityLayer data={chartRows} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                 <defs>
                   <linearGradient id="pull-up-count-fill" x1="0" x2="0" y1="0" y2="1">

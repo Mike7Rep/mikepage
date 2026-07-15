@@ -4,7 +4,6 @@ import { Suspense } from "react"
 
 import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getPullUpEntries, todayInZurich } from "@/lib/pull-up-data"
-import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
 import { DashboardLoadingFrame } from "../_components/dashboard-loading-frame"
@@ -53,7 +52,7 @@ async function PullUpsDashboardContent() {
   }
 
   return (
-    <DashboardFrame actions={<DashboardActions />} activeSection="pullUps">
+    <DashboardFrame activeSection="pullUps">
       <PullUpsContent entries={entries} today={todayInZurich()} />
     </DashboardFrame>
   )
