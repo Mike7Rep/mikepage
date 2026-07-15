@@ -15,7 +15,7 @@ const sections = [
   },
   {
     title: "Privates Dashboard und Google Health",
-    text: "Nach ausdrücklicher OAuth-Freigabe liest das private Dashboard ausschliesslich Herzfrequenzdaten aus der Google Health API. Messzeitpunkt und Herzfrequenz werden in der privaten Dashboard-Datenbank beim Hosting-Anbieter gespeichert und nur zur persönlichen Verlaufsdarstellung verwendet; eine Weitergabe für Werbung oder Analysen findet nicht statt. Das Google-Refresh-Token wird verschlüsselt gespeichert. Die Daten bleiben bis zu ihrer Löschung gespeichert. Die Freigabe kann jederzeit im Google-Konto widerrufen werden; eine Löschung der lokal gespeicherten Daten kann über die unten angegebene Kontaktadresse verlangt werden.",
+    text: "Nach ausdrücklicher OAuth-Freigabe liest das private Dashboard ausschliesslich Herzfrequenzdaten, tägliche Schrittzahlen und Schlafintervalle aus der Google Health API. Messzeitpunkt, Herzfrequenz, Datum, Schrittzahl sowie Beginn und Ende der Schlafintervalle werden in der privaten Dashboard-Datenbank beim Hosting-Anbieter gespeichert und nur zur persönlichen Verlaufsdarstellung und Berechnung des Belastungsscores verwendet; eine Weitergabe für Werbung oder Analysen findet nicht statt. Das Google-Refresh-Token wird verschlüsselt gespeichert. Die Daten bleiben bis zu ihrer Löschung gespeichert. Die Freigabe kann jederzeit im Google-Konto widerrufen werden; eine Löschung der lokal gespeicherten Daten kann über die unten angegebene Kontaktadresse verlangt werden.",
   },
   {
     title: "Server- und Zugriffsdaten",

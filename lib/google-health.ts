@@ -2,14 +2,19 @@ import "server-only"
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto"
 
+import { calculateHealthStrainScore } from "@/lib/health-strain"
 import { prisma } from "@/lib/prisma"
 
-export const GOOGLE_HEALTH_SCOPE =
-  "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+const GOOGLE_HEALTH_SCOPES = [
+  "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+  "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+  "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
+] as const
+export const GOOGLE_HEALTH_SCOPE = GOOGLE_HEALTH_SCOPES.join(" ")
 export const GOOGLE_HEALTH_STATE_COOKIE = "mydashboard_google_health_state"
 export const GOOGLE_HEALTH_COOKIE_PATH = "/myDashboard/google-health"
 
-export type HeartRateChartRange = "1m" | "3m" | "6m" | "1y" | "max"
+export type HeartRateChartRange = "1h" | "1d" | "1w"
 
 export type HeartRateChartPoint = {
   measuredAt: string
@@ -18,11 +23,16 @@ export type HeartRateChartPoint = {
 
 export type HeartRateChartSeries = Record<HeartRateChartRange, HeartRateChartPoint[]>
 
+export type DailyStepsPoint = {
+  date: string
+  steps: number | null
+}
+
 export type GoogleHealthStatus =
   | { state: "configuration_missing"; missing: string[] }
   | { state: "not_connected" }
   | {
-      state: "connected" | "expired"
+      state: "connected" | "expired" | "scope_update_required"
       connectedAt: string
       lastSyncedAt: string | null
       refreshTokenExpiresAt: string | null
@@ -48,11 +58,37 @@ type GoogleHealthDataPoint = {
       physicalTime?: string
     }
   }
+  sleep?: {
+    interval?: {
+      endTime?: string
+      startTime?: string
+    }
+    stages?: Array<{
+      endTime?: string
+      startTime?: string
+      type?: string
+    }>
+  }
 }
 
 type GoogleHealthDataResponse = {
   dataPoints?: GoogleHealthDataPoint[]
   nextPageToken?: string
+}
+
+type GoogleHealthDailyStepsResponse = {
+  rollupDataPoints?: Array<{
+    civilStartTime?: {
+      date?: {
+        day?: number
+        month?: number
+        year?: number
+      }
+    }
+    steps?: {
+      countSum?: string
+    }
+  }>
 }
 
 type AggregatedHeartRateRow = {
@@ -61,6 +97,8 @@ type AggregatedHeartRateRow = {
 }
 
 const HEALTH_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/heart-rate/dataPoints"
+const STEPS_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp"
+const SLEEP_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/sleep/dataPoints:reconcile"
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const CONNECTION_ID = 1
@@ -71,15 +109,23 @@ const INITIAL_SYNC_DAYS = 30
 const SYNC_OVERLAP_MS = DAY_MS
 const SYNC_THROTTLE_MS = MINUTE_MS
 const INSERT_BATCH_SIZE = 2_000
+const STEPS_SYNC_DAYS = 90
+const SLEEP_SYNC_DAYS = 7
+const SLEEPING_STAGE_TYPES = new Set(["ASLEEP", "DEEP", "LIGHT", "REM"])
 
-const chartRanges: HeartRateChartRange[] = ["1m", "3m", "6m", "1y", "max"]
+const chartRanges: HeartRateChartRange[] = ["1h", "1d", "1w"]
 const chartBuckets: Record<HeartRateChartRange, string> = {
-  "1m": "1 hour",
-  "3m": "3 hours",
-  "6m": "6 hours",
-  "1y": "12 hours",
-  max: "1 day",
+  "1h": "1 minute",
+  "1d": "5 minutes",
+  "1w": "30 minutes",
 }
+
+const civilDateFormatter = new Intl.DateTimeFormat("en-CA", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Zurich",
+  year: "numeric",
+})
 
 export function getGoogleHealthConfig() {
   const clientId = readEnv("GOOGLE_CLIENT_ID")
@@ -145,8 +191,8 @@ export async function saveGoogleHealthAuthorizationCode(code: string, redirectUr
     throw new Error("Google hat kein Refresh-Token geliefert. Bitte die Verbindung erneut bestätigen.")
   }
 
-  if (tokens.scope && !tokens.scope.split(" ").includes(GOOGLE_HEALTH_SCOPE)) {
-    throw new Error("Die Freigabe für Herzfrequenzdaten wurde nicht erteilt.")
+  if (tokens.scope && !hasGoogleHealthScopes(tokens.scope)) {
+    throw new Error("Die Freigabe für Herzfrequenz-, Aktivitäts- und Schlafdaten wurde nicht vollständig erteilt.")
   }
 
   const refreshTokenExpiresAt = tokens.refresh_token_expires_in
@@ -167,6 +213,7 @@ export async function saveGoogleHealthAuthorizationCode(code: string, redirectUr
     update: {
       connectedAt: new Date(),
       grantedScopes: tokens.scope ?? GOOGLE_HEALTH_SCOPE,
+      lastSyncedAt: null,
       refreshTokenCiphertext,
       refreshTokenExpiresAt,
     },
@@ -188,7 +235,9 @@ export async function getGoogleHealthStatus(): Promise<GoogleHealthStatus> {
     refreshTokenExpiresAt: connection.refreshTokenExpiresAt?.toISOString() ?? null,
     state: connection.refreshTokenExpiresAt && connection.refreshTokenExpiresAt <= new Date()
       ? "expired"
-      : "connected",
+      : hasGoogleHealthScopes(connection.grantedScopes)
+        ? "connected"
+        : "scope_update_required",
   }
 }
 
@@ -199,7 +248,50 @@ export async function getHeartRateChartSeries(): Promise<HeartRateChartSeries> {
   return Object.fromEntries(entries) as HeartRateChartSeries
 }
 
-export async function syncGoogleHeartRate() {
+export async function getDailyStepsSeries(): Promise<DailyStepsPoint[]> {
+  const dates = recentCivilDates(STEPS_SYNC_DAYS)
+  const rows = await prisma.dailyStepCount.findMany({
+    where: { date: { gte: new Date(`${dates[0]}T00:00:00.000Z`) } },
+    orderBy: { date: "asc" },
+  })
+  const stepsByDate = new Map(
+    rows.map((row) => [row.date.toISOString().slice(0, 10), row.steps])
+  )
+
+  return dates.map((date) => ({
+    date,
+    steps: stepsByDate.get(date) ?? null,
+  }))
+}
+
+export async function getHealthStrainScore() {
+  const now = new Date()
+  const start = new Date(now.getTime() - SLEEP_SYNC_DAYS * DAY_MS)
+  const [heartRateSamples, sleepIntervals] = await Promise.all([
+    prisma.heartRateSample.findMany({
+      where: { measuredAt: { gte: start, lte: now } },
+      orderBy: { measuredAt: "asc" },
+      select: { beatsPerMinute: true, measuredAt: true },
+    }),
+    prisma.googleHealthSleepInterval.findMany({
+      where: {
+        endedAt: { gte: start },
+        startedAt: { lt: now },
+      },
+      orderBy: { startedAt: "asc" },
+      select: { endedAt: true, startedAt: true },
+    }),
+  ])
+
+  return calculateHealthStrainScore({
+    heartRateSamples,
+    maximumHeartRate: personalMaximumHeartRate(now),
+    now,
+    sleepIntervals,
+  })
+}
+
+export async function syncGoogleHealthData() {
   const config = requireGoogleHealthConfig()
   const connection = await prisma.googleHealthConnection.findUnique({ where: { id: CONNECTION_ID } })
   if (!connection) {
@@ -208,10 +300,13 @@ export async function syncGoogleHeartRate() {
   if (connection.refreshTokenExpiresAt && connection.refreshTokenExpiresAt <= new Date()) {
     throw new Error("Die Google-Health-Verbindung ist abgelaufen. Bitte erneut verbinden.")
   }
+  if (!hasGoogleHealthScopes(connection.grantedScopes)) {
+    throw new Error("Für Schritte und Belastungsscore braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
+  }
 
   const now = new Date(Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS)
   if (connection.lastSyncedAt && now.getTime() - connection.lastSyncedAt.getTime() < SYNC_THROTTLE_MS) {
-    return { inserted: 0, skipped: true }
+    return { insertedHeartRate: 0, skipped: true, updatedSleepIntervals: 0, updatedStepDays: 0 }
   }
 
   const refreshToken = decryptRefreshToken(connection.refreshTokenCiphertext, config.encryptionSecret)
@@ -225,12 +320,19 @@ export async function syncGoogleHeartRate() {
     : new Date(now.getTime() - INITIAL_SYNC_DAYS * DAY_MS)
   const backfillEnd = connection.backfillBefore ?? forwardStart
   const backfillStart = new Date(backfillEnd.getTime() - MAX_QUERY_WINDOW_MS)
-  const [forwardSamples, backfillSamples] = await Promise.all([
+  const sleepStart = new Date(now.getTime() - SLEEP_SYNC_DAYS * DAY_MS)
+  const [forwardSamples, backfillSamples, dailySteps, sleepIntervals] = await Promise.all([
     fetchHeartRateRange(tokens.access_token, forwardStart, now),
     fetchHeartRateRange(tokens.access_token, backfillStart, backfillEnd),
+    fetchDailySteps(tokens.access_token),
+    fetchSleepIntervals(tokens.access_token, sleepStart, now),
   ])
   const samples = normalizeHeartRateSamples([...forwardSamples, ...backfillSamples])
-  const inserted = await insertHeartRateSamples(samples)
+  const [insertedHeartRate, updatedStepDays, updatedSleepIntervals] = await Promise.all([
+    insertHeartRateSamples(samples),
+    replaceDailySteps(dailySteps),
+    replaceSleepIntervals(sleepIntervals),
+  ])
 
   await prisma.googleHealthConnection.update({
     where: { id: CONNECTION_ID },
@@ -246,7 +348,7 @@ export async function syncGoogleHeartRate() {
     },
   })
 
-  return { inserted, skipped: false }
+  return { insertedHeartRate, skipped: false, updatedSleepIntervals, updatedStepDays }
 }
 
 async function getHeartRateChartRange(range: HeartRateChartRange) {
@@ -319,7 +421,111 @@ async function fetchHeartRateWindow(accessToken: string, start: Date, end: Date)
   return points
 }
 
-async function googleHealthFetch(url: URL, accessToken: string) {
+async function fetchDailySteps(accessToken: string) {
+  const dates = recentCivilDates(STEPS_SYNC_DAYS)
+  const [startYear, startMonth, startDay] = dates[0].split("-").map(Number)
+  const tomorrow = new Date(`${dates.at(-1)}T00:00:00.000Z`)
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+
+  const response = await googleHealthFetch(new URL(STEPS_API_URL), accessToken, {
+    body: JSON.stringify({
+      dataSourceFamily: "users/me/dataSourceFamilies/all-sources",
+      pageSize: STEPS_SYNC_DAYS,
+      range: {
+        start: {
+          date: { day: startDay, month: startMonth, year: startYear },
+          time: {},
+        },
+        end: {
+          date: {
+            day: tomorrow.getUTCDate(),
+            month: tomorrow.getUTCMonth() + 1,
+            year: tomorrow.getUTCFullYear(),
+          },
+          time: {},
+        },
+      },
+      windowSizeDays: 1,
+    }),
+    method: "POST",
+  })
+  const data = await googleJson<GoogleHealthDailyStepsResponse>(
+    response,
+    "Schrittdaten konnten nicht geladen werden."
+  )
+
+  return (data.rollupDataPoints ?? []).flatMap((point) => {
+    const { day, month, year } = point.civilStartTime?.date ?? {}
+    const steps = Number(point.steps?.countSum)
+    if (
+      !Number.isInteger(day) ||
+      !Number.isInteger(month) ||
+      !Number.isInteger(year) ||
+      !Number.isSafeInteger(steps) ||
+      steps < 0 ||
+      steps > 2_147_483_647
+    ) {
+      return []
+    }
+
+    return [{
+      date: new Date(Date.UTC(year!, month! - 1, day!)),
+      steps,
+    }]
+  })
+}
+
+async function fetchSleepIntervals(accessToken: string, start: Date, end: Date) {
+  const intervals = new Map<string, { endedAt: Date; startedAt: Date }>()
+  let pageToken = ""
+
+  do {
+    const url = new URL(SLEEP_API_URL)
+    url.searchParams.set("dataSourceFamily", "users/me/dataSourceFamilies/all-sources")
+    url.searchParams.set(
+      "filter",
+      `sleep.interval.end_time >= "${start.toISOString()}" AND sleep.interval.end_time < "${end.toISOString()}"`
+    )
+    url.searchParams.set("pageSize", "25")
+    if (pageToken) url.searchParams.set("pageToken", pageToken)
+
+    const response = await googleHealthFetch(url, accessToken)
+    const data = await googleJson<GoogleHealthDataResponse>(response, "Schlafdaten konnten nicht geladen werden.")
+
+    for (const point of data.dataPoints ?? []) {
+      const sleepingStages = (point.sleep?.stages ?? []).filter((stage) => (
+        stage.type && SLEEPING_STAGE_TYPES.has(stage.type)
+      ))
+      const candidates = sleepingStages.length > 0
+        ? sleepingStages
+        : [point.sleep?.interval ?? {}]
+
+      for (const candidate of candidates) {
+        const startedAt = new Date(candidate.startTime ?? "")
+        const endedAt = new Date(candidate.endTime ?? "")
+        if (
+          !Number.isFinite(startedAt.getTime())
+          || !Number.isFinite(endedAt.getTime())
+          || endedAt.getTime() <= startedAt.getTime()
+        ) {
+          continue
+        }
+
+        intervals.set(`${startedAt.toISOString()}:${endedAt.toISOString()}`, { endedAt, startedAt })
+      }
+    }
+
+    pageToken = data.nextPageToken ?? ""
+  } while (pageToken)
+
+  return [...intervals.values()].sort((left, right) => left.startedAt.getTime() - right.startedAt.getTime())
+}
+
+async function googleHealthFetch(
+  url: URL,
+  accessToken: string,
+  init?: { body: string; method: "POST" }
+) {
   let response: Response | null = null
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -328,7 +534,9 @@ async function googleHealthFetch(url: URL, accessToken: string) {
       headers: {
         accept: "application/json",
         authorization: `Bearer ${accessToken}`,
+        ...(init?.body ? { "content-type": "application/json" } : {}),
       },
+      ...init,
     })
     if (response.status !== 429 && response.status < 500) return response
     await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt))
@@ -375,6 +583,38 @@ async function insertHeartRateSamples(samples: Array<{ beatsPerMinute: number; m
   return inserted
 }
 
+async function replaceDailySteps(steps: Array<{ date: Date; steps: number }>) {
+  const dates = recentCivilDates(STEPS_SYNC_DAYS)
+  const start = new Date(`${dates[0]}T00:00:00.000Z`)
+  const end = new Date(`${dates.at(-1)}T00:00:00.000Z`)
+  end.setUTCDate(end.getUTCDate() + 1)
+
+  await prisma.$transaction(async (transaction) => {
+    await transaction.dailyStepCount.deleteMany({
+      where: { date: { gte: start, lt: end } },
+    })
+    if (steps.length > 0) {
+      await transaction.dailyStepCount.createMany({ data: steps })
+    }
+  })
+
+  return steps.length
+}
+
+async function replaceSleepIntervals(intervals: Array<{ endedAt: Date; startedAt: Date }>) {
+  await prisma.$transaction(async (transaction) => {
+    await transaction.googleHealthSleepInterval.deleteMany()
+    if (intervals.length > 0) {
+      await transaction.googleHealthSleepInterval.createMany({
+        data: intervals,
+        skipDuplicates: true,
+      })
+    }
+  })
+
+  return intervals.length
+}
+
 async function googleJson<T>(response: Response, fallback: string): Promise<T> {
   const data: unknown = await response.json().catch(() => null)
   if (response.ok && data !== null) return data as T
@@ -417,15 +657,43 @@ function encryptionKey(secret: string) {
 }
 
 function chartRangeStart(end: Date, range: HeartRateChartRange) {
-  if (range === "max") return new Date(0)
-  const months = { "1m": 1, "3m": 3, "6m": 6, "1y": 12 }[range]
-  const result = new Date(end)
-  const day = result.getUTCDate()
-  result.setUTCDate(1)
-  result.setUTCMonth(result.getUTCMonth() - months)
-  const lastDay = new Date(Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)).getUTCDate()
-  result.setUTCDate(Math.min(day, lastDay))
-  return result
+  const duration = { "1h": 60 * MINUTE_MS, "1d": DAY_MS, "1w": 7 * DAY_MS }[range]
+  return new Date(end.getTime() - duration)
+}
+
+function hasGoogleHealthScopes(scopes: string) {
+  const granted = new Set(scopes.split(/\s+/).filter(Boolean))
+  return GOOGLE_HEALTH_SCOPES.every((scope) => granted.has(scope))
+}
+
+function recentCivilDates(days: number) {
+  const parts = Object.fromEntries(
+    civilDateFormatter
+      .formatToParts(new Date())
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)])
+  ) as Record<"day" | "month" | "year", number>
+  const today = new Date(Date.UTC(parts.year, parts.month - 1, parts.day))
+
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today)
+    date.setUTCDate(today.getUTCDate() - days + index + 1)
+    return date.toISOString().slice(0, 10)
+  })
+}
+
+function personalMaximumHeartRate(now: Date) {
+  const parts = Object.fromEntries(
+    civilDateFormatter
+      .formatToParts(now)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)])
+  ) as Record<"day" | "month" | "year", number>
+  const age = parts.year - 1985 - (
+    parts.month < 7 || (parts.month === 7 && parts.day < 7) ? 1 : 0
+  )
+
+  return 208 - 0.7 * age
 }
 
 function requireGoogleHealthConfig() {

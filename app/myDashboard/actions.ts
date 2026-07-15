@@ -23,9 +23,11 @@ import {
   upsertHealthGoals,
 } from "@/lib/health-data"
 import {
+  getDailyStepsSeries,
   getGoogleHealthStatus,
+  getHealthStrainScore,
   getHeartRateChartSeries,
-  syncGoogleHeartRate,
+  syncGoogleHealthData,
 } from "@/lib/google-health"
 import { incrementPullUps } from "@/lib/pull-up-data"
 import {
@@ -162,17 +164,19 @@ export async function updateHealthGoalsAction(formData: FormData) {
   revalidatePath("/myDashboard/health")
 }
 
-export async function syncGoogleHeartRateAction() {
+export async function syncGoogleHealthAction() {
   await requireDashboardSession()
 
   try {
-    const sync = await syncGoogleHeartRate()
-    const [series, status] = await Promise.all([
+    const sync = await syncGoogleHealthData()
+    const [series, status, steps, strainScore] = await Promise.all([
       getHeartRateChartSeries(),
       getGoogleHealthStatus(),
+      getDailyStepsSeries(),
+      getHealthStrainScore(),
     ])
     revalidatePath("/myDashboard/health")
-    return { ok: true, series, status, ...sync } as const
+    return { ok: true, series, status, steps, strainScore, ...sync } as const
   } catch (error) {
     return {
       ok: false,

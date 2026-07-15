@@ -97,6 +97,24 @@ model HeartRateSample {
   @@map("heart_rate_samples")
 }
 
+model DailyStepCount {
+  date      DateTime @id @db.Date
+  steps     Int
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("daily_step_counts")
+}
+
+model GoogleHealthSleepInterval {
+  id        Int      @id @default(autoincrement())
+  startedAt DateTime @map("started_at") @db.Timestamptz(3)
+  endedAt   DateTime @map("ended_at") @db.Timestamptz(3)
+
+  @@unique([startedAt, endedAt])
+  @@index([endedAt])
+  @@map("google_health_sleep_intervals")
+}
+
 model PullUpEntry {
   id        Int      @id @default(autoincrement())
   date      DateTime @unique @db.Date

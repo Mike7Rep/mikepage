@@ -4,7 +4,12 @@ import { Suspense } from "react"
 
 import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getHealthEntries, getHealthGoals } from "@/lib/health-data"
-import { getGoogleHealthStatus, getHeartRateChartSeries } from "@/lib/google-health"
+import {
+  getDailyStepsSeries,
+  getGoogleHealthStatus,
+  getHealthStrainScore,
+  getHeartRateChartSeries,
+} from "@/lib/google-health"
 import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
@@ -51,6 +56,8 @@ async function HealthDashboardContent({
     getHealthEntries(),
     getHealthGoals(),
     getHeartRateChartSeries(),
+    getDailyStepsSeries(),
+    getHealthStrainScore(),
     getGoogleHealthStatus(),
     searchParams,
   ]).then(
@@ -69,7 +76,15 @@ async function HealthDashboardContent({
     )
   }
 
-  const [entries, goals, heartRateSeries, googleHealthStatus, params] = healthData.data
+  const [
+    entries,
+    goals,
+    heartRateSeries,
+    dailySteps,
+    healthStrainScore,
+    googleHealthStatus,
+    params,
+  ] = healthData.data
   const googleHealthResult = Array.isArray(params.googleHealth)
     ? params.googleHealth[0]
     : params.googleHealth
@@ -89,6 +104,8 @@ async function HealthDashboardContent({
         goals={goals}
         googleHealthResult={googleHealthResult}
         googleHealthStatus={googleHealthStatus}
+        initialDailySteps={dailySteps}
+        initialHealthStrainScore={healthStrainScore}
         initialHeartRateSeries={heartRateSeries}
       />
     </DashboardFrame>

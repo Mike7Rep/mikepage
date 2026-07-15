@@ -73,6 +73,18 @@
   --chart-3: oklch(0.77 0.20 131);
   --chart-4: oklch(0.65 0.18 132);
   --chart-5: oklch(0.53 0.14 132);
+  --heart-zone-recovery: oklch(0.67 0.02 250);
+  --heart-zone-very-light: oklch(0.72 0.14 235);
+  --heart-zone-light: oklch(0.72 0.18 145);
+  --heart-zone-medium: oklch(0.82 0.17 90);
+  --heart-zone-strong: oklch(0.72 0.19 55);
+  --heart-zone-maximum: oklch(0.63 0.24 25);
+  --strain-green: oklch(0.68 0.18 145);
+  --strain-light-green: oklch(0.82 0.16 125);
+  --strain-yellow: oklch(0.86 0.18 95);
+  --strain-orange: oklch(0.72 0.19 55);
+  --strain-red: oklch(0.63 0.24 25);
+  --strain-unavailable: oklch(0.55 0.02 250);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
