@@ -14,7 +14,12 @@ import {
 export async function GET(request: NextRequest) {
   const sessionStatus = await getDashboardSessionStatus()
   if (sessionStatus !== "authenticated") {
-    return NextResponse.redirect(new URL("/myDashboard?next=/myDashboard/health", request.url))
+    return NextResponse.redirect(
+      new URL(
+        "/myDashboard?next=/myDashboard/health",
+        googleHealthRedirectUri(request.nextUrl.origin)
+      )
+    )
   }
 
   const config = getGoogleHealthConfig()
@@ -37,7 +42,10 @@ export async function GET(request: NextRequest) {
 }
 
 function healthRedirect(request: NextRequest, result: string) {
-  const url = new URL("/myDashboard/health", request.url)
+  const url = new URL(
+    "/myDashboard/health",
+    googleHealthRedirectUri(request.nextUrl.origin)
+  )
   url.searchParams.set("googleHealth", result)
   return NextResponse.redirect(url)
 }

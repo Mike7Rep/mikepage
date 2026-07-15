@@ -305,7 +305,7 @@ async function fetchHeartRateWindow(accessToken: string, start: Date, end: Date)
     const url = new URL(HEALTH_API_URL)
     url.searchParams.set(
       "filter",
-      `heartRate.sample_time.physical_time >= "${start.toISOString()}" AND heartRate.sample_time.physical_time < "${end.toISOString()}"`
+      `heart_rate.sample_time.physical_time >= "${start.toISOString()}" AND heart_rate.sample_time.physical_time < "${end.toISOString()}"`
     )
     url.searchParams.set("pageSize", "10000")
     if (pageToken) url.searchParams.set("pageToken", pageToken)

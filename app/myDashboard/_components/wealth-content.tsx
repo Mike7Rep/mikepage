@@ -1,6 +1,6 @@
 "use client"
 
-import { type Dispatch, type ReactNode, type SetStateAction, useEffect, useId, useMemo, useState } from "react"
+import { type Dispatch, type ReactNode, type SetStateAction, useId, useMemo, useState } from "react"
 import { Plus, Save, Trash2 } from "lucide-react"
 import {
   Area,
@@ -77,10 +77,6 @@ export function WealthContent({
     () => filterChartRange(snapshots, chartRange, wealthSnapshotDate),
     [chartRange, snapshots]
   )
-
-  useEffect(() => {
-    setAssetRows(investmentAssets.map(investmentAssetToDraft))
-  }, [investmentAssets])
 
   return (
     <div className="flex flex-col gap-5">

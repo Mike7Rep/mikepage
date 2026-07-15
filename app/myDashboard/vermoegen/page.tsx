@@ -58,7 +58,11 @@ async function VermoegenContent() {
       actions={<DashboardActions status={wealthUpdatedLabel(data.snapshots.at(-1)?.updatedAt)} />}
       activeSection="vermoegen"
     >
-      <WealthContent investmentAssets={data.investmentAssets} snapshots={data.snapshots} />
+      <WealthContent
+        key={data.investmentAssets.map((asset) => asset.updatedAt).join()}
+        investmentAssets={data.investmentAssets}
+        snapshots={data.snapshots}
+      />
     </DashboardFrame>
   )
 }

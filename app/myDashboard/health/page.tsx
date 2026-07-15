@@ -47,47 +47,52 @@ async function HealthDashboardContent({
     )
   }
 
-  try {
-    const [entries, goals, heartRateSeries, googleHealthStatus, params] = await Promise.all([
-      getHealthEntries(),
-      getHealthGoals(),
-      getHeartRateChartSeries(),
-      getGoogleHealthStatus(),
-      searchParams,
-    ])
-    const googleHealthResult = Array.isArray(params.googleHealth)
-      ? params.googleHealth[0]
-      : params.googleHealth
+  const healthData = await Promise.all([
+    getHealthEntries(),
+    getHealthGoals(),
+    getHeartRateChartSeries(),
+    getGoogleHealthStatus(),
+    searchParams,
+  ]).then(
+    (data) => ({ data } as const),
+    (error: unknown) => ({ error } as const)
+  )
 
-    return (
-      <DashboardFrame
-        actions={
-          <>
-            <HealthEntryDialog entries={entries} />
-            <DashboardActions status={healthStatus(entries.at(-1)?.date)} />
-          </>
-        }
-        activeSection="health"
-      >
-        <HealthContent
-          entries={entries}
-          goals={goals}
-          googleHealthResult={googleHealthResult}
-          googleHealthStatus={googleHealthStatus}
-          initialHeartRateSeries={heartRateSeries}
-        />
-      </DashboardFrame>
-    )
-  } catch (error) {
+  if ("error" in healthData) {
     return (
       <DashboardError
-        detail={error instanceof Error ? error.message : "Health-Daten konnten nicht geladen werden."}
+        detail={healthData.error instanceof Error ? healthData.error.message : "Health-Daten konnten nicht geladen werden."}
         help="Die Anmeldung hat funktioniert. Bitte pruefe DATABASE_URL und ob die lokale Postgres-Datenbank läuft."
         subtitle="Login erfolgreich, Postgres nicht erreichbar."
         title="Health-Daten konnten nicht geladen werden"
       />
     )
   }
+
+  const [entries, goals, heartRateSeries, googleHealthStatus, params] = healthData.data
+  const googleHealthResult = Array.isArray(params.googleHealth)
+    ? params.googleHealth[0]
+    : params.googleHealth
+
+  return (
+    <DashboardFrame
+      actions={
+        <>
+          <HealthEntryDialog entries={entries} />
+          <DashboardActions status={healthStatus(entries.at(-1)?.date)} />
+        </>
+      }
+      activeSection="health"
+    >
+      <HealthContent
+        entries={entries}
+        goals={goals}
+        googleHealthResult={googleHealthResult}
+        googleHealthStatus={googleHealthStatus}
+        initialHeartRateSeries={heartRateSeries}
+      />
+    </DashboardFrame>
+  )
 }
 
 function healthStatus(latestDate?: string) {
