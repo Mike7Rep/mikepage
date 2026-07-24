@@ -3,7 +3,7 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 
-export type ChartRange = "1m" | "3m" | "6m" | "1y" | "max"
+export type ChartRange = "1w" | "1m" | "3m" | "6m" | "1y" | "max"
 
 export const dashboardChartClassName = "aspect-[16/5] min-h-[220px] w-full"
 
@@ -18,10 +18,12 @@ const chartRanges = [
 export function ChartRangeToggle({
   className,
   onRangeChange,
+  options = chartRanges,
   range,
 }: {
   className?: string
   onRangeChange: (range: ChartRange) => void
+  options?: ReadonlyArray<{ label: string; shortLabel: string; value: ChartRange }>
   range: ChartRange
 }) {
   return (
@@ -37,7 +39,7 @@ export function ChartRangeToggle({
       value={range}
       variant="outline"
     >
-      {chartRanges.map((option) => (
+      {options.map((option) => (
         <ToggleGroupItem aria-label={option.label} key={option.value} value={option.value}>
           <span className="sm:hidden">{option.shortLabel}</span>
           <span className="hidden sm:inline">{option.label}</span>
@@ -60,6 +62,12 @@ export function filterChartRange<T>(
 }
 
 export function chartRangeStart(end: Date, range: ChartRange) {
+  if (range === "1w") {
+    const result = new Date(end)
+    result.setUTCDate(result.getUTCDate() - 6)
+    return result
+  }
+
   const months = { "1m": 1, "3m": 3, "6m": 6, "1y": 12, max: null }[range]
   if (months === null) return null
 

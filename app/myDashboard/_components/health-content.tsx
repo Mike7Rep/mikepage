@@ -62,7 +62,6 @@ import {
 } from "../actions"
 import {
   ChartRangeToggle,
-  dashboardChartClassName,
   filterChartRange,
   type ChartRange,
 } from "./chart-range-toggle"
@@ -81,6 +80,8 @@ const heartRateChartConfig = {
 const dailyStepsChartConfig = {
   steps: { label: "Schritte", color: "var(--chart-2)" },
 } satisfies ChartConfig
+
+const healthChartClassName = "aspect-[16/5] min-h-[440px] w-full sm:min-h-[220px]"
 
 const heartRateRangeOptions = [
   { label: "1 Stunde", shortLabel: "1h", value: "1h" },
@@ -112,12 +113,12 @@ const age = currentDate.year - 1985 - (
 )
 const heartRateMaximum = 208 - 0.7 * age
 const heartRateZones = [
-  { color: "var(--heart-zone-recovery)", description: "Schlaf, Sitzen, Entspannung", from: 0, label: "Erholung", percent: "< 50 %", to: 0.5 },
-  { color: "var(--heart-zone-very-light)", description: "Spazieren", from: 0.5, label: "Sehr leicht", percent: "50–60 %", to: 0.6 },
-  { color: "var(--heart-zone-light)", description: "Zone 2, lockeres Laufen", from: 0.6, label: "Leicht", percent: "60–70 %", to: 0.7 },
-  { color: "var(--heart-zone-medium)", description: "Ausdauertraining", from: 0.7, label: "Mittel", percent: "70–80 %", to: 0.8 },
-  { color: "var(--heart-zone-strong)", description: "Hartes Training", from: 0.8, label: "Stark", percent: "80–90 %", to: 0.9 },
-  { color: "var(--heart-zone-maximum)", description: "Sprint, Intervalle", from: 0.9, label: "Maximal", percent: "90–100 %", to: 1 },
+  { color: "var(--heart-zone-recovery)", from: 0, label: "Erholung", to: 0.5 },
+  { color: "var(--heart-zone-very-light)", from: 0.5, label: "Sehr leicht", to: 0.6 },
+  { color: "var(--heart-zone-light)", from: 0.6, label: "Leicht", to: 0.7 },
+  { color: "var(--heart-zone-medium)", from: 0.7, label: "Mittel", to: 0.8 },
+  { color: "var(--heart-zone-strong)", from: 0.8, label: "Stark", to: 0.9 },
+  { color: "var(--heart-zone-maximum)", from: 0.9, label: "Maximal", to: 1 },
 ] as const
 
 type SingleMetric = Exclude<HealthGoalMetric, "bloodPressure">
@@ -137,11 +138,6 @@ const singleMetrics: SingleMetricDefinition[] = [
 const decimalFormatter = new Intl.NumberFormat("de-CH", {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
-})
-
-const compactNumberFormatter = new Intl.NumberFormat("de-CH", {
-  maximumFractionDigits: 1,
-  notation: "compact",
 })
 
 const heartRateAxisFormatter = new Intl.DateTimeFormat("de-CH", {
@@ -275,7 +271,7 @@ export function HealthContent({
             }
             title="Verlauf Blutdruck"
           >
-            <ChartContainer config={bloodPressureChartConfig} className={dashboardChartClassName}>
+            <ChartContainer config={bloodPressureChartConfig} className={healthChartClassName}>
               <LineChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                 <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
                 <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
@@ -398,7 +394,7 @@ function SingleMetricChart({
   ], 5)
 
   return (
-    <ChartContainer config={config} className={dashboardChartClassName}>
+    <ChartContainer config={config} className={healthChartClassName}>
       <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -469,14 +465,11 @@ function HeartRateChartCard({
         <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
           Herzfrequenz
         </CardTitle>
-        <CardDescription className="flex flex-col gap-1">
-          <span>
-            myDashboard liest ausschließlich deine Herzfrequenz-, Schlaf- und täglichen Schrittdaten aus Google Health,
-            speichert sie in deiner privaten Dashboard-Datenbank und verwendet sie nur für diese Diagramme und den Belastungsscore.
-          </span>
-          <span aria-live="polite" className={cn(hasError ? "text-destructive" : "text-white/50")}>
-            {statusMessage}
-          </span>
+        <CardDescription
+          aria-live="polite"
+          className={cn(hasError ? "text-destructive" : "text-white/50")}
+        >
+          {statusMessage}
         </CardDescription>
         <CardAction>
           <GoogleHealthAction status={status} syncState={syncState} />
@@ -492,7 +485,7 @@ function HeartRateChartCard({
             range={range}
           />
         </div>
-        <ChartContainer config={heartRateChartConfig} className={dashboardChartClassName}>
+        <ChartContainer config={heartRateChartConfig} className={healthChartClassName}>
           <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
             <defs>
               <linearGradient id="heart-rate-fill" x1="0" x2="0" y1="0" y2="1">
@@ -550,33 +543,6 @@ function HeartRateChartCard({
             />
           </AreaChart>
         </ChartContainer>
-        <div>
-          <p className="mb-2 text-white/60">
-            HFmax {decimalFormatter.format(heartRateMaximum)} bpm · Alter {age} · 208 − (0,7 × Alter)
-          </p>
-          <ul aria-label="Herzfrequenzzonen" className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {heartRateZones.map((zone) => (
-              <li className="flex gap-2 rounded-md border border-white/10 bg-black/15 p-2" key={zone.label}>
-                <span
-                  aria-hidden="true"
-                  className="mt-0.5 size-3 shrink-0 rounded-sm"
-                  style={{ backgroundColor: zone.color }}
-                />
-                <span className="min-w-0">
-                  <span className="block font-medium text-white">
-                    {zone.label} · {zone.percent}
-                  </span>
-                  <span className="block text-white/55">
-                    {zone.from === 0
-                      ? `< ${Math.round(heartRateMaximum * zone.to)} bpm`
-                      : `${Math.round(heartRateMaximum * zone.from)}–${Math.round(heartRateMaximum * zone.to)} bpm`}
-                    {" · "}{zone.description}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </CardContent>
     </Card>
   )
@@ -601,9 +567,6 @@ function DailyStepsChartCard({
         <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
           Tägliche Schritte
         </CardTitle>
-        <CardDescription>
-          Abgeglichene Tageswerte aus allen verfügbaren Google-Health-Quellen. Fehlende Tage werden nicht als „0 Schritte“ gewertet.
-        </CardDescription>
         <CardAction>
           <DataRangeToggle
             ariaLabel="Schrittezeitraum"
@@ -615,7 +578,7 @@ function DailyStepsChartCard({
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <ChartContainer config={dailyStepsChartConfig} className={dashboardChartClassName}>
+          <ChartContainer config={dailyStepsChartConfig} className={healthChartClassName}>
             <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
               <XAxis
@@ -629,7 +592,7 @@ function DailyStepsChartCard({
               <YAxis
                 allowDecimals={false}
                 axisLine={false}
-                tickFormatter={formatCompactNumber}
+                tickFormatter={formatStepsAxis}
                 tickLine={false}
                 width={44}
               />
@@ -646,7 +609,7 @@ function DailyStepsChartCard({
             </BarChart>
           </ChartContainer>
         ) : (
-          <div className={`${dashboardChartClassName} grid place-items-center rounded-md border border-dashed border-white/10 text-center text-white/50`}>
+          <div className={`${healthChartClassName} grid place-items-center rounded-md border border-dashed border-white/10 text-center text-white/50`}>
             Noch keine Schrittdaten für diesen Zeitraum vorhanden.
           </div>
         )}
@@ -775,9 +738,33 @@ export function HealthEntryDialog({
 }) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [date, setDate] = useState(entry?.date ?? todayInputValue())
+  const dialogContentRef = useRef<HTMLDivElement>(null)
   const open = controlledOpen ?? uncontrolledOpen
   const setOpen = onOpenChange ?? setUncontrolledOpen
   const selectedEntry = entries.find((candidate) => candidate.date === date)
+
+  useEffect(() => {
+    const dialogContent = dialogContentRef.current
+    const viewport = window.visualViewport
+
+    if (!open || !dialogContent || !viewport) return
+    const visibleDialog = dialogContent
+    const visibleViewport = viewport
+
+    function fitDialogToVisibleViewport() {
+      visibleDialog.style.top = `${visibleViewport.offsetTop + visibleViewport.height / 2}px`
+      visibleDialog.style.maxHeight = `${Math.max(visibleViewport.height - 16, 0)}px`
+    }
+
+    fitDialogToVisibleViewport()
+    visibleViewport.addEventListener("resize", fitDialogToVisibleViewport)
+    visibleViewport.addEventListener("scroll", fitDialogToVisibleViewport)
+
+    return () => {
+      visibleViewport.removeEventListener("resize", fitDialogToVisibleViewport)
+      visibleViewport.removeEventListener("scroll", fitDialogToVisibleViewport)
+    }
+  }, [open])
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) setDate(entry?.date ?? todayInputValue())
@@ -799,7 +786,10 @@ export function HealthEntryDialog({
           </Button>
         </DialogTrigger>
       ) : null}
-      <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-md overflow-y-auto border-0 bg-black text-white">
+      <DialogContent
+        className="max-h-[calc(100dvh-1rem)] max-w-md overflow-y-auto overscroll-y-contain border-0 bg-black text-white"
+        ref={dialogContentRef}
+      >
         <DialogHeader>
           <DialogTitle>{selectedEntry ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}</DialogTitle>
           <DialogDescription>
@@ -1026,8 +1016,10 @@ function formatStepsTooltip(value: ReactNode) {
   return stepsTooltipFormatter.format(new Date(`${String(value)}T00:00:00.000Z`))
 }
 
-function formatCompactNumber(value: number) {
-  return compactNumberFormatter.format(value)
+function formatStepsAxis(value: number) {
+  return Math.abs(value) >= 1_000
+    ? `${decimalFormatter.format(value / 1_000)}k`
+    : decimalFormatter.format(value)
 }
 
 function googleHealthStatusMessage(status: GoogleHealthStatus) {

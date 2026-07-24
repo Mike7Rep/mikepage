@@ -30,6 +30,13 @@ const pullUpChartConfig = {
   },
 } satisfies ChartConfig
 
+const pullUpRangeOptions = [
+  { label: "Woche", shortLabel: "1W", value: "1w" },
+  { label: "Monat", shortLabel: "1M", value: "1m" },
+  { label: "3 Monate", shortLabel: "3M", value: "3m" },
+  { label: "Max", shortLabel: "Max", value: "max" },
+] satisfies Array<{ label: string; shortLabel: string; value: ChartRange }>
+
 const shortDateFormatter = new Intl.DateTimeFormat("de-CH", {
   day: "2-digit",
   month: "2-digit",
@@ -74,8 +81,8 @@ export function PullUpsContent({
     () => dailyChartRows(displayedEntries, today, range),
     [displayedEntries, range, today]
   )
-  const week = useMemo(
-    () => weeklyPullUps(displayedEntries, today),
+  const lastSevenDays = useMemo(
+    () => rollingSevenDayPullUps(displayedEntries, today),
     [displayedEntries, today]
   )
 
@@ -152,18 +159,23 @@ export function PullUpsContent({
                 Pullups pro Tag
               </CardTitle>
               <CardDescription className="mt-1 text-white/50">
-                Diese Woche · Änderung zur Vorwoche
+                Letzte 7 Tage · Differenz zu den 7 Tagen davor
               </CardDescription>
             </div>
             <CardAction className="flex items-center gap-2">
-              <span className="text-2xl font-semibold text-white tabular-nums">{week.current}</span>
-              <Badge variant={week.change < 0 ? "destructive" : "default"}>
-                {signedNumber(week.change)}
+              <span className="text-2xl font-semibold text-white tabular-nums">{lastSevenDays.current}</span>
+              <Badge variant={lastSevenDays.change < 0 ? "destructive" : "default"}>
+                DIFF {signedNumber(lastSevenDays.change)}
               </Badge>
             </CardAction>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <ChartRangeToggle className="self-end" onRangeChange={setRange} range={range} />
+            <ChartRangeToggle
+              className="self-end"
+              onRangeChange={setRange}
+              options={pullUpRangeOptions}
+              range={range}
+            />
 
             <ChartContainer config={pullUpChartConfig} className="aspect-[8/5] min-h-[440px] w-full">
               <AreaChart accessibilityLayer data={chartRows} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
@@ -227,28 +239,22 @@ function dailyChartRows(entries: PullUpEntryView[], today: string, range: ChartR
   return rows
 }
 
-function weeklyPullUps(entries: PullUpEntryView[], today: string) {
-  const currentWeekStart = startOfWeek(dateFromValue(today))
-  const nextWeekStart = new Date(currentWeekStart)
-  nextWeekStart.setUTCDate(nextWeekStart.getUTCDate() + 7)
-  const previousWeekStart = new Date(currentWeekStart)
-  previousWeekStart.setUTCDate(previousWeekStart.getUTCDate() - 7)
+function rollingSevenDayPullUps(entries: PullUpEntryView[], today: string) {
+  const currentEnd = dateFromValue(today)
+  const currentStart = new Date(currentEnd)
+  currentStart.setUTCDate(currentStart.getUTCDate() - 6)
+  const previousStart = new Date(currentStart)
+  previousStart.setUTCDate(previousStart.getUTCDate() - 7)
   let current = 0
   let previous = 0
 
   for (const entry of entries) {
     const date = dateFromValue(entry.date)
-    if (date >= currentWeekStart && date < nextWeekStart) current += entry.count
-    if (date >= previousWeekStart && date < currentWeekStart) previous += entry.count
+    if (date >= currentStart && date <= currentEnd) current += entry.count
+    if (date >= previousStart && date < currentStart) previous += entry.count
   }
 
   return { change: current - previous, current }
-}
-
-function startOfWeek(date: Date) {
-  const day = date.getUTCDay() || 7
-  date.setUTCDate(date.getUTCDate() - day + 1)
-  return date
 }
 
 function dateFromValue(value: string) {
