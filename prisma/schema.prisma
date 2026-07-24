@@ -115,6 +115,38 @@ model GoogleHealthSleepInterval {
   @@map("google_health_sleep_intervals")
 }
 
+model WithingsConnection {
+  id                     Int       @id @default(1)
+  userId                 BigInt    @unique @map("user_id")
+  accessTokenCiphertext  String    @map("access_token_ciphertext")
+  accessTokenExpiresAt   DateTime  @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenCiphertext String    @map("refresh_token_ciphertext")
+  refreshTokenExpiresAt  DateTime  @map("refresh_token_expires_at") @db.Timestamptz(3)
+  grantedScopes          String    @default("") @map("granted_scopes")
+  lastUpdate             BigInt?   @map("last_update")
+  lastSyncedAt           DateTime? @map("last_synced_at") @db.Timestamptz(3)
+  connectedAt            DateTime  @default(now()) @map("connected_at") @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("withings_connections")
+}
+
+model WithingsMeasurement {
+  groupId        BigInt    @id @map("group_id")
+  measuredAt     DateTime  @map("measured_at") @db.Timestamptz(3)
+  weightKg       Decimal?  @map("weight_kg") @db.Decimal(6, 3)
+  bodyFatPercent Decimal?  @map("body_fat_percent") @db.Decimal(5, 2)
+  isDeleted      Boolean   @default(false) @map("is_deleted")
+  modifiedAt     DateTime? @map("modified_at") @db.Timestamptz(3)
+  deviceId       String?   @map("device_id")
+  model          String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([isDeleted, measuredAt, groupId])
+  @@map("withings_measurements")
+}
+
 model PullUpEntry {
   id        Int      @id @default(autoincrement())
   date      DateTime @unique @db.Date

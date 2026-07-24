@@ -3,7 +3,7 @@ import { cacheLife, cacheTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 
 export type HealthEntryView = {
-  id: number
+  id: number | null
   date: string
   bloodPressure1: number | null
   bloodPressure2: number | null
@@ -35,8 +35,6 @@ type HealthEntryInput = {
   bloodPressure1: number | null
   bloodPressure2: number | null
   waistCm: number | null
-  bodyFatPercent: number | null
-  weightKg: number | null
   pulse: number | null
 }
 
@@ -63,21 +61,61 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
   cacheLife("hours")
   cacheTag("dashboard:health")
 
-  const rows = await prisma.healthEntry.findMany({
-    orderBy: [{ date: "asc" }, { id: "asc" }],
-  })
+  const [rows, withingsMeasurements] = await Promise.all([
+    prisma.healthEntry.findMany({
+      orderBy: [{ date: "asc" }, { id: "asc" }],
+    }),
+    prisma.withingsMeasurement.findMany({
+      where: { isDeleted: false },
+      orderBy: [{ measuredAt: "asc" }, { groupId: "asc" }],
+    }),
+  ])
+  const entries = new Map<string, HealthEntryView>()
 
-  return rows.map((row) => ({
-    id: row.id,
-    date: row.date.toISOString().slice(0, 10),
-    bloodPressure1: row.bloodPressure1,
-    bloodPressure2: row.bloodPressure2,
-    waistCm: row.waistCm === null ? null : Number(row.waistCm),
-    bodyFatPercent: row.bodyFatPercent === null ? null : Number(row.bodyFatPercent),
-    weightKg: row.weightKg === null ? null : Number(row.weightKg),
-    pulse: row.pulse,
-    updatedAt: row.updatedAt.toISOString(),
-  }))
+  for (const row of rows) {
+    const date = row.date.toISOString().slice(0, 10)
+    entries.set(date, {
+      id: row.id,
+      date,
+      bloodPressure1: row.bloodPressure1,
+      bloodPressure2: row.bloodPressure2,
+      waistCm: row.waistCm === null ? null : Number(row.waistCm),
+      bodyFatPercent: null,
+      weightKg: null,
+      pulse: row.pulse,
+      updatedAt: row.updatedAt.toISOString(),
+    })
+  }
+
+  for (const measurement of withingsMeasurements) {
+    const date = zurichDate(measurement.measuredAt)
+    const entry = entries.get(date) ?? {
+      id: null,
+      date,
+      bloodPressure1: null,
+      bloodPressure2: null,
+      waistCm: null,
+      bodyFatPercent: null,
+      weightKg: null,
+      pulse: null,
+      updatedAt: measurement.updatedAt.toISOString(),
+    }
+
+    entries.set(date, {
+      ...entry,
+      bodyFatPercent: measurement.bodyFatPercent === null
+        ? entry.bodyFatPercent
+        : Number(measurement.bodyFatPercent),
+      weightKg: measurement.weightKg === null
+        ? entry.weightKg
+        : Number(measurement.weightKg),
+      updatedAt: measurement.updatedAt > new Date(entry.updatedAt)
+        ? measurement.updatedAt.toISOString()
+        : entry.updatedAt,
+    })
+  }
+
+  return [...entries.values()].sort((left, right) => left.date.localeCompare(right.date))
 }
 
 export async function getHealthGoals(): Promise<HealthGoalsView> {
@@ -103,13 +141,15 @@ export async function getHealthGoals(): Promise<HealthGoalsView> {
 export async function upsertHealthEntry(input: HealthEntryInput) {
   return prisma.healthEntry.upsert({
     where: { date: input.date },
-    create: input,
+    create: {
+      ...input,
+      bodyFatPercent: null,
+      weightKg: null,
+    },
     update: {
       ...(input.bloodPressure1 === null ? {} : { bloodPressure1: input.bloodPressure1 }),
       ...(input.bloodPressure2 === null ? {} : { bloodPressure2: input.bloodPressure2 }),
       ...(input.waistCm === null ? {} : { waistCm: input.waistCm }),
-      ...(input.bodyFatPercent === null ? {} : { bodyFatPercent: input.bodyFatPercent }),
-      ...(input.weightKg === null ? {} : { weightKg: input.weightKg }),
       ...(input.pulse === null ? {} : { pulse: input.pulse }),
     },
   })
@@ -133,8 +173,6 @@ export function parseHealthEntryForm(formData: FormData): HealthEntryInput {
     bloodPressure1: parsePositiveInt(formData, "bloodPressure1", "Blutdruck 1", true),
     bloodPressure2: parsePositiveInt(formData, "bloodPressure2", "Blutdruck 2", true),
     waistCm: parsePositiveDecimal(formData, "waistCm", "Bauchumfang", true),
-    bodyFatPercent: parsePositiveDecimal(formData, "bodyFatPercent", "Fettgehalt", true),
-    weightKg: parsePositiveDecimal(formData, "weightKg", "Gewicht", true),
     pulse: parsePositiveInt(formData, "pulse", "Puls", true),
   }
 }
@@ -172,6 +210,15 @@ function parseDate(raw: string) {
   }
 
   return new Date(`${value}T00:00:00.000Z`)
+}
+
+function zurichDate(value: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "Europe/Zurich",
+    year: "numeric",
+  }).format(value)
 }
 
 function parsePositiveInt(formData: FormData, key: string, label: string, optional = false) {

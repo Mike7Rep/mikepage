@@ -1,7 +1,7 @@
 "use client"
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
-import { HeartPulse, Loader2, Plus, Target, Trash2 } from "lucide-react"
+import { HeartPulse, Loader2, Plus, Scale, Target, Trash2 } from "lucide-react"
 import {
   Area,
   AreaChart,
@@ -54,10 +54,12 @@ import type {
 import type { HealthEntryView, HealthGoalMetric, HealthGoalsView } from "@/lib/health-data"
 import type { HealthStrainScore } from "@/lib/health-strain"
 import { cn } from "@/lib/utils"
+import type { WithingsStatus } from "@/lib/withings"
 import {
   createOrUpdateHealthEntryAction,
   deleteHealthEntryAction,
   syncGoogleHealthAction,
+  syncWithingsAction,
   updateHealthGoalsAction,
 } from "../actions"
 import {
@@ -163,16 +165,18 @@ const stepsTooltipFormatter = new Intl.DateTimeFormat("de-CH", {
   timeZone: "Europe/Zurich",
 })
 
-type GoogleHealthSyncState = "idle" | "syncing" | "synced" | "error"
+type HealthSyncState = "idle" | "syncing" | "synced" | "error"
 
 export function HealthContent({
-  entries,
+  entries: initialEntries,
   goals,
   googleHealthResult,
   googleHealthStatus: initialGoogleHealthStatus,
   initialDailySteps,
   initialHealthStrainScore,
   initialHeartRateSeries,
+  withingsResult,
+  withingsStatus: initialWithingsStatus,
 }: {
   entries: HealthEntryView[]
   goals: HealthGoalsView
@@ -181,7 +185,16 @@ export function HealthContent({
   initialDailySteps: DailyStepsPoint[]
   initialHealthStrainScore: HealthStrainScore
   initialHeartRateSeries: HeartRateChartSeries
+  withingsResult?: string
+  withingsStatus: WithingsStatus
 }) {
+  const [withingsEntries, setWithingsEntries] = useState<{
+    source: HealthEntryView[]
+    value: HealthEntryView[]
+  } | null>(null)
+  const entries = withingsEntries?.source === initialEntries
+    ? withingsEntries.value
+    : initialEntries
   const newestFirst = useMemo(() => [...entries].reverse(), [entries])
   const [editingEntry, setEditingEntry] = useState<HealthEntryView | null>(null)
   const [chartRange, setChartRange] = useState<ChartRange>("max")
@@ -191,7 +204,7 @@ export function HealthContent({
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
   const [healthStrainScore, setHealthStrainScore] = useState(initialHealthStrainScore)
   const [heartRateSeries, setHeartRateSeries] = useState(initialHeartRateSeries)
-  const [googleHealthSyncState, setGoogleHealthSyncState] = useState<GoogleHealthSyncState>(
+  const [googleHealthSyncState, setGoogleHealthSyncState] = useState<HealthSyncState>(
     initialGoogleHealthStatus.state === "connected" ? "syncing" : "idle"
   )
   const [googleHealthSyncMessage, setGoogleHealthSyncMessage] = useState<string | null>(
@@ -199,7 +212,17 @@ export function HealthContent({
       ? "Neue Gesundheitsdaten werden geladen …"
       : null
   )
-  const syncStarted = useRef(false)
+  const [withingsStatus, setWithingsStatus] = useState(initialWithingsStatus)
+  const [withingsSyncState, setWithingsSyncState] = useState<HealthSyncState>(
+    initialWithingsStatus.state === "connected" ? "syncing" : "idle"
+  )
+  const [withingsSyncMessage, setWithingsSyncMessage] = useState<string | null>(
+    initialWithingsStatus.state === "connected"
+      ? "Neue Withings-Messdaten werden geladen …"
+      : null
+  )
+  const googleHealthSyncStarted = useRef(false)
+  const withingsSyncStarted = useRef(false)
   const chartEntries = useMemo(
     () => filterChartRange(entries, chartRange, (entry) => entry.date),
     [chartRange, entries]
@@ -211,8 +234,8 @@ export function HealthContent({
   ], 10)
 
   useEffect(() => {
-    if (googleHealthStatus.state !== "connected" || syncStarted.current) return
-    syncStarted.current = true
+    if (googleHealthStatus.state !== "connected" || googleHealthSyncStarted.current) return
+    googleHealthSyncStarted.current = true
 
     void syncGoogleHealthAction().then((result) => {
       if (!result.ok) {
@@ -236,6 +259,30 @@ export function HealthContent({
     })
   }, [googleHealthStatus.state])
 
+  useEffect(() => {
+    if (withingsStatus.state !== "connected" || withingsSyncStarted.current) return
+    withingsSyncStarted.current = true
+
+    void syncWithingsAction().then((result) => {
+      if (!result.ok) {
+        setWithingsSyncState("error")
+        setWithingsSyncMessage(result.error)
+        return
+      }
+
+      setWithingsEntries({ source: initialEntries, value: result.entries })
+      setWithingsStatus(result.status)
+      setWithingsSyncState("synced")
+      setWithingsSyncMessage(
+        result.skipped
+          ? "Withings-Messdaten sind bereits aktuell."
+          : result.processedMeasurements > 0
+            ? `${result.processedMeasurements} Withings-Messgruppen abgeglichen.`
+            : "Keine neuen Withings-Messdaten gefunden."
+      )
+    })
+  }, [initialEntries, withingsStatus.state])
+
   return (
     <div className="flex flex-col gap-5">
       <section className="flex w-full flex-col gap-6">
@@ -255,6 +302,13 @@ export function HealthContent({
             entries={dailySteps}
             onRangeChange={setStepsRange}
             range={stepsRange}
+          />
+
+          <WithingsConnectionCard
+            result={withingsResult}
+            status={withingsStatus}
+            syncMessage={withingsSyncMessage}
+            syncState={withingsSyncState}
           />
 
           <div className="flex justify-end px-4 sm:px-0">
@@ -330,7 +384,7 @@ export function HealthContent({
             <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
               {newestFirst.map((entry) => (
                 <TableRow
-                  key={entry.id}
+                  key={entry.id ?? `withings-${entry.date}`}
                   className="relative grid cursor-pointer grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] focus-visible:bg-white/[0.06] focus-visible:outline-none md:table-row md:rounded-none md:bg-transparent md:p-0"
                   onClick={() => setEditingEntry(entry)}
                   onKeyDown={(event) => {
@@ -354,7 +408,7 @@ export function HealthContent({
                     onClick={(event) => event.stopPropagation()}
                     onKeyDown={(event) => event.stopPropagation()}
                   >
-                    <DeleteHealthEntryDialog entry={entry} />
+                    {entry.id === null ? null : <DeleteHealthEntryDialog entry={entry} />}
                   </TableCell>
                 </TableRow>
               ))}
@@ -449,7 +503,7 @@ function HeartRateChartCard({
   range: HeartRateChartRange
   status: GoogleHealthStatus
   syncMessage: string | null
-  syncState: GoogleHealthSyncState
+  syncState: HealthSyncState
 }) {
   const chartMaximum = Math.ceil(
     Math.max(heartRateMaximum, ...entries.map((entry) => entry.bpm)) / 30
@@ -618,6 +672,41 @@ function DailyStepsChartCard({
   )
 }
 
+function WithingsConnectionCard({
+  result,
+  status,
+  syncMessage,
+  syncState,
+}: {
+  result?: string
+  status: WithingsStatus
+  syncMessage: string | null
+  syncState: HealthSyncState
+}) {
+  const resultMessage = withingsResultMessage(result)
+  const statusMessage = syncMessage ?? resultMessage ?? withingsStatusMessage(status)
+  const hasError = syncState === "error" || withingsResultIsError(result)
+
+  return (
+    <Card className="w-full bg-white/[0.035] text-white">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+          Withings
+        </CardTitle>
+        <CardDescription
+          aria-live="polite"
+          className={cn(hasError ? "text-destructive" : "text-white/50")}
+        >
+          {statusMessage}
+        </CardDescription>
+        <CardAction>
+          <WithingsAction status={status} syncState={syncState} />
+        </CardAction>
+      </CardHeader>
+    </Card>
+  )
+}
+
 function DataRangeToggle<T extends string>({
   ariaLabel,
   onRangeChange,
@@ -656,7 +745,7 @@ function GoogleHealthAction({
   syncState,
 }: {
   status: GoogleHealthStatus
-  syncState: GoogleHealthSyncState
+  syncState: HealthSyncState
 }) {
   if (status.state === "configuration_missing") {
     return <Badge variant="destructive">OAuth fehlt</Badge>
@@ -688,6 +777,45 @@ function GoogleHealthAction({
   }
 
   return <Badge>Google Health verbunden</Badge>
+}
+
+function WithingsAction({
+  status,
+  syncState,
+}: {
+  status: WithingsStatus
+  syncState: HealthSyncState
+}) {
+  if (status.state === "configuration_missing") {
+    return <Badge variant="destructive">OAuth fehlt</Badge>
+  }
+
+  if (
+    status.state === "not_connected" ||
+    status.state === "expired" ||
+    status.state === "scope_update_required" ||
+    syncState === "error"
+  ) {
+    return (
+      <Button asChild variant="outline">
+        <a href="/myDashboard/withings/connect">
+          <Scale data-icon="inline-start" />
+          {status.state === "not_connected" ? "Verbinden" : "Neu verbinden"}
+        </a>
+      </Button>
+    )
+  }
+
+  if (syncState === "syncing") {
+    return (
+      <Badge variant="secondary">
+        <Loader2 className="animate-spin" data-icon="inline-start" />
+        Synchronisiert
+      </Badge>
+    )
+  }
+
+  return <Badge>Withings verbunden</Badge>
 }
 
 function GoalLine({ color, value }: { color: string; value: number }) {
@@ -794,8 +922,8 @@ export function HealthEntryDialog({
           <DialogTitle>{selectedEntry ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}</DialogTitle>
           <DialogDescription>
             {selectedEntry
-              ? "Vorhandene Messwerte ergänzen oder ändern. Leere Felder bleiben erhalten."
-              : "Nur vorhandene Messwerte eintragen."}
+              ? "Blutdruck, Puls oder Bauchumfang ergänzen oder ändern. Gewicht und Fettgehalt kommen automatisch von Withings."
+              : "Blutdruck, Puls oder Bauchumfang eintragen. Gewicht und Fettgehalt kommen automatisch von Withings."}
           </DialogDescription>
         </DialogHeader>
         <form action={submitEntry} className="flex flex-col gap-4" key={`${date}-${selectedEntry?.updatedAt ?? "new"}`}>
@@ -808,8 +936,6 @@ export function HealthEntryDialog({
             <HealthNumberField defaultValue={selectedEntry?.bloodPressure2} label="Blutdruck 2 (mmHg)" name="bloodPressure2" optional />
             <HealthNumberField defaultValue={selectedEntry?.pulse} label="Puls (bpm)" name="pulse" optional />
             <HealthNumberField decimal defaultValue={selectedEntry?.waistCm} label="Bauchumfang (cm)" name="waistCm" optional />
-            <HealthNumberField decimal defaultValue={selectedEntry?.weightKg} label="Gewicht (kg)" name="weightKg" optional />
-            <HealthNumberField decimal defaultValue={selectedEntry?.bodyFatPercent} label="Fettgehalt (%)" name="bodyFatPercent" optional />
           </FieldGroup>
           <DialogFooter>
             <DialogClose asChild>
@@ -971,19 +1097,22 @@ function DeleteHealthEntryDialog({ entry }: { entry: HealthEntryView }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button aria-label={`Eintrag vom ${formatDate(entry.date)} löschen`} size="icon" type="button" variant="ghost">
+        <Button aria-label={`Manuelle Werte vom ${formatDate(entry.date)} löschen`} size="icon" type="button" variant="ghost">
           <Trash2 />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="border-white/10 bg-black text-white">
         <AlertDialogHeader>
-          <AlertDialogTitle>Eintrag löschen?</AlertDialogTitle>
-          <AlertDialogDescription>Der Eintrag vom {formatDate(entry.date)} wird dauerhaft entfernt.</AlertDialogDescription>
+          <AlertDialogTitle>Manuelle Werte löschen?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Die manuell eingetragenen Werte vom {formatDate(entry.date)} werden entfernt.
+            Withings-Messwerte bleiben erhalten.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel variant="outline">Abbrechen</AlertDialogCancel>
           <form action={deleteHealthEntryAction}>
-            <input name="id" type="hidden" value={entry.id} />
+            <input name="id" type="hidden" value={entry.id ?? ""} />
             <AlertDialogAction type="submit" variant="destructive">Löschen</AlertDialogAction>
           </form>
         </AlertDialogFooter>
@@ -1051,6 +1180,38 @@ function googleHealthResultMessage(result?: string) {
 }
 
 function googleHealthResultIsError(result?: string) {
+  return Boolean(result && result !== "connected")
+}
+
+function withingsStatusMessage(status: WithingsStatus) {
+  if (status.state === "configuration_missing") {
+    return `OAuth-Konfiguration fehlt: ${status.missing.join(", ")}.`
+  }
+  if (status.state === "not_connected") {
+    return "Verbinde einmal dein Withings-Konto. Gewicht und Fettgehalt werden danach automatisch geladen."
+  }
+  if (status.state === "expired") {
+    return "Die Withings-Freigabe ist abgelaufen und muss erneuert werden."
+  }
+  if (status.state === "scope_update_required") {
+    return "Withings braucht die Freigabe für Körpermessungen. Bitte einmal neu verbinden."
+  }
+  if (status.lastSyncedAt) {
+    return `Zuletzt synchronisiert: ${heartRateTooltipFormatter.format(new Date(status.lastSyncedAt))}.`
+  }
+  return "Withings ist verbunden. Die erste Synchronisierung startet automatisch."
+}
+
+function withingsResultMessage(result?: string) {
+  if (result === "connected") return "Withings wurde verbunden. Die erste Synchronisierung startet automatisch."
+  if (result === "denied") return "Der Zugriff auf Withings wurde nicht freigegeben."
+  if (result === "invalid_state") return "Die OAuth-Sicherheitsprüfung ist abgelaufen. Bitte die Verbindung erneut starten."
+  if (result === "oauth_error") return "Withings OAuth konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+  if (result === "configuration_missing") return "Die Withings-Umgebungsvariablen sind noch nicht vollständig gesetzt."
+  return null
+}
+
+function withingsResultIsError(result?: string) {
   return Boolean(result && result !== "connected")
 }
 

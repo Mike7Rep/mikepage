@@ -17,6 +17,7 @@ import {
 import { getAssetChart } from "@/lib/python-api"
 import {
   deleteHealthEntry,
+  getHealthEntries,
   parseHealthEntryForm,
   parseHealthGoalsForm,
   upsertHealthEntry,
@@ -30,6 +31,7 @@ import {
   syncGoogleHealthData,
 } from "@/lib/google-health"
 import { incrementPullUps } from "@/lib/pull-up-data"
+import { getWithingsStatus, syncWithingsData } from "@/lib/withings"
 import {
   deleteWealthSnapshot,
   parseInvestmentAssetsForm,
@@ -183,6 +185,28 @@ export async function syncGoogleHealthAction() {
       error: error instanceof Error
         ? error.message
         : "Google Health konnte nicht synchronisiert werden.",
+    } as const
+  }
+}
+
+export async function syncWithingsAction() {
+  await requireDashboardSession()
+
+  try {
+    const sync = await syncWithingsData()
+    updateTag("dashboard:health")
+    const [entries, status] = await Promise.all([
+      getHealthEntries(),
+      getWithingsStatus(),
+    ])
+    revalidatePath("/myDashboard/health")
+    return { ok: true, entries, status, ...sync } as const
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error
+        ? error.message
+        : "Withings konnte nicht synchronisiert werden.",
     } as const
   }
 }

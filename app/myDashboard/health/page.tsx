@@ -10,6 +10,7 @@ import {
   getHealthStrainScore,
   getHeartRateChartSeries,
 } from "@/lib/google-health"
+import { getWithingsStatus } from "@/lib/withings"
 import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
 import { DashboardFrame } from "../_components/dashboard-frame"
@@ -25,7 +26,10 @@ export const metadata: Metadata = {
 export default function HealthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ googleHealth?: string | string[] }>
+  searchParams: Promise<{
+    googleHealth?: string | string[]
+    withings?: string | string[]
+  }>
 }) {
   return (
     <Suspense fallback={<DashboardLoadingFrame activeSection="health" />}>
@@ -37,7 +41,10 @@ export default function HealthPage({
 async function HealthDashboardContent({
   searchParams,
 }: {
-  searchParams: Promise<{ googleHealth?: string | string[] }>
+  searchParams: Promise<{
+    googleHealth?: string | string[]
+    withings?: string | string[]
+  }>
 }) {
   await connection()
 
@@ -59,6 +66,7 @@ async function HealthDashboardContent({
     getDailyStepsSeries(),
     getHealthStrainScore(),
     getGoogleHealthStatus(),
+    getWithingsStatus(),
     searchParams,
   ]).then(
     (data) => ({ data } as const),
@@ -83,11 +91,15 @@ async function HealthDashboardContent({
     dailySteps,
     healthStrainScore,
     googleHealthStatus,
+    withingsStatus,
     params,
   ] = healthData.data
   const googleHealthResult = Array.isArray(params.googleHealth)
     ? params.googleHealth[0]
     : params.googleHealth
+  const withingsResult = Array.isArray(params.withings)
+    ? params.withings[0]
+    : params.withings
 
   return (
     <DashboardFrame
@@ -107,6 +119,8 @@ async function HealthDashboardContent({
         initialDailySteps={dailySteps}
         initialHealthStrainScore={healthStrainScore}
         initialHeartRateSeries={heartRateSeries}
+        withingsResult={withingsResult}
+        withingsStatus={withingsStatus}
       />
     </DashboardFrame>
   )

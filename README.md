@@ -24,6 +24,9 @@ ALPACA_ENDPOINT=https://api.alpaca.markets
 ALPACA_DATA_ENDPOINT=https://data.alpaca.markets
 ALPACA_KEY=<alpaca key>
 ALPACA_SECRET=<alpaca secret>
+WITHINGS_CLIENT_ID=<withings client id>
+WITHINGS_CLIENT_SECRET=<withings client secret>
+WITHINGS_REDIRECT_URI=http://localhost:3000/myDashboard/withings/callback
 ```
 
 Use Railway's public proxy URLs (`*.proxy.rlwy.net`) locally. Internal
@@ -42,6 +45,21 @@ Health checks:
 ```bash
 curl http://localhost:3000/health
 ```
+
+## Withings
+
+Create a Public API application in the Withings Developer Dashboard and register
+these exact callback URLs in the `Callback Url` field, separated by a comma:
+
+```text
+http://localhost:3000/myDashboard/withings/callback,https://www.michael-repolusk.com/myDashboard/withings/callback
+```
+
+Set `WITHINGS_CLIENT_ID`, `WITHINGS_CLIENT_SECRET` and, in production,
+`WITHINGS_REDIRECT_URI=https://www.michael-repolusk.com/myDashboard/withings/callback`.
+Then open `/myDashboard/health` and select **Verbinden** in the Withings card.
+The first connection imports all available weight and body-fat measurements;
+later page visits fetch only changes and store them idempotently in Postgres.
 
 ## Database
 
@@ -72,6 +90,9 @@ ALPACA_ENDPOINT=https://api.alpaca.markets
 ALPACA_DATA_ENDPOINT=https://data.alpaca.markets
 ALPACA_KEY=<alpaca key>
 ALPACA_SECRET=<alpaca secret>
+WITHINGS_CLIENT_ID=<withings client id>
+WITHINGS_CLIENT_SECRET=<withings client secret>
+WITHINGS_REDIRECT_URI=https://www.michael-repolusk.com/myDashboard/withings/callback
 ```
 
 `REDIS_URL` must be configured on the web service as a Railway variable reference
