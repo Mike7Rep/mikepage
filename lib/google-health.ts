@@ -301,6 +301,12 @@ export async function getHealthStrainScore() {
   const heartRateSamples = await prisma.heartRateSample.findMany({
     orderBy: { measuredAt: "asc" },
     select: { beatsPerMinute: true, measuredAt: true },
+    where: {
+      measuredAt: {
+        gte: new Date(now.getTime() - 7 * DAY_MS),
+        lte: now,
+      },
+    },
   })
 
   return calculateHealthStrainScore({
