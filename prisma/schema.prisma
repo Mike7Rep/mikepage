@@ -105,6 +105,14 @@ model DailyStepCount {
   @@map("daily_step_counts")
 }
 
+model DailyRestingHeartRate {
+  date           DateTime @id @db.Date
+  beatsPerMinute Int      @map("beats_per_minute")
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("daily_resting_heart_rates")
+}
+
 model GoogleHealthSleepInterval {
   id        Int      @id @default(autoincrement())
   startedAt DateTime @map("started_at") @db.Timestamptz(3)

@@ -28,6 +28,11 @@ export type DailyStepsPoint = {
   steps: number | null
 }
 
+export type DailyRestingHeartRatePoint = {
+  date: string
+  bpm: number | null
+}
+
 export type GoogleHealthStatus =
   | { state: "configuration_missing"; missing: string[] }
   | { state: "not_connected" }
@@ -56,6 +61,14 @@ type GoogleHealthDataPoint = {
     beatsPerMinute?: string
     sampleTime?: {
       physicalTime?: string
+    }
+  }
+  dailyRestingHeartRate?: {
+    beatsPerMinute?: string
+    date?: {
+      day?: number
+      month?: number
+      year?: number
     }
   }
   sleep?: {
@@ -97,6 +110,7 @@ type AggregatedHeartRateRow = {
 }
 
 const HEALTH_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/heart-rate/dataPoints"
+const RESTING_HEART_RATE_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/daily-resting-heart-rate/dataPoints:reconcile"
 const STEPS_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp"
 const SLEEP_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/sleep/dataPoints:reconcile"
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -109,6 +123,7 @@ const INITIAL_SYNC_DAYS = 30
 const SYNC_OVERLAP_MS = DAY_MS
 const SYNC_THROTTLE_MS = MINUTE_MS
 const INSERT_BATCH_SIZE = 2_000
+const RESTING_HEART_RATE_SYNC_DAYS = 90
 const STEPS_SYNC_DAYS = 90
 const SLEEP_SYNC_DAYS = 7
 const SLEEPING_STAGE_TYPES = new Set(["ASLEEP", "DEEP", "LIGHT", "REM"])
@@ -249,14 +264,13 @@ export async function getHeartRateChartSeries(): Promise<HeartRateChartSeries> {
 }
 
 export async function getDailyStepsSeries(): Promise<DailyStepsPoint[]> {
-  const dates = recentCivilDates(STEPS_SYNC_DAYS)
   const rows = await prisma.dailyStepCount.findMany({
-    where: { date: { gte: new Date(`${dates[0]}T00:00:00.000Z`) } },
     orderBy: { date: "asc" },
   })
   const stepsByDate = new Map(
     rows.map((row) => [row.date.toISOString().slice(0, 10), row.steps])
   )
+  const dates = dailySeriesDates([...stepsByDate.keys()], STEPS_SYNC_DAYS)
 
   return dates.map((date) => ({
     date,
@@ -264,11 +278,24 @@ export async function getDailyStepsSeries(): Promise<DailyStepsPoint[]> {
   }))
 }
 
+export async function getDailyRestingHeartRateSeries(): Promise<DailyRestingHeartRatePoint[]> {
+  const rows = await prisma.dailyRestingHeartRate.findMany({
+    orderBy: { date: "asc" },
+  })
+  const valuesByDate = new Map(
+    rows.map((row) => [row.date.toISOString().slice(0, 10), row.beatsPerMinute])
+  )
+  const dates = dailySeriesDates([...valuesByDate.keys()], RESTING_HEART_RATE_SYNC_DAYS)
+
+  return dates.map((date) => ({
+    bpm: valuesByDate.get(date) ?? null,
+    date,
+  }))
+}
+
 export async function getHealthStrainScore() {
   const now = new Date()
-  const start = new Date(now.getTime() - SLEEP_SYNC_DAYS * DAY_MS)
   const heartRateSamples = await prisma.heartRateSample.findMany({
-    where: { measuredAt: { gte: start, lte: now } },
     orderBy: { measuredAt: "asc" },
     select: { beatsPerMinute: true, measuredAt: true },
   })
@@ -276,7 +303,6 @@ export async function getHealthStrainScore() {
   return calculateHealthStrainScore({
     heartRateSamples,
     maximumHeartRate: personalMaximumHeartRate(now),
-    now,
   })
 }
 
@@ -290,12 +316,18 @@ export async function syncGoogleHealthData() {
     throw new Error("Die Google-Health-Verbindung ist abgelaufen. Bitte erneut verbinden.")
   }
   if (!hasGoogleHealthScopes(connection.grantedScopes)) {
-    throw new Error("Für Schritte und Belastungsscore braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
+    throw new Error("Für Ruhepuls, Schritte und Belastungsscore braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
   }
 
   const now = new Date(Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS)
   if (connection.lastSyncedAt && now.getTime() - connection.lastSyncedAt.getTime() < SYNC_THROTTLE_MS) {
-    return { insertedHeartRate: 0, skipped: true, updatedSleepIntervals: 0, updatedStepDays: 0 }
+    return {
+      insertedHeartRate: 0,
+      skipped: true,
+      updatedRestingHeartRateDays: 0,
+      updatedSleepIntervals: 0,
+      updatedStepDays: 0,
+    }
   }
 
   const refreshToken = decryptRefreshToken(connection.refreshTokenCiphertext, config.encryptionSecret)
@@ -310,15 +342,22 @@ export async function syncGoogleHealthData() {
   const backfillEnd = connection.backfillBefore ?? forwardStart
   const backfillStart = new Date(backfillEnd.getTime() - MAX_QUERY_WINDOW_MS)
   const sleepStart = new Date(now.getTime() - SLEEP_SYNC_DAYS * DAY_MS)
-  const [forwardSamples, backfillSamples, dailySteps, sleepIntervals] = await Promise.all([
+  const [forwardSamples, backfillSamples, dailyRestingHeartRates, dailySteps, sleepIntervals] = await Promise.all([
     fetchHeartRateRange(tokens.access_token, forwardStart, now),
     fetchHeartRateRange(tokens.access_token, backfillStart, backfillEnd),
+    fetchDailyRestingHeartRates(tokens.access_token),
     fetchDailySteps(tokens.access_token),
     fetchSleepIntervals(tokens.access_token, sleepStart, now),
   ])
   const samples = normalizeHeartRateSamples([...forwardSamples, ...backfillSamples])
-  const [insertedHeartRate, updatedStepDays, updatedSleepIntervals] = await Promise.all([
+  const [
+    insertedHeartRate,
+    updatedRestingHeartRateDays,
+    updatedStepDays,
+    updatedSleepIntervals,
+  ] = await Promise.all([
     insertHeartRateSamples(samples),
+    replaceDailyRestingHeartRates(dailyRestingHeartRates),
     replaceDailySteps(dailySteps),
     replaceSleepIntervals(sleepIntervals),
   ])
@@ -337,7 +376,13 @@ export async function syncGoogleHealthData() {
     },
   })
 
-  return { insertedHeartRate, skipped: false, updatedSleepIntervals, updatedStepDays }
+  return {
+    insertedHeartRate,
+    skipped: false,
+    updatedRestingHeartRateDays,
+    updatedSleepIntervals,
+    updatedStepDays,
+  }
 }
 
 async function getHeartRateChartRange(range: HeartRateChartRange) {
@@ -408,6 +453,56 @@ async function fetchHeartRateWindow(accessToken: string, start: Date, end: Date)
   } while (pageToken)
 
   return points
+}
+
+async function fetchDailyRestingHeartRates(accessToken: string) {
+  const points: GoogleHealthDataPoint[] = []
+  let pageToken = ""
+
+  do {
+    const url = new URL(RESTING_HEART_RATE_API_URL)
+    url.searchParams.set("dataSourceFamily", "users/me/dataSourceFamilies/all-sources")
+    url.searchParams.set("pageSize", "10000")
+    if (pageToken) url.searchParams.set("pageToken", pageToken)
+
+    const response = await googleHealthFetch(url, accessToken)
+    const data = await googleJson<GoogleHealthDataResponse>(
+      response,
+      "Ruhepulsdaten konnten nicht geladen werden."
+    )
+    points.push(...(data.dataPoints ?? []))
+    pageToken = data.nextPageToken ?? ""
+  } while (pageToken)
+
+  const values = points.flatMap((point) => {
+    const { day, month, year } = point.dailyRestingHeartRate?.date ?? {}
+    const beatsPerMinute = Number(point.dailyRestingHeartRate?.beatsPerMinute)
+    if (
+      !Number.isInteger(day)
+      || !Number.isInteger(month)
+      || !Number.isInteger(year)
+      || !Number.isInteger(beatsPerMinute)
+      || beatsPerMinute <= 0
+      || beatsPerMinute > 400
+    ) {
+      return []
+    }
+
+    const date = new Date(Date.UTC(year!, month! - 1, day!))
+    if (
+      date.getUTCFullYear() !== year
+      || date.getUTCMonth() + 1 !== month
+      || date.getUTCDate() !== day
+    ) {
+      return []
+    }
+
+    return [{ beatsPerMinute, date }]
+  })
+
+  return [...new Map(
+    values.map((value) => [value.date.toISOString().slice(0, 10), value])
+  ).values()].sort((left, right) => left.date.getTime() - right.date.getTime())
 }
 
 async function fetchDailySteps(accessToken: string) {
@@ -590,6 +685,19 @@ async function replaceDailySteps(steps: Array<{ date: Date; steps: number }>) {
   return steps.length
 }
 
+async function replaceDailyRestingHeartRates(
+  values: Array<{ beatsPerMinute: number; date: Date }>
+) {
+  await prisma.$transaction(async (transaction) => {
+    await transaction.dailyRestingHeartRate.deleteMany()
+    if (values.length > 0) {
+      await transaction.dailyRestingHeartRate.createMany({ data: values })
+    }
+  })
+
+  return values.length
+}
+
 async function replaceSleepIntervals(intervals: Array<{ endedAt: Date; startedAt: Date }>) {
   await prisma.$transaction(async (transaction) => {
     await transaction.googleHealthSleepInterval.deleteMany()
@@ -669,6 +777,10 @@ function recentCivilDates(days: number) {
     date.setUTCDate(today.getUTCDate() - days + index + 1)
     return date.toISOString().slice(0, 10)
   })
+}
+
+function dailySeriesDates(storedDates: string[], recentDays: number) {
+  return [...new Set([...storedDates, ...recentCivilDates(recentDays)])].sort()
 }
 
 function personalMaximumHeartRate(now: Date) {

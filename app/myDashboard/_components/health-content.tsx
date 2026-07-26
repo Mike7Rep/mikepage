@@ -47,6 +47,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type {
+  DailyRestingHeartRatePoint,
   DailyStepsPoint,
   GoogleHealthStatus,
   HeartRateChartRange,
@@ -64,7 +65,6 @@ import {
   updateHealthGoalsAction,
 } from "../actions"
 import {
-  ChartRangeToggle,
   filterChartRange,
   type ChartRange,
 } from "./chart-range-toggle"
@@ -85,7 +85,11 @@ const dailyStepsChartConfig = {
   steps: { label: "Schritte", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
-const healthChartClassName = "h-[440px] w-full sm:h-[360px] lg:h-[320px] xl:h-[360px]"
+const restingHeartRateChartConfig = {
+  bpm: { label: "Ruhepuls", color: "#45C456" },
+} satisfies ChartConfig
+
+const healthChartClassName = "aspect-square w-full md:aspect-video"
 
 const heartRateRangeOptions = [
   { label: "1 Stunde", shortLabel: "1h", value: "1h" },
@@ -93,13 +97,12 @@ const heartRateRangeOptions = [
   { label: "1 Woche", shortLabel: "1W", value: "1w" },
 ] satisfies Array<{ label: string; shortLabel: string; value: HeartRateChartRange }>
 
-type StepsChartRange = "1w" | "1m" | "3m"
-
-const stepsRangeOptions = [
+const nonHeartRateRangeOptions = [
   { label: "1 Woche", shortLabel: "1W", value: "1w" },
   { label: "1 Monat", shortLabel: "1M", value: "1m" },
   { label: "3 Monate", shortLabel: "3M", value: "3m" },
-] satisfies Array<{ label: string; shortLabel: string; value: StepsChartRange }>
+  { label: "Max", shortLabel: "Max", value: "max" },
+] satisfies Array<{ label: string; shortLabel: string; value: ChartRange }>
 
 const currentDate = Object.fromEntries(
   new Intl.DateTimeFormat("en-CA", {
@@ -125,7 +128,10 @@ const heartRateZones = [
   { color: "var(--heart-zone-maximum)", from: 0.9, label: "Maximal", to: 1 },
 ] as const
 
-type SingleMetric = Exclude<HealthGoalMetric, "bloodPressure">
+type SingleMetric = Extract<
+  HealthGoalMetric,
+  "waistCm" | "weightKg" | "bodyFatPercent"
+>
 type SingleMetricDefinition = {
   key: SingleMetric
   title: string
@@ -133,10 +139,9 @@ type SingleMetricDefinition = {
 }
 
 const singleMetrics: SingleMetricDefinition[] = [
-  { key: "pulse", title: "Verlauf Puls", color: "#45C456" },
-  { key: "waistCm", title: "Verlauf Bauchumfang", color: "#f5c778" },
-  { key: "weightKg", title: "Verlauf Gewicht", color: "#8bc7ff" },
-  { key: "bodyFatPercent", title: "Verlauf Fettgehalt", color: "#c4a7ff" },
+  { key: "waistCm", title: "Bauchumfang", color: "#f5c778" },
+  { key: "weightKg", title: "Gewicht", color: "#8bc7ff" },
+  { key: "bodyFatPercent", title: "Fettgehalt", color: "#c4a7ff" },
 ]
 
 const decimalFormatter = new Intl.NumberFormat("de-CH", {
@@ -177,6 +182,7 @@ export function HealthContent({
   initialDailySteps,
   initialHealthStrainScore,
   initialHeartRateSeries,
+  initialRestingHeartRates,
   withingsResult,
   withingsStatus: initialWithingsStatus,
 }: {
@@ -187,6 +193,7 @@ export function HealthContent({
   initialDailySteps: DailyStepsPoint[]
   initialHealthStrainScore: HealthStrainScore
   initialHeartRateSeries: HeartRateChartSeries
+  initialRestingHeartRates: DailyRestingHeartRatePoint[]
   withingsResult?: string
   withingsStatus: WithingsStatus
 }) {
@@ -201,11 +208,12 @@ export function HealthContent({
   const [editingEntry, setEditingEntry] = useState<HealthEntryView | null>(null)
   const [chartRange, setChartRange] = useState<ChartRange>("max")
   const [heartRateRange, setHeartRateRange] = useState<HeartRateChartRange>("1d")
-  const [stepsRange, setStepsRange] = useState<StepsChartRange>("1w")
+  const [stepsRange, setStepsRange] = useState<ChartRange>("1w")
   const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
   const [healthStrainScore, setHealthStrainScore] = useState(initialHealthStrainScore)
   const [heartRateSeries, setHeartRateSeries] = useState(initialHeartRateSeries)
+  const [restingHeartRates, setRestingHeartRates] = useState(initialRestingHeartRates)
   const [googleHealthSyncState, setGoogleHealthSyncState] = useState<HealthSyncState>(
     initialGoogleHealthStatus.state === "connected" ? "syncing" : "idle"
   )
@@ -249,13 +257,17 @@ export function HealthContent({
       setDailySteps(result.steps)
       setHealthStrainScore(result.strainScore)
       setHeartRateSeries(result.series)
+      setRestingHeartRates(result.restingHeartRates)
       setGoogleHealthStatus(result.status)
       setGoogleHealthSyncState("synced")
       setGoogleHealthSyncMessage(
         result.skipped
           ? "Gesundheitsdaten sind bereits aktuell."
-          : result.insertedHeartRate > 0 || result.updatedStepDays > 0 || result.updatedSleepIntervals > 0
-            ? `${result.insertedHeartRate} neue Herzfrequenz-Minutenwerte gespeichert, ${result.updatedStepDays} Schritttage und ${result.updatedSleepIntervals} Schlafintervalle abgeglichen.`
+          : result.insertedHeartRate > 0
+              || result.updatedRestingHeartRateDays > 0
+              || result.updatedStepDays > 0
+              || result.updatedSleepIntervals > 0
+            ? `${result.insertedHeartRate} neue Herzfrequenz-Minutenwerte gespeichert, ${result.updatedRestingHeartRateDays} Ruhepulstage, ${result.updatedStepDays} Schritttage und ${result.updatedSleepIntervals} Schlafintervalle abgeglichen.`
             : "Keine neuen Gesundheitsdaten gefunden."
       )
     })
@@ -316,25 +328,53 @@ export function HealthContent({
             range={heartRateRange}
           />
 
+          {singleMetrics.map((metric) => (
+            <HealthChartSection
+              action={
+                <div className="flex items-center gap-2">
+                  <HealthGoalDialog
+                    goals={goals}
+                    metric={metric.key}
+                    title={`Zielwert ${metric.title}`}
+                  />
+                  <DataRangeToggle
+                    ariaLabel={`${metric.title} Zeitraum`}
+                    onRangeChange={setChartRange}
+                    options={nonHeartRateRangeOptions}
+                    range={chartRange}
+                  />
+                </div>
+              }
+              key={metric.key}
+              title={metric.title}
+            >
+              <SingleMetricChart entries={chartEntries} goal={goals[metric.key]} metric={metric} />
+            </HealthChartSection>
+          ))}
+
           <DailyStepsChartCard
             entries={dailySteps}
             onRangeChange={setStepsRange}
             range={stepsRange}
           />
 
-          <div className="flex justify-end">
-            <ChartRangeToggle onRangeChange={setChartRange} range={chartRange} />
-          </div>
-
           <HealthChartSection
             action={
-              <HealthGoalDialog
-                goals={goals}
-                metric="bloodPressure"
-                title="Zielwert Blutdruck"
-              />
+              <div className="flex items-center gap-2">
+                <HealthGoalDialog
+                  goals={goals}
+                  metric="bloodPressure"
+                  title="Zielwert Blutdruck"
+                />
+                <DataRangeToggle
+                  ariaLabel="Blutdruckzeitraum"
+                  onRangeChange={setChartRange}
+                  options={nonHeartRateRangeOptions}
+                  range={chartRange}
+                />
+              </div>
             }
-            title="Verlauf Blutdruck"
+            title="Blutdruck"
           >
             <ChartContainer config={bloodPressureChartConfig} className={healthChartClassName}>
               <LineChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
@@ -360,31 +400,26 @@ export function HealthContent({
             </ChartContainer>
           </HealthChartSection>
 
-          {singleMetrics.map((metric) => (
-            <HealthChartSection
-              action={<HealthGoalDialog goals={goals} metric={metric.key} title={`Zielwert ${metric.title.replace("Verlauf ", "")}`} />}
-              key={metric.key}
-              title={metric.title}
-            >
-              <SingleMetricChart entries={chartEntries} goal={goals[metric.key]} metric={metric} />
-            </HealthChartSection>
-          ))}
+          <RestingHeartRateChartCard
+            entries={restingHeartRates}
+            onRangeChange={setChartRange}
+            range={chartRange}
+          />
         </section>
 
         <Card className="bg-white/[0.035] text-white">
           <CardHeader>
             <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-              Verlauf
+              Einträge
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-2">
-            <Table className="block min-w-0 text-white md:table md:min-w-[1180px]">
+            <Table className="block min-w-0 text-white md:table md:min-w-[1080px]">
               <TableHeader className="hidden md:table-header-group">
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="px-4 text-white/45">Datum</TableHead>
                   <TableHead className="text-right text-white/45">Blutdruck 1</TableHead>
                   <TableHead className="text-right text-white/45">Blutdruck 2</TableHead>
-                  <TableHead className="text-right text-white/45">Puls</TableHead>
                   <TableHead className="text-right text-white/45">Bauchumfang (cm)</TableHead>
                   <TableHead className="text-right text-white/45">Gewicht (kg)</TableHead>
                   <TableHead className="text-right text-white/45">Fettgehalt (%)</TableHead>
@@ -409,7 +444,6 @@ export function HealthContent({
                     <TableCell className="col-span-2 p-0 pr-10 font-medium text-white md:table-cell md:px-4 md:py-2">{formatDate(entry.date)}</TableCell>
                     <MetricCell label="Blutdruck 1" unit="mmHg" value={entry.bloodPressure1} />
                     <MetricCell label="Blutdruck 2" unit="mmHg" value={entry.bloodPressure2} />
-                    <MetricCell label="Puls" unit="bpm" value={entry.pulse} />
                     <MetricCell label="Bauchumfang" unit="cm" value={entry.waistCm} />
                     <MetricCell label="Gewicht" unit="kg" value={entry.weightKg} />
                     <MetricCell label="Fettgehalt" unit="%" value={entry.bodyFatPercent} />
@@ -450,7 +484,7 @@ function SingleMetricChart({
   metric: SingleMetricDefinition
 }) {
   const config = {
-    [metric.key]: { label: metric.title.replace("Verlauf ", ""), color: metric.color },
+    [metric.key]: { label: metric.title, color: metric.color },
   } satisfies ChartConfig
   const gradientId = `${metric.key}-fill`
   const scale = chartScale([
@@ -591,11 +625,10 @@ function DailyStepsChartCard({
   range,
 }: {
   entries: DailyStepsPoint[]
-  onRangeChange: (range: StepsChartRange) => void
-  range: StepsChartRange
+  onRangeChange: (range: ChartRange) => void
+  range: ChartRange
 }) {
-  const days = { "1w": 7, "1m": 30, "3m": 90 }[range]
-  const chartEntries = entries.slice(-days)
+  const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
   const hasData = chartEntries.some((entry) => entry.steps !== null)
 
   return (
@@ -604,11 +637,11 @@ function DailyStepsChartCard({
         <DataRangeToggle
           ariaLabel="Schrittezeitraum"
           onRangeChange={onRangeChange}
-          options={stepsRangeOptions}
+          options={nonHeartRateRangeOptions}
           range={range}
         />
       }
-      title="Tägliche Schritte"
+      title="Schritte"
     >
       {hasData ? (
         <ChartContainer config={dailyStepsChartConfig} className={healthChartClassName}>
@@ -644,6 +677,88 @@ function DailyStepsChartCard({
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
           Noch keine Schrittdaten für diesen Zeitraum vorhanden.
+        </div>
+      )}
+    </HealthChartSection>
+  )
+}
+
+function RestingHeartRateChartCard({
+  entries,
+  onRangeChange,
+  range,
+}: {
+  entries: DailyRestingHeartRatePoint[]
+  onRangeChange: (range: ChartRange) => void
+  range: ChartRange
+}) {
+  const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
+  const hasData = chartEntries.some((entry) => entry.bpm !== null)
+  const scale = chartScale(chartEntries.map((entry) => entry.bpm), 5)
+
+  return (
+    <HealthChartSection
+      action={
+        <DataRangeToggle
+          ariaLabel="Ruhepulszeitraum"
+          onRangeChange={onRangeChange}
+          options={nonHeartRateRangeOptions}
+          range={range}
+        />
+      }
+      title="Ruhepuls"
+    >
+      {hasData ? (
+        <ChartContainer config={restingHeartRateChartConfig} className={healthChartClassName}>
+          <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="resting-heart-rate-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-bpm)" stopOpacity={0.42} />
+                <stop offset="95%" stopColor="var(--color-bpm)" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="date"
+              minTickGap={32}
+              tickFormatter={formatChartAxisDate}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              allowDecimals={false}
+              axisLine={false}
+              domain={scale.domain}
+              ticks={scale.ticks}
+              tickLine={false}
+              width={40}
+            />
+            <ChartTooltip
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+              content={(
+                <ChartTooltipContent
+                  className="border-white/10 bg-background/95"
+                  indicator="line"
+                  labelFormatter={formatStepsTooltip}
+                />
+              )}
+            />
+            <Area
+              connectNulls
+              dataKey="bpm"
+              dot={false}
+              fill="url(#resting-heart-rate-fill)"
+              fillOpacity={1}
+              stroke="var(--color-bpm)"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+          </AreaChart>
+        </ChartContainer>
+      ) : (
+        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+          Noch keine Ruhepulsdaten für diesen Zeitraum vorhanden.
         </div>
       )}
     </HealthChartSection>
@@ -800,11 +915,11 @@ function HealthChartSection({
 }) {
   return (
     <section className="flex w-full flex-col gap-4 text-white">
-      <header className="flex min-w-0 items-center justify-between gap-3">
+      <header className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h2 className="min-w-0 text-xl font-bold tracking-[0] text-white uppercase">
           {title}
         </h2>
-        <div className="shrink-0">{action}</div>
+        <div className="ml-auto max-w-full shrink-0">{action}</div>
       </header>
       {children}
     </section>
@@ -880,8 +995,8 @@ export function HealthEntryDialog({
           <DialogTitle>{selectedEntry ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}</DialogTitle>
           <DialogDescription>
             {selectedEntry
-              ? "Blutdruck, Puls oder Bauchumfang ergänzen oder ändern. Gewicht und Fettgehalt kommen automatisch von Withings."
-              : "Blutdruck, Puls oder Bauchumfang eintragen. Gewicht und Fettgehalt kommen automatisch von Withings."}
+              ? "Blutdruck oder Bauchumfang ergänzen oder ändern. Gewicht und Fettgehalt kommen automatisch von Withings, der Ruhepuls von Google Health."
+              : "Blutdruck oder Bauchumfang eintragen. Gewicht und Fettgehalt kommen automatisch von Withings, der Ruhepuls von Google Health."}
           </DialogDescription>
         </DialogHeader>
         <form action={submitEntry} className="flex flex-col gap-4" key={`${date}-${selectedEntry?.updatedAt ?? "new"}`}>
@@ -892,7 +1007,6 @@ export function HealthEntryDialog({
             </Field>
             <HealthNumberField defaultValue={selectedEntry?.bloodPressure1} label="Blutdruck 1 (mmHg)" name="bloodPressure1" optional />
             <HealthNumberField defaultValue={selectedEntry?.bloodPressure2} label="Blutdruck 2 (mmHg)" name="bloodPressure2" optional />
-            <HealthNumberField defaultValue={selectedEntry?.pulse} label="Puls (bpm)" name="pulse" optional />
             <HealthNumberField decimal defaultValue={selectedEntry?.waistCm} label="Bauchumfang (cm)" name="waistCm" optional />
           </FieldGroup>
           <DialogFooter>
@@ -1120,7 +1234,7 @@ function googleHealthStatusMessage(status: GoogleHealthStatus) {
     return "Die Google-Health-Freigabe ist abgelaufen und muss erneuert werden."
   }
   if (status.state === "scope_update_required") {
-    return "Für Schritte und Belastungsscore sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
+    return "Für Ruhepuls, Schritte und Belastungsscore sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
   }
   if (status.lastSyncedAt) {
     return `Zuletzt synchronisiert: ${heartRateTooltipFormatter.format(new Date(status.lastSyncedAt))}.`

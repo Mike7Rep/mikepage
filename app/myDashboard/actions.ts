@@ -24,6 +24,7 @@ import {
   upsertHealthGoals,
 } from "@/lib/health-data"
 import {
+  getDailyRestingHeartRateSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
   getHealthStrainScore,
@@ -171,14 +172,23 @@ export async function syncGoogleHealthAction() {
 
   try {
     const sync = await syncGoogleHealthData()
-    const [series, status, steps, strainScore] = await Promise.all([
+    const [restingHeartRates, series, status, steps, strainScore] = await Promise.all([
+      getDailyRestingHeartRateSeries(),
       getHeartRateChartSeries(),
       getGoogleHealthStatus(),
       getDailyStepsSeries(),
       getHealthStrainScore(),
     ])
     revalidatePath("/myDashboard/health")
-    return { ok: true, series, status, steps, strainScore, ...sync } as const
+    return {
+      ok: true,
+      restingHeartRates,
+      series,
+      status,
+      steps,
+      strainScore,
+      ...sync,
+    } as const
   } catch (error) {
     return {
       ok: false,
