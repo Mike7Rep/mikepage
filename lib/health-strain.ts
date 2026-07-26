@@ -1,4 +1,14 @@
-const MINUTE_DURATION = 1
+const HOUR_MS = 60 * 60 * 1_000
+const MAX_SAMPLE_DURATION_MS = 60 * 1_000
+
+export const HEART_RATE_SCORE_ZONES = [
+  { from: 0, label: "Erholung", rate: -1, to: 0.4 },
+  { from: 0.4, label: "Sehr leicht", rate: -0.25, to: 0.5 },
+  { from: 0.5, label: "Leicht", rate: 0, to: 0.6 },
+  { from: 0.6, label: "Mittel", rate: 1, to: 0.7 },
+  { from: 0.7, label: "Stark", rate: 2, to: 0.8 },
+  { from: 0.8, label: "Maximal", rate: 4, to: Number.POSITIVE_INFINITY },
+] as const
 
 export type HealthStrainScore = {
   score: number | null
@@ -9,47 +19,23 @@ type HeartRateSample = {
   measuredAt: Date
 }
 
-export function updateHealthStrainScore({
-  currentScore,
-  durationMinutes,
-  heartRate,
-  maxHeartRate,
-}: {
-  currentScore: number
-  durationMinutes: number
-  heartRate: number
-  maxHeartRate: number
-}) {
-  const boundedCurrentScore = Number.isFinite(currentScore)
-    ? clamp(currentScore, 0, 10)
-    : 0
+export function personalMaximumHeartRate(now = new Date()) {
+  const date = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "Europe/Zurich",
+    year: "numeric",
+  })
+    .formatToParts(now)
+    .reduce<Record<string, number>>((parts, part) => {
+      if (part.type !== "literal") parts[part.type] = Number(part.value)
+      return parts
+    }, {})
+  const age = date.year - 1985 - (
+    date.month < 7 || (date.month === 7 && date.day < 7) ? 1 : 0
+  )
 
-  if (
-    !Number.isFinite(heartRate)
-    || heartRate <= 0
-    || !Number.isFinite(maxHeartRate)
-    || maxHeartRate <= 0
-    || !Number.isFinite(durationMinutes)
-    || durationMinutes <= 0
-  ) {
-    return boundedCurrentScore
-  }
-
-  const intensity = heartRate / maxHeartRate
-  const rate = intensity < 0.4
-    ? -2
-    : intensity < 0.5
-      ? -1
-      : intensity < 0.6
-        ? 0.25
-        : intensity < 0.7
-          ? 1
-          : intensity < 0.8
-            ? 2
-            : 4
-  const scoreChange = rate * (durationMinutes / 60)
-
-  return clamp(boundedCurrentScore + scoreChange, 0, 10)
+  return 220 - age
 }
 
 export function calculateHealthStrainScore({
@@ -63,28 +49,28 @@ export function calculateHealthStrainScore({
     return { score: null }
   }
 
-  const minuteAverages = heartRateSamples
-    .filter(({ beatsPerMinute, measuredAt }) => {
-      const measuredTime = measuredAt.getTime()
-      return Number.isFinite(beatsPerMinute)
-        && beatsPerMinute > 0
-        && Number.isFinite(measuredTime)
-    })
+  const samples = heartRateSamples
+    .filter(({ beatsPerMinute, measuredAt }) => (
+      Number.isFinite(beatsPerMinute)
+      && beatsPerMinute > 0
+      && Number.isFinite(measuredAt.getTime())
+    ))
     .sort((left, right) => left.measuredAt.getTime() - right.measuredAt.getTime())
 
-  if (minuteAverages.length === 0) {
-    return { score: null }
-  }
+  if (samples.length === 0) return { score: null }
 
-  const score = minuteAverages.reduce(
-    (value, { beatsPerMinute }) => updateHealthStrainScore({
-      currentScore: value,
-      durationMinutes: MINUTE_DURATION,
-      heartRate: beatsPerMinute,
-      maxHeartRate: maximumHeartRate,
-    }),
-    0
-  )
+  let score = 0
+  for (let index = 0; index < samples.length; index += 1) {
+    const sample = samples[index]
+    const adjacent = samples[index + 1] ?? samples[index - 1]
+    const duration = adjacent
+      ? Math.min(Math.abs(adjacent.measuredAt.getTime() - sample.measuredAt.getTime()), MAX_SAMPLE_DURATION_MS)
+      : MAX_SAMPLE_DURATION_MS
+    const intensity = sample.beatsPerMinute / maximumHeartRate
+    const zone = HEART_RATE_SCORE_ZONES.find(({ to }) => intensity <= to)
+    const change = (zone?.rate ?? 4) * duration / HOUR_MS
+    score = clamp(score + change, 0, 10)
+  }
 
   return { score: roundToOneDecimal(score) }
 }
@@ -94,5 +80,5 @@ function clamp(value: number, minimum: number, maximum: number) {
 }
 
 function roundToOneDecimal(value: number) {
-  return Math.round(value * 10) / 10
+  return Math.round((value + 1e-9) * 10) / 10
 }

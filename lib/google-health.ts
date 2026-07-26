@@ -2,7 +2,10 @@ import "server-only"
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto"
 
-import { calculateHealthStrainScore } from "@/lib/health-strain"
+import {
+  calculateHealthStrainScore,
+  personalMaximumHeartRate,
+} from "@/lib/health-strain"
 import { prisma } from "@/lib/prisma"
 
 const GOOGLE_HEALTH_SCOPES = [
@@ -630,7 +633,7 @@ async function googleHealthFetch(
 }
 
 function normalizeHeartRateSamples(points: GoogleHealthDataPoint[]) {
-  const minutes = new Map<number, { count: number; total: number }>()
+  const samples = new Map<number, number>()
 
   for (const point of points) {
     const physicalTime = point.heartRate?.sampleTime?.physicalTime
@@ -638,17 +641,13 @@ function normalizeHeartRateSamples(points: GoogleHealthDataPoint[]) {
     const timestamp = physicalTime ? Date.parse(physicalTime) : Number.NaN
     if (!Number.isFinite(timestamp) || !Number.isInteger(bpm) || bpm <= 0 || bpm > 400) continue
 
-    const minute = Math.floor(timestamp / MINUTE_MS) * MINUTE_MS
-    const current = minutes.get(minute) ?? { count: 0, total: 0 }
-    current.count += 1
-    current.total += bpm
-    minutes.set(minute, current)
+    samples.set(timestamp, bpm)
   }
 
-  return [...minutes.entries()]
+  return [...samples.entries()]
     .sort(([left], [right]) => left - right)
-    .map(([measuredAt, value]) => ({
-      beatsPerMinute: Math.round(value.total / value.count),
+    .map(([measuredAt, beatsPerMinute]) => ({
+      beatsPerMinute,
       measuredAt: new Date(measuredAt),
     }))
 }
@@ -781,20 +780,6 @@ function recentCivilDates(days: number) {
 
 function dailySeriesDates(storedDates: string[], recentDays: number) {
   return [...new Set([...storedDates, ...recentCivilDates(recentDays)])].sort()
-}
-
-function personalMaximumHeartRate(now: Date) {
-  const parts = Object.fromEntries(
-    civilDateFormatter
-      .formatToParts(now)
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, Number(part.value)])
-  ) as Record<"day" | "month" | "year", number>
-  const age = parts.year - 1985 - (
-    parts.month < 7 || (parts.month === 7 && parts.day < 7) ? 1 : 0
-  )
-
-  return 208 - 0.7 * age
 }
 
 function requireGoogleHealthConfig() {

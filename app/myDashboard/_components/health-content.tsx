@@ -6,8 +6,6 @@ import { SiGoogle } from "react-icons/si"
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -54,7 +52,11 @@ import type {
   HeartRateChartSeries,
 } from "@/lib/google-health"
 import type { HealthEntryView, HealthGoalMetric, HealthGoalsView } from "@/lib/health-data"
-import type { HealthStrainScore } from "@/lib/health-strain"
+import {
+  HEART_RATE_SCORE_ZONES,
+  type HealthStrainScore,
+  personalMaximumHeartRate,
+} from "@/lib/health-strain"
 import { cn } from "@/lib/utils"
 import type { WithingsStatus } from "@/lib/withings"
 import {
@@ -89,7 +91,7 @@ const restingHeartRateChartConfig = {
   bpm: { label: "Ruhepuls", color: "#45C456" },
 } satisfies ChartConfig
 
-const healthChartClassName = "aspect-square w-full md:aspect-video"
+const healthChartClassName = "aspect-[4/3] w-full"
 
 const heartRateRangeOptions = [
   { label: "1 Stunde", shortLabel: "1h", value: "1h" },
@@ -104,29 +106,19 @@ const nonHeartRateRangeOptions = [
   { label: "Max", shortLabel: "Max", value: "max" },
 ] satisfies Array<{ label: string; shortLabel: string; value: ChartRange }>
 
-const currentDate = Object.fromEntries(
-  new Intl.DateTimeFormat("en-CA", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "Europe/Zurich",
-    year: "numeric",
-  })
-    .formatToParts(new Date())
-    .filter((part) => part.type !== "literal")
-    .map((part) => [part.type, Number(part.value)])
-) as Record<"day" | "month" | "year", number>
-const age = currentDate.year - 1985 - (
-  currentDate.month < 7 || (currentDate.month === 7 && currentDate.day < 7) ? 1 : 0
-)
-const heartRateMaximum = 208 - 0.7 * age
-const heartRateZones = [
-  { color: "var(--heart-zone-recovery)", from: 0, label: "Erholung", to: 0.5 },
-  { color: "var(--heart-zone-very-light)", from: 0.5, label: "Sehr leicht", to: 0.6 },
-  { color: "var(--heart-zone-light)", from: 0.6, label: "Leicht", to: 0.7 },
-  { color: "var(--heart-zone-medium)", from: 0.7, label: "Mittel", to: 0.8 },
-  { color: "var(--heart-zone-strong)", from: 0.8, label: "Stark", to: 0.9 },
-  { color: "var(--heart-zone-maximum)", from: 0.9, label: "Maximal", to: 1 },
+const heartRateMaximum = personalMaximumHeartRate()
+const heartRateZoneColors = [
+  "var(--heart-zone-recovery)",
+  "var(--heart-zone-very-light)",
+  "var(--heart-zone-light)",
+  "var(--heart-zone-medium)",
+  "var(--heart-zone-strong)",
+  "var(--heart-zone-maximum)",
 ] as const
+const heartRateZones = HEART_RATE_SCORE_ZONES.map((zone, index) => ({
+  ...zone,
+  color: heartRateZoneColors[index],
+}))
 
 type SingleMetric = Extract<
   HealthGoalMetric,
@@ -267,7 +259,7 @@ export function HealthContent({
               || result.updatedRestingHeartRateDays > 0
               || result.updatedStepDays > 0
               || result.updatedSleepIntervals > 0
-            ? `${result.insertedHeartRate} neue Herzfrequenz-Minutenwerte gespeichert, ${result.updatedRestingHeartRateDays} Ruhepulstage, ${result.updatedStepDays} Schritttage und ${result.updatedSleepIntervals} Schlafintervalle abgeglichen.`
+            ? `${result.insertedHeartRate} neue Herzfrequenz-Messwerte gespeichert, ${result.updatedRestingHeartRateDays} Ruhepulstage, ${result.updatedStepDays} Schritttage und ${result.updatedSleepIntervals} Schlafintervalle abgeglichen.`
             : "Keine neuen Gesundheitsdaten gefunden."
       )
     })
@@ -573,7 +565,7 @@ function HeartRateChartCard({
               key={zone.label}
               strokeOpacity={0}
               y1={heartRateMaximum * zone.from}
-              y2={zone.to === 1 ? chartMaximum : heartRateMaximum * zone.to}
+              y2={Number.isFinite(zone.to) ? heartRateMaximum * zone.to : chartMaximum}
               zIndex={0}
             />
           ))}
@@ -645,7 +637,13 @@ function DailyStepsChartCard({
     >
       {hasData ? (
         <ChartContainer config={dailyStepsChartConfig} className={healthChartClassName}>
-          <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+          <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="daily-steps-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-steps)" stopOpacity={0.42} />
+                <stop offset="95%" stopColor="var(--color-steps)" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis
               axisLine={false}
@@ -663,16 +661,26 @@ function DailyStepsChartCard({
               width={44}
             />
             <ChartTooltip
-              cursor={{ fill: "rgba(255,255,255,0.06)" }}
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
               content={(
                 <ChartTooltipContent
                   className="border-white/10 bg-background/95"
+                  indicator="line"
                   labelFormatter={formatStepsTooltip}
                 />
               )}
             />
-            <Bar dataKey="steps" fill="var(--color-steps)" radius={[4, 4, 0, 0]} />
-          </BarChart>
+            <Area
+              connectNulls
+              dataKey="steps"
+              dot={false}
+              fill="url(#daily-steps-fill)"
+              fillOpacity={1}
+              stroke="var(--color-steps)"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+          </AreaChart>
         </ChartContainer>
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
