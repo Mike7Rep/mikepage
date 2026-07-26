@@ -91,7 +91,7 @@ const restingHeartRateChartConfig = {
   bpm: { label: "Ruhepuls", color: "#45C456" },
 } satisfies ChartConfig
 
-const healthChartClassName = "aspect-[4/3] w-full"
+const healthChartClassName = "aspect-[4/3] w-full md:aspect-video"
 
 const heartRateRangeOptions = [
   { label: "1 Stunde", shortLabel: "1h", value: "1h" },

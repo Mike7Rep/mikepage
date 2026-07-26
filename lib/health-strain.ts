@@ -1,13 +1,13 @@
-const HOUR_MS = 60 * 60 * 1_000
+const SECONDS_PER_HOUR = 3_600
 const MAX_SAMPLE_DURATION_MS = 60 * 1_000
 
 export const HEART_RATE_SCORE_ZONES = [
-  { from: 0, label: "Erholung", rate: -1, to: 0.4 },
-  { from: 0.4, label: "Sehr leicht", rate: -0.25, to: 0.5 },
-  { from: 0.5, label: "Leicht", rate: 0, to: 0.6 },
-  { from: 0.6, label: "Mittel", rate: 1, to: 0.7 },
-  { from: 0.7, label: "Stark", rate: 2, to: 0.8 },
-  { from: 0.8, label: "Maximal", rate: 4, to: Number.POSITIVE_INFINITY },
+  { from: 0, label: "Erholung", rate: -0.25, to: 0.35 },
+  { from: 0.35, label: "Sehr leicht", rate: -0.5, to: 0.45 },
+  { from: 0.45, label: "Leicht", rate: 1, to: 0.65 },
+  { from: 0.65, label: "Mittel", rate: 2, to: 0.75 },
+  { from: 0.75, label: "Stark", rate: 4, to: 0.85 },
+  { from: 0.85, label: "Maximal", rate: 6, to: Number.POSITIVE_INFINITY },
 ] as const
 
 export type HealthStrainScore = {
@@ -63,16 +63,15 @@ export function calculateHealthStrainScore({
   for (let index = 0; index < samples.length; index += 1) {
     const sample = samples[index]
     const adjacent = samples[index + 1] ?? samples[index - 1]
-    const duration = adjacent
+    const durationSeconds = (adjacent
       ? Math.min(Math.abs(adjacent.measuredAt.getTime() - sample.measuredAt.getTime()), MAX_SAMPLE_DURATION_MS)
-      : MAX_SAMPLE_DURATION_MS
+      : MAX_SAMPLE_DURATION_MS) / 1_000
     const intensity = sample.beatsPerMinute / maximumHeartRate
-    const zone = HEART_RATE_SCORE_ZONES.find(({ to }) => intensity <= to)
-    const change = (zone?.rate ?? 4) * duration / HOUR_MS
-    score = clamp(score + change, 0, 10)
+    const zone = HEART_RATE_SCORE_ZONES.find(({ to }) => intensity < to)
+    score += (zone?.rate ?? 6) * durationSeconds / SECONDS_PER_HOUR
   }
 
-  return { score: roundToOneDecimal(score) }
+  return { score: roundToOneDecimal(clamp(score, 0, 10)) }
 }
 
 function clamp(value: number, minimum: number, maximum: number) {
