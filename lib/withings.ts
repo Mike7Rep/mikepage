@@ -69,6 +69,8 @@ type NormalizedMeasurement = {
 const WITHINGS_AUTH_URL = "https://account.withings.com/oauth2_user/authorize2"
 const WITHINGS_TOKEN_URL = "https://wbsapi.withings.net/v2/oauth2"
 const WITHINGS_MEASURE_URL = "https://wbsapi.withings.net/measure"
+const PRODUCTION_WITHINGS_REDIRECT_URI =
+  "https://www.michael-repolusk.com/myDashboard/withings/callback"
 const WITHINGS_SCOPE = "user.metrics"
 const CONNECTION_ID = 1
 const DAY_MS = 24 * 60 * 60 * 1_000
@@ -100,6 +102,9 @@ export function getWithingsConfig() {
 export function withingsRedirectUri(requestOrigin: string) {
   const configured = readEnv("WITHINGS_REDIRECT_URI")
   if (configured) return configured
+  if (process.env.NODE_ENV === "production") {
+    return PRODUCTION_WITHINGS_REDIRECT_URI
+  }
   return new URL("/myDashboard/withings/callback", requestOrigin).toString()
 }
 

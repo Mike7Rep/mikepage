@@ -1,7 +1,8 @@
 "use client"
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
-import { HeartPulse, Loader2, Plus, Scale, Target, Trash2 } from "lucide-react"
+import { Plus, Scale, Target, Trash2 } from "lucide-react"
+import { SiGoogle } from "react-icons/si"
 import {
   Area,
   AreaChart,
@@ -27,9 +28,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import {
   Dialog,
@@ -45,6 +45,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type {
   DailyStepsPoint,
   GoogleHealthStatus,
@@ -68,6 +69,7 @@ import {
   type ChartRange,
 } from "./chart-range-toggle"
 import { DashboardDatePicker, formatDashboardDate, todayInputValue } from "./dashboard-date-picker"
+import { DashboardFrame } from "./dashboard-frame"
 import { HealthStrainIndicator } from "./health-strain-indicator"
 
 const bloodPressureChartConfig = {
@@ -83,7 +85,7 @@ const dailyStepsChartConfig = {
   steps: { label: "Schritte", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
-const healthChartClassName = "aspect-[16/5] min-h-[440px] w-full sm:min-h-[220px]"
+const healthChartClassName = "h-[440px] w-full sm:h-[360px] lg:h-[320px] xl:h-[360px]"
 
 const heartRateRangeOptions = [
   { label: "1 Stunde", shortLabel: "1h", value: "1h" },
@@ -284,18 +286,34 @@ export function HealthContent({
   }, [initialEntries, withingsStatus.state])
 
   return (
-    <div className="flex flex-col gap-5">
-      <section className="flex w-full flex-col gap-6">
-        <div className="flex flex-col gap-8 sm:gap-10">
+    <DashboardFrame
+      actions={
+        <>
+          <HealthEntryDialog entries={entries} />
+          <HealthApiActions
+            googleHealthResult={googleHealthResult}
+            googleHealthStatus={googleHealthStatus}
+            googleHealthSyncMessage={googleHealthSyncMessage}
+            googleHealthSyncState={googleHealthSyncState}
+            withingsResult={withingsResult}
+            withingsStatus={withingsStatus}
+            withingsSyncMessage={withingsSyncMessage}
+            withingsSyncState={withingsSyncState}
+          />
+        </>
+      }
+      activeSection="health"
+    >
+      <div className="flex flex-col gap-10 sm:gap-12">
+        <section aria-label="Belastungs- und Erholungsscore" className="w-full">
+          <HealthStrainIndicator score={healthStrainScore.score} />
+        </section>
+
+        <section className="flex w-full flex-col gap-10 sm:gap-12">
           <HeartRateChartCard
             entries={heartRateSeries[heartRateRange]}
-            googleHealthResult={googleHealthResult}
-            healthStrainScore={healthStrainScore}
             onRangeChange={setHeartRateRange}
             range={heartRateRange}
-            status={googleHealthStatus}
-            syncMessage={googleHealthSyncMessage}
-            syncState={googleHealthSyncState}
           />
 
           <DailyStepsChartCard
@@ -304,19 +322,12 @@ export function HealthContent({
             range={stepsRange}
           />
 
-          <WithingsConnectionCard
-            result={withingsResult}
-            status={withingsStatus}
-            syncMessage={withingsSyncMessage}
-            syncState={withingsSyncState}
-          />
-
-          <div className="flex justify-end px-4 sm:px-0">
+          <div className="flex justify-end">
             <ChartRangeToggle onRangeChange={setChartRange} range={chartRange} />
           </div>
 
-          <HealthChartCard
-            goalAction={
+          <HealthChartSection
+            action={
               <HealthGoalDialog
                 goals={goals}
                 metric="bloodPressure"
@@ -347,85 +358,85 @@ export function HealthContent({
                 <Line connectNulls dataKey="bloodPressure2" dot={false} stroke="var(--color-bloodPressure2)" strokeWidth={2.5} type="monotone" />
               </LineChart>
             </ChartContainer>
-          </HealthChartCard>
+          </HealthChartSection>
 
           {singleMetrics.map((metric) => (
-            <HealthChartCard
-              goalAction={<HealthGoalDialog goals={goals} metric={metric.key} title={`Zielwert ${metric.title.replace("Verlauf ", "")}`} />}
+            <HealthChartSection
+              action={<HealthGoalDialog goals={goals} metric={metric.key} title={`Zielwert ${metric.title.replace("Verlauf ", "")}`} />}
               key={metric.key}
               title={metric.title}
             >
               <SingleMetricChart entries={chartEntries} goal={goals[metric.key]} metric={metric} />
-            </HealthChartCard>
+            </HealthChartSection>
           ))}
-        </div>
-      </section>
+        </section>
 
-      <Card className="bg-white/[0.035] text-white">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-            Verlauf
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 pb-2">
-          <Table className="block min-w-0 text-white md:table md:min-w-[1180px]">
-            <TableHeader className="hidden md:table-header-group">
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="px-4 text-white/45">Datum</TableHead>
-                <TableHead className="text-right text-white/45">Blutdruck 1</TableHead>
-                <TableHead className="text-right text-white/45">Blutdruck 2</TableHead>
-                <TableHead className="text-right text-white/45">Puls</TableHead>
-                <TableHead className="text-right text-white/45">Bauchumfang (cm)</TableHead>
-                <TableHead className="text-right text-white/45">Gewicht (kg)</TableHead>
-                <TableHead className="text-right text-white/45">Fettgehalt (%)</TableHead>
-                <TableHead className="w-10 pr-4 text-right text-white/45" />
-              </TableRow>
-            </TableHeader>
-            <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
-              {newestFirst.map((entry) => (
-                <TableRow
-                  key={entry.id ?? `withings-${entry.date}`}
-                  className="relative grid cursor-pointer grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] focus-visible:bg-white/[0.06] focus-visible:outline-none md:table-row md:rounded-none md:bg-transparent md:p-0"
-                  onClick={() => setEditingEntry(entry)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault()
-                      setEditingEntry(entry)
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <TableCell className="col-span-2 p-0 pr-10 font-medium text-white md:table-cell md:px-4 md:py-2">{formatDate(entry.date)}</TableCell>
-                  <MetricCell label="Blutdruck 1" unit="mmHg" value={entry.bloodPressure1} />
-                  <MetricCell label="Blutdruck 2" unit="mmHg" value={entry.bloodPressure2} />
-                  <MetricCell label="Puls" unit="bpm" value={entry.pulse} />
-                  <MetricCell label="Bauchumfang" unit="cm" value={entry.waistCm} />
-                  <MetricCell label="Gewicht" unit="kg" value={entry.weightKg} />
-                  <MetricCell label="Fettgehalt" unit="%" value={entry.bodyFatPercent} />
-                  <TableCell
-                    className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4"
-                    onClick={(event) => event.stopPropagation()}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  >
-                    {entry.id === null ? null : <DeleteHealthEntryDialog entry={entry} />}
-                  </TableCell>
+        <Card className="bg-white/[0.035] text-white">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+              Verlauf
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-0 pb-2">
+            <Table className="block min-w-0 text-white md:table md:min-w-[1180px]">
+              <TableHeader className="hidden md:table-header-group">
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="px-4 text-white/45">Datum</TableHead>
+                  <TableHead className="text-right text-white/45">Blutdruck 1</TableHead>
+                  <TableHead className="text-right text-white/45">Blutdruck 2</TableHead>
+                  <TableHead className="text-right text-white/45">Puls</TableHead>
+                  <TableHead className="text-right text-white/45">Bauchumfang (cm)</TableHead>
+                  <TableHead className="text-right text-white/45">Gewicht (kg)</TableHead>
+                  <TableHead className="text-right text-white/45">Fettgehalt (%)</TableHead>
+                  <TableHead className="w-10 pr-4 text-right text-white/45" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <HealthEntryDialog
-          entries={entries}
-          entry={editingEntry}
-          key={editingEntry?.id ?? "health-entry-editor"}
-          onOpenChange={(open) => {
-            if (!open) setEditingEntry(null)
-          }}
-          open={Boolean(editingEntry)}
-        />
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
+                {newestFirst.map((entry) => (
+                  <TableRow
+                    key={entry.id ?? `withings-${entry.date}`}
+                    className="relative grid cursor-pointer grid-cols-2 gap-3 rounded-lg bg-white/[0.04] p-3 hover:bg-white/[0.055] focus-visible:bg-white/[0.06] focus-visible:outline-none md:table-row md:rounded-none md:bg-transparent md:p-0"
+                    onClick={() => setEditingEntry(entry)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault()
+                        setEditingEntry(entry)
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <TableCell className="col-span-2 p-0 pr-10 font-medium text-white md:table-cell md:px-4 md:py-2">{formatDate(entry.date)}</TableCell>
+                    <MetricCell label="Blutdruck 1" unit="mmHg" value={entry.bloodPressure1} />
+                    <MetricCell label="Blutdruck 2" unit="mmHg" value={entry.bloodPressure2} />
+                    <MetricCell label="Puls" unit="bpm" value={entry.pulse} />
+                    <MetricCell label="Bauchumfang" unit="cm" value={entry.waistCm} />
+                    <MetricCell label="Gewicht" unit="kg" value={entry.weightKg} />
+                    <MetricCell label="Fettgehalt" unit="%" value={entry.bodyFatPercent} />
+                    <TableCell
+                      className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4"
+                      onClick={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => event.stopPropagation()}
+                    >
+                      {entry.id === null ? null : <DeleteHealthEntryDialog entry={entry} />}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <HealthEntryDialog
+            entries={entries}
+            entry={editingEntry}
+            key={editingEntry?.id ?? "health-entry-editor"}
+            onOpenChange={(open) => {
+              if (!open) setEditingEntry(null)
+            }}
+            open={Boolean(editingEntry)}
+          />
+        </Card>
+      </div>
+    </DashboardFrame>
   )
 }
 
@@ -488,117 +499,89 @@ function SingleMetricChart({
 
 function HeartRateChartCard({
   entries,
-  googleHealthResult,
-  healthStrainScore,
   onRangeChange,
   range,
-  status,
-  syncMessage,
-  syncState,
 }: {
   entries: HeartRateChartSeries[HeartRateChartRange]
-  googleHealthResult?: string
-  healthStrainScore: HealthStrainScore
   onRangeChange: (range: HeartRateChartRange) => void
   range: HeartRateChartRange
-  status: GoogleHealthStatus
-  syncMessage: string | null
-  syncState: HealthSyncState
 }) {
   const chartMaximum = Math.ceil(
     Math.max(heartRateMaximum, ...entries.map((entry) => entry.bpm)) / 30
   ) * 30
   const ticks = Array.from({ length: chartMaximum / 30 + 1 }, (_, index) => index * 30)
-  const resultMessage = googleHealthResultMessage(googleHealthResult)
-  const statusMessage = syncMessage ?? resultMessage ?? googleHealthStatusMessage(status)
-  const hasError = syncState === "error" || googleHealthResultIsError(googleHealthResult)
 
   return (
-    <Card className="w-full bg-white/[0.035] text-white">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-          Herzfrequenz
-        </CardTitle>
-        <CardDescription
-          aria-live="polite"
-          className={cn(hasError ? "text-destructive" : "text-white/50")}
-        >
-          {statusMessage}
-        </CardDescription>
-        <CardAction>
-          <GoogleHealthAction status={status} syncState={syncState} />
-        </CardAction>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <HealthStrainIndicator score={healthStrainScore.score} />
-          <DataRangeToggle
-            ariaLabel="Herzfrequenzzeitraum"
-            onRangeChange={onRangeChange}
-            options={heartRateRangeOptions}
-            range={range}
+    <HealthChartSection
+      action={
+        <DataRangeToggle
+          ariaLabel="Herzfrequenzzeitraum"
+          onRangeChange={onRangeChange}
+          options={heartRateRangeOptions}
+          range={range}
+        />
+      }
+      title="Herzfrequenz"
+    >
+      <ChartContainer config={heartRateChartConfig} className={healthChartClassName}>
+        <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+          <defs>
+            <linearGradient id="heart-rate-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="5%" stopColor="var(--color-bpm)" stopOpacity={0.14} />
+              <stop offset="95%" stopColor="var(--color-bpm)" stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          {heartRateZones.map((zone) => (
+            <ReferenceArea
+              fill={zone.color}
+              fillOpacity={0.18}
+              ifOverflow="hidden"
+              key={zone.label}
+              strokeOpacity={0}
+              y1={heartRateMaximum * zone.from}
+              y2={zone.to === 1 ? chartMaximum : heartRateMaximum * zone.to}
+              zIndex={0}
+            />
+          ))}
+          <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+          <XAxis
+            axisLine={false}
+            dataKey="measuredAt"
+            minTickGap={42}
+            tickFormatter={range === "1w" ? formatChartAxisDate : formatHeartRateAxis}
+            tickLine={false}
+            tickMargin={10}
           />
-        </div>
-        <ChartContainer config={heartRateChartConfig} className={healthChartClassName}>
-          <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
-            <defs>
-              <linearGradient id="heart-rate-fill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-bpm)" stopOpacity={0.14} />
-                <stop offset="95%" stopColor="var(--color-bpm)" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            {heartRateZones.map((zone) => (
-              <ReferenceArea
-                fill={zone.color}
-                fillOpacity={0.18}
-                ifOverflow="hidden"
-                key={zone.label}
-                strokeOpacity={0}
-                y1={heartRateMaximum * zone.from}
-                y2={zone.to === 1 ? chartMaximum : heartRateMaximum * zone.to}
-                zIndex={0}
+          <YAxis
+            allowDecimals={false}
+            axisLine={false}
+            domain={[0, chartMaximum]}
+            ticks={ticks}
+            tickLine={false}
+            width={40}
+          />
+          <ChartTooltip
+            cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+            content={(
+              <ChartTooltipContent
+                className="border-white/10 bg-background/95"
+                indicator="line"
+                labelFormatter={formatHeartRateTooltip}
               />
-            ))}
-            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-            <XAxis
-              axisLine={false}
-              dataKey="measuredAt"
-              minTickGap={42}
-              tickFormatter={range === "1w" ? formatChartAxisDate : formatHeartRateAxis}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              allowDecimals={false}
-              axisLine={false}
-              domain={[0, chartMaximum]}
-              ticks={ticks}
-              tickLine={false}
-              width={40}
-            />
-            <ChartTooltip
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
-              content={(
-                <ChartTooltipContent
-                  className="border-white/10 bg-background/95"
-                  indicator="line"
-                  labelFormatter={formatHeartRateTooltip}
-                />
-              )}
-            />
-            <Area
-              dataKey="bpm"
-              dot={false}
-              fill="url(#heart-rate-fill)"
-              fillOpacity={1}
-              stroke="var(--color-bpm)"
-              strokeWidth={2.5}
-              type="monotone"
-            />
-          </AreaChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+            )}
+          />
+          <Area
+            dataKey="bpm"
+            dot={false}
+            fill="url(#heart-rate-fill)"
+            fillOpacity={1}
+            stroke="var(--color-bpm)"
+            strokeWidth={2.5}
+            type="monotone"
+          />
+        </AreaChart>
+      </ChartContainer>
+    </HealthChartSection>
   )
 }
 
@@ -616,94 +599,54 @@ function DailyStepsChartCard({
   const hasData = chartEntries.some((entry) => entry.steps !== null)
 
   return (
-    <Card className="w-full bg-white/[0.035] text-white">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-          Tägliche Schritte
-        </CardTitle>
-        <CardAction>
-          <DataRangeToggle
-            ariaLabel="Schrittezeitraum"
-            onRangeChange={onRangeChange}
-            options={stepsRangeOptions}
-            range={range}
-          />
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        {hasData ? (
-          <ChartContainer config={dailyStepsChartConfig} className={healthChartClassName}>
-            <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-              <XAxis
-                axisLine={false}
-                dataKey="date"
-                minTickGap={32}
-                tickFormatter={formatChartAxisDate}
-                tickLine={false}
-                tickMargin={10}
-              />
-              <YAxis
-                allowDecimals={false}
-                axisLine={false}
-                tickFormatter={formatStepsAxis}
-                tickLine={false}
-                width={44}
-              />
-              <ChartTooltip
-                cursor={{ fill: "rgba(255,255,255,0.06)" }}
-                content={(
-                  <ChartTooltipContent
-                    className="border-white/10 bg-background/95"
-                    labelFormatter={formatStepsTooltip}
-                  />
-                )}
-              />
-              <Bar dataKey="steps" fill="var(--color-steps)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ChartContainer>
-        ) : (
-          <div className={`${healthChartClassName} grid place-items-center rounded-md border border-dashed border-white/10 text-center text-white/50`}>
-            Noch keine Schrittdaten für diesen Zeitraum vorhanden.
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-function WithingsConnectionCard({
-  result,
-  status,
-  syncMessage,
-  syncState,
-}: {
-  result?: string
-  status: WithingsStatus
-  syncMessage: string | null
-  syncState: HealthSyncState
-}) {
-  const resultMessage = withingsResultMessage(result)
-  const statusMessage = syncMessage ?? resultMessage ?? withingsStatusMessage(status)
-  const hasError = syncState === "error" || withingsResultIsError(result)
-
-  return (
-    <Card className="w-full bg-white/[0.035] text-white">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
-          Withings
-        </CardTitle>
-        <CardDescription
-          aria-live="polite"
-          className={cn(hasError ? "text-destructive" : "text-white/50")}
-        >
-          {statusMessage}
-        </CardDescription>
-        <CardAction>
-          <WithingsAction status={status} syncState={syncState} />
-        </CardAction>
-      </CardHeader>
-    </Card>
+    <HealthChartSection
+      action={
+        <DataRangeToggle
+          ariaLabel="Schrittezeitraum"
+          onRangeChange={onRangeChange}
+          options={stepsRangeOptions}
+          range={range}
+        />
+      }
+      title="Tägliche Schritte"
+    >
+      {hasData ? (
+        <ChartContainer config={dailyStepsChartConfig} className={healthChartClassName}>
+          <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="date"
+              minTickGap={32}
+              tickFormatter={formatChartAxisDate}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              allowDecimals={false}
+              axisLine={false}
+              tickFormatter={formatStepsAxis}
+              tickLine={false}
+              width={44}
+            />
+            <ChartTooltip
+              cursor={{ fill: "rgba(255,255,255,0.06)" }}
+              content={(
+                <ChartTooltipContent
+                  className="border-white/10 bg-background/95"
+                  labelFormatter={formatStepsTooltip}
+                />
+              )}
+            />
+            <Bar dataKey="steps" fill="var(--color-steps)" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartContainer>
+      ) : (
+        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+          Noch keine Schrittdaten für diesen Zeitraum vorhanden.
+        </div>
+      )}
+    </HealthChartSection>
   )
 }
 
@@ -740,82 +683,97 @@ function DataRangeToggle<T extends string>({
   )
 }
 
-function GoogleHealthAction({
-  status,
-  syncState,
+function HealthApiActions({
+  googleHealthResult,
+  googleHealthStatus,
+  googleHealthSyncMessage,
+  googleHealthSyncState,
+  withingsResult,
+  withingsStatus,
+  withingsSyncMessage,
+  withingsSyncState,
 }: {
-  status: GoogleHealthStatus
-  syncState: HealthSyncState
+  googleHealthResult?: string
+  googleHealthStatus: GoogleHealthStatus
+  googleHealthSyncMessage: string | null
+  googleHealthSyncState: HealthSyncState
+  withingsResult?: string
+  withingsStatus: WithingsStatus
+  withingsSyncMessage: string | null
+  withingsSyncState: HealthSyncState
 }) {
-  if (status.state === "configuration_missing") {
-    return <Badge variant="destructive">OAuth fehlt</Badge>
-  }
+  const googleResultError = googleHealthResultIsError(googleHealthResult)
+  const withingsResultError = withingsResultIsError(withingsResult)
+  const googleMessage = googleResultError
+    ? googleHealthResultMessage(googleHealthResult)!
+    : googleHealthSyncMessage
+      ?? googleHealthResultMessage(googleHealthResult)
+      ?? googleHealthStatusMessage(googleHealthStatus)
+  const withingsMessage = withingsResultError
+    ? withingsResultMessage(withingsResult)!
+    : withingsSyncMessage
+      ?? withingsResultMessage(withingsResult)
+      ?? withingsStatusMessage(withingsStatus)
 
-  if (
-    status.state === "not_connected" ||
-    status.state === "expired" ||
-    status.state === "scope_update_required" ||
-    syncState === "error"
-  ) {
-    return (
-      <Button asChild variant="outline">
-        <a href="/myDashboard/google-health/connect">
-          <HeartPulse data-icon="inline-start" />
-          {status.state === "not_connected" ? "Verbinden" : "Neu verbinden"}
-        </a>
-      </Button>
-    )
-  }
-
-  if (syncState === "syncing") {
-    return (
-      <Badge variant="secondary">
-        <Loader2 className="animate-spin" data-icon="inline-start" />
-        Synchronisiert
-      </Badge>
-    )
-  }
-
-  return <Badge>Google Health verbunden</Badge>
+  return (
+    <>
+      <HealthApiButton
+        healthy={
+          googleHealthStatus.state === "connected"
+          && googleHealthSyncState !== "error"
+          && !googleResultError
+        }
+        href="/myDashboard/google-health/connect"
+        icon={<SiGoogle aria-hidden="true" data-icon="inline-start" />}
+        label={`Google Health: ${googleMessage}`}
+      />
+      <HealthApiButton
+        healthy={
+          withingsStatus.state === "connected"
+          && withingsSyncState !== "error"
+          && !withingsResultError
+        }
+        href="/myDashboard/withings/connect"
+        icon={<Scale aria-hidden="true" data-icon="inline-start" />}
+        label={`Withings: ${withingsMessage}`}
+      />
+    </>
+  )
 }
 
-function WithingsAction({
-  status,
-  syncState,
+function HealthApiButton({
+  healthy,
+  href,
+  icon,
+  label,
 }: {
-  status: WithingsStatus
-  syncState: HealthSyncState
+  healthy: boolean
+  href: string
+  icon: ReactNode
+  label: string
 }) {
-  if (status.state === "configuration_missing") {
-    return <Badge variant="destructive">OAuth fehlt</Badge>
-  }
-
-  if (
-    status.state === "not_connected" ||
-    status.state === "expired" ||
-    status.state === "scope_update_required" ||
-    syncState === "error"
-  ) {
-    return (
-      <Button asChild variant="outline">
-        <a href="/myDashboard/withings/connect">
-          <Scale data-icon="inline-start" />
-          {status.state === "not_connected" ? "Verbinden" : "Neu verbinden"}
-        </a>
-      </Button>
-    )
-  }
-
-  if (syncState === "syncing") {
-    return (
-      <Badge variant="secondary">
-        <Loader2 className="animate-spin" data-icon="inline-start" />
-        Synchronisiert
-      </Badge>
-    )
-  }
-
-  return <Badge>Withings verbunden</Badge>
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          asChild
+          className={cn(
+            "size-10 p-0 text-black hover:text-black sm:size-9",
+            healthy
+              ? "bg-primary hover:bg-primary/80"
+              : "bg-destructive hover:bg-destructive/80"
+          )}
+        >
+          <a aria-label={label} href={href}>
+            {icon}
+          </a>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  )
 }
 
 function GoalLine({ color, value }: { color: string; value: number }) {
@@ -831,25 +789,25 @@ function GoalLine({ color, value }: { color: string; value: number }) {
   )
 }
 
-function HealthChartCard({
+function HealthChartSection({
+  action,
   children,
-  goalAction,
   title,
 }: {
+  action: ReactNode
   children: ReactNode
-  goalAction: ReactNode
   title: string
 }) {
   return (
-    <Card className="w-full bg-white/[0.035] text-white">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
+    <section className="flex w-full flex-col gap-4 text-white">
+      <header className="flex min-w-0 items-center justify-between gap-3">
+        <h2 className="min-w-0 text-xl font-bold tracking-[0] text-white uppercase">
           {title}
-        </CardTitle>
-        <CardAction>{goalAction}</CardAction>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+        </h2>
+        <div className="shrink-0">{action}</div>
+      </header>
+      {children}
+    </section>
   )
 }
 

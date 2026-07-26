@@ -1,10 +1,9 @@
 const DAY_MS = 24 * 60 * 60 * 1_000
 const LOOKBACK_MS = 7 * DAY_MS
-const RECENT_WINDOW_MS = DAY_MS
-const DECAY_HALF_LIFE_MS = 2 * DAY_MS
-const MINIMUM_SLEEP_SAMPLES = 12
-const LOWEST_SLEEP_FRACTION = 0.1
-const NORMALIZATION_LOAD = 50
+const MINUTE_DURATION = 1
+const NEUTRAL_INTENSITY = 0.5
+const MAX_RECOVERY_RATE = 0.3
+const MAX_LOAD_RATE = 3
 
 export type HealthStrainScore = {
   restingHeartRate: number | null
@@ -16,78 +15,107 @@ type HeartRateSample = {
   measuredAt: Date
 }
 
-type SleepInterval = {
-  endedAt: Date
-  startedAt: Date
+export function updateHealthStrainScore({
+  currentScore,
+  durationMinutes,
+  heartRate,
+  maxHeartRate,
+  restingHeartRate,
+}: {
+  currentScore: number
+  durationMinutes: number
+  heartRate: number
+  maxHeartRate: number
+  restingHeartRate: number
+}) {
+  const boundedCurrentScore = Number.isFinite(currentScore)
+    ? clamp(currentScore, 0, 10)
+    : 0
+
+  if (
+    !Number.isFinite(heartRate)
+    || heartRate <= 0
+    || !Number.isFinite(restingHeartRate)
+    || !Number.isFinite(maxHeartRate)
+    || maxHeartRate <= restingHeartRate
+    || !Number.isFinite(durationMinutes)
+    || durationMinutes <= 0
+  ) {
+    return boundedCurrentScore
+  }
+
+  const intensity = clamp(
+    (heartRate - restingHeartRate) / (maxHeartRate - restingHeartRate),
+    0,
+    1
+  )
+  const rate = intensity < NEUTRAL_INTENSITY
+    ? -MAX_RECOVERY_RATE * (
+        (NEUTRAL_INTENSITY - intensity) / NEUTRAL_INTENSITY
+      )
+    : MAX_LOAD_RATE * (
+        (intensity - NEUTRAL_INTENSITY) / (1 - NEUTRAL_INTENSITY)
+      ) ** 2
+  const scoreChange = rate * (durationMinutes / 60)
+
+  return clamp(boundedCurrentScore + scoreChange, 0, 10)
 }
 
 export function calculateHealthStrainScore({
+  currentScore = 0,
   heartRateSamples,
   maximumHeartRate,
   now = new Date(),
-  sleepIntervals,
 }: {
+  currentScore?: number
   heartRateSamples: HeartRateSample[]
   maximumHeartRate: number
   now?: Date
-  sleepIntervals: SleepInterval[]
 }): HealthStrainScore {
+  if (!Number.isFinite(maximumHeartRate) || maximumHeartRate <= 0) {
+    return { restingHeartRate: null, score: null }
+  }
+
   const nowTime = now.getTime()
   const lookbackStart = nowTime - LOOKBACK_MS
-  const intervals = sleepIntervals
-    .map(({ endedAt, startedAt }) => ({ end: endedAt.getTime(), start: startedAt.getTime() }))
-    .filter(({ end, start }) => Number.isFinite(start) && Number.isFinite(end) && end > start)
-  const sleepHeartRates = heartRateSamples
+  const restingHeartRate = maximumHeartRate * 0.5
+  const minuteAverages = heartRateSamples
     .filter(({ beatsPerMinute, measuredAt }) => {
       const measuredTime = measuredAt.getTime()
       return Number.isFinite(beatsPerMinute)
         && beatsPerMinute > 0
+        && Number.isFinite(measuredTime)
         && measuredTime >= lookbackStart
         && measuredTime <= nowTime
-        && intervals.some(({ end, start }) => measuredTime >= start && measuredTime < end)
     })
-    .map(({ beatsPerMinute }) => beatsPerMinute)
-    .sort((left, right) => left - right)
+    .sort((left, right) => left.measuredAt.getTime() - right.measuredAt.getTime())
 
-  if (sleepHeartRates.length < MINIMUM_SLEEP_SAMPLES) {
-    return { restingHeartRate: null, score: null }
-  }
-
-  const lowestCount = Math.max(1, Math.ceil(sleepHeartRates.length * LOWEST_SLEEP_FRACTION))
-  const restingHeartRate = sleepHeartRates
-    .slice(0, lowestCount)
-    .reduce((total, heartRate) => total + heartRate, 0) / lowestCount
-  const heartRateReserve = maximumHeartRate - restingHeartRate
-
-  if (!Number.isFinite(heartRateReserve) || heartRateReserve <= 0) {
-    return { restingHeartRate: roundToOneDecimal(restingHeartRate), score: null }
-  }
-
-  const weightedLoad = heartRateSamples.reduce((total, { beatsPerMinute, measuredAt }) => {
-    const age = nowTime - measuredAt.getTime()
-    if (
-      !Number.isFinite(beatsPerMinute)
-      || beatsPerMinute <= restingHeartRate
-      || !Number.isFinite(age)
-      || age < 0
-      || age > LOOKBACK_MS
-    ) {
-      return total
+  if (minuteAverages.length === 0) {
+    return {
+      restingHeartRate: roundToOneDecimal(restingHeartRate),
+      score: null,
     }
+  }
 
-    const intensity = Math.min(1.25, (beatsPerMinute - restingHeartRate) / heartRateReserve)
-    const decay = age <= RECENT_WINDOW_MS
-      ? 1
-      : 0.5 ** ((age - RECENT_WINDOW_MS) / DECAY_HALF_LIFE_MS)
-
-    return total + intensity ** 3 * decay
-  }, 0)
-  const score = Math.min(10, 10 * (1 - Math.exp(-weightedLoad / NORMALIZATION_LOAD)))
+  const score = minuteAverages.reduce(
+    (value, { beatsPerMinute }) => updateHealthStrainScore({
+      currentScore: value,
+      durationMinutes: MINUTE_DURATION,
+      heartRate: beatsPerMinute,
+      maxHeartRate: maximumHeartRate,
+      restingHeartRate,
+    }),
+    currentScore
+  )
 
   return {
     restingHeartRate: roundToOneDecimal(restingHeartRate),
     score: roundToOneDecimal(score),
   }
+}
+
+function clamp(value: number, minimum: number, maximum: number) {
+  return Math.min(maximum, Math.max(minimum, value))
 }
 
 function roundToOneDecimal(value: number) {

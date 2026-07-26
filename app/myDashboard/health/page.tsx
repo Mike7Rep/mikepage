@@ -11,11 +11,9 @@ import {
   getHeartRateChartSeries,
 } from "@/lib/google-health"
 import { getWithingsStatus } from "@/lib/withings"
-import { DashboardActions } from "../_components/dashboard-actions"
 import { DashboardError } from "../_components/dashboard-error"
-import { DashboardFrame } from "../_components/dashboard-frame"
 import { DashboardLoadingFrame } from "../_components/dashboard-loading-frame"
-import { HealthContent, HealthEntryDialog } from "../_components/health-content"
+import { HealthContent } from "../_components/health-content"
 import { LoginPanel } from "../_components/login-panel"
 
 export const metadata: Metadata = {
@@ -102,30 +100,16 @@ async function HealthDashboardContent({
     : params.withings
 
   return (
-    <DashboardFrame
-      actions={
-        <>
-          <HealthEntryDialog entries={entries} />
-          <DashboardActions status={healthStatus(entries.at(-1)?.date)} />
-        </>
-      }
-      activeSection="health"
-    >
-      <HealthContent
-        entries={entries}
-        goals={goals}
-        googleHealthResult={googleHealthResult}
-        googleHealthStatus={googleHealthStatus}
-        initialDailySteps={dailySteps}
-        initialHealthStrainScore={healthStrainScore}
-        initialHeartRateSeries={heartRateSeries}
-        withingsResult={withingsResult}
-        withingsStatus={withingsStatus}
-      />
-    </DashboardFrame>
+    <HealthContent
+      entries={entries}
+      goals={goals}
+      googleHealthResult={googleHealthResult}
+      googleHealthStatus={googleHealthStatus}
+      initialDailySteps={dailySteps}
+      initialHealthStrainScore={healthStrainScore}
+      initialHeartRateSeries={heartRateSeries}
+      withingsResult={withingsResult}
+      withingsStatus={withingsStatus}
+    />
   )
-}
-
-function healthStatus(latestDate?: string) {
-  return latestDate ? `Letzter Eintrag: ${latestDate}` : "Noch keine Health-Daten"
 }

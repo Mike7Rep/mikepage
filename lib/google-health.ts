@@ -267,27 +267,16 @@ export async function getDailyStepsSeries(): Promise<DailyStepsPoint[]> {
 export async function getHealthStrainScore() {
   const now = new Date()
   const start = new Date(now.getTime() - SLEEP_SYNC_DAYS * DAY_MS)
-  const [heartRateSamples, sleepIntervals] = await Promise.all([
-    prisma.heartRateSample.findMany({
-      where: { measuredAt: { gte: start, lte: now } },
-      orderBy: { measuredAt: "asc" },
-      select: { beatsPerMinute: true, measuredAt: true },
-    }),
-    prisma.googleHealthSleepInterval.findMany({
-      where: {
-        endedAt: { gte: start },
-        startedAt: { lt: now },
-      },
-      orderBy: { startedAt: "asc" },
-      select: { endedAt: true, startedAt: true },
-    }),
-  ])
+  const heartRateSamples = await prisma.heartRateSample.findMany({
+    where: { measuredAt: { gte: start, lte: now } },
+    orderBy: { measuredAt: "asc" },
+    select: { beatsPerMinute: true, measuredAt: true },
+  })
 
   return calculateHealthStrainScore({
     heartRateSamples,
     maximumHeartRate: personalMaximumHeartRate(now),
     now,
-    sleepIntervals,
   })
 }
 
