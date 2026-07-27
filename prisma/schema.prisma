@@ -105,6 +105,14 @@ model DailyStepCount {
   @@map("daily_step_counts")
 }
 
+model DailyCalorieBurn {
+  date         DateTime @id @db.Date
+  kilocalories Int
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("daily_calorie_burns")
+}
+
 model DailyRestingHeartRate {
   date           DateTime @id @db.Date
   beatsPerMinute Int      @map("beats_per_minute")

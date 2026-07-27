@@ -56,18 +56,25 @@ const emptyGoals: HealthGoalsView = {
   pulse: null,
 }
 
+const HEALTH_RETENTION_YEARS = 1
+
 export async function getHealthEntries(): Promise<HealthEntryView[]> {
   "use cache"
   cacheLife("hours")
   cacheTag("dashboard:health")
 
+  const retentionStart = healthRetentionStart()
   const [rows, withingsMeasurements] = await Promise.all([
     prisma.healthEntry.findMany({
       orderBy: [{ date: "asc" }, { id: "asc" }],
+      where: { date: { gte: retentionStart } },
     }),
     prisma.withingsMeasurement.findMany({
-      where: { isDeleted: false },
       orderBy: [{ measuredAt: "asc" }, { groupId: "asc" }],
+      where: {
+        isDeleted: false,
+        measuredAt: { gte: retentionStart },
+      },
     }),
   ])
   const entries = new Map<string, HealthEntryView>()
@@ -139,19 +146,30 @@ export async function getHealthGoals(): Promise<HealthGoalsView> {
 }
 
 export async function upsertHealthEntry(input: HealthEntryInput) {
-  return prisma.healthEntry.upsert({
-    where: { date: input.date },
-    create: {
-      ...input,
-      bodyFatPercent: null,
-      weightKg: null,
-    },
-    update: {
-      ...(input.bloodPressure1 === null ? {} : { bloodPressure1: input.bloodPressure1 }),
-      ...(input.bloodPressure2 === null ? {} : { bloodPressure2: input.bloodPressure2 }),
-      ...(input.waistCm === null ? {} : { waistCm: input.waistCm }),
-      ...(input.pulse === null ? {} : { pulse: input.pulse }),
-    },
+  const retentionStart = healthRetentionStart()
+  if (input.date < retentionStart) {
+    throw new Error("Health-Einträge können höchstens ein Jahr zurückliegen.")
+  }
+
+  return prisma.$transaction(async (transaction) => {
+    const entry = await transaction.healthEntry.upsert({
+      where: { date: input.date },
+      create: {
+        ...input,
+        bodyFatPercent: null,
+        weightKg: null,
+      },
+      update: {
+        ...(input.bloodPressure1 === null ? {} : { bloodPressure1: input.bloodPressure1 }),
+        ...(input.bloodPressure2 === null ? {} : { bloodPressure2: input.bloodPressure2 }),
+        ...(input.waistCm === null ? {} : { waistCm: input.waistCm }),
+        ...(input.pulse === null ? {} : { pulse: input.pulse }),
+      },
+    })
+    await transaction.healthEntry.deleteMany({
+      where: { date: { lt: retentionStart } },
+    })
+    return entry
   })
 }
 
@@ -219,6 +237,13 @@ function zurichDate(value: Date) {
     timeZone: "Europe/Zurich",
     year: "numeric",
   }).format(value)
+}
+
+function healthRetentionStart(reference = new Date()) {
+  const start = new Date(reference)
+  start.setUTCFullYear(start.getUTCFullYear() - HEALTH_RETENTION_YEARS)
+  start.setUTCHours(0, 0, 0, 0)
+  return start
 }
 
 function parsePositiveInt(formData: FormData, key: string, label: string, optional = false) {

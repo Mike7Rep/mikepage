@@ -11,12 +11,24 @@ test("uses 220 minus age for the personal maximum heart rate", () => {
   assert.equal(personalMaximumHeartRate(new Date("2026-07-07T12:00:00Z")), 179)
 })
 
-test("integrates every heart-rate value by its measured duration", () => {
-  const heartRateSamples = samplesForHour(140, 10)
+test("adds every minute value divided by 60", () => {
+  const heartRateSamples = samplesForHour(140)
 
   assert.deepEqual(
     calculateHealthStrainScore({ heartRateSamples, maximumHeartRate: 200 }),
     { score: 2 }
+  )
+})
+
+test("does not weight minute values by the distance between timestamps", () => {
+  const heartRateSamples = Array.from({ length: 3 }, (_, index) => ({
+    beatsPerMinute: 170,
+    measuredAt: new Date(index * 10 * 1_000),
+  }))
+
+  assert.deepEqual(
+    calculateHealthStrainScore({ heartRateSamples, maximumHeartRate: 200 }),
+    { score: 0.3 }
   )
 })
 
@@ -38,8 +50,8 @@ test("uses the requested hourly score for every heart-rate zone", () => {
 
   for (const { beatsPerMinute, score } of cases) {
     const heartRateSamples = [
-      ...samplesForHour(90, 10),
-      ...samplesForHour(beatsPerMinute, 10, 3_600),
+      ...samplesForHour(90),
+      ...samplesForHour(beatsPerMinute, 3_600),
     ]
 
     assert.deepEqual(
@@ -53,12 +65,12 @@ test("uses the requested hourly score for every heart-rate zone", () => {
 test("clamps the completed sum instead of every intermediate value", () => {
   const maximumHeartRate = 200
   const recoveryThenLoad = [
-    ...samplesForHour(70, 10),
-    ...samplesForHour(90, 10, 3_600),
+    ...samplesForHour(70),
+    ...samplesForHour(90, 3_600),
   ]
   const loadThenRecovery = [
-    ...samplesForHour(90, 10),
-    ...samplesForHour(70, 10, 3_600),
+    ...samplesForHour(90),
+    ...samplesForHour(70, 3_600),
   ]
 
   assert.deepEqual(
@@ -72,8 +84,8 @@ test("clamps the completed sum instead of every intermediate value", () => {
   assert.deepEqual(
     calculateHealthStrainScore({
       heartRateSamples: [
-        ...samplesForHour(170, 10),
-        ...samplesForHour(170, 10, 3_600),
+        ...samplesForHour(170),
+        ...samplesForHour(170, 3_600),
       ],
       maximumHeartRate,
     }),
@@ -81,16 +93,16 @@ test("clamps the completed sum instead of every intermediate value", () => {
   )
   assert.deepEqual(
     calculateHealthStrainScore({
-      heartRateSamples: samplesForHour(70, 10),
+      heartRateSamples: samplesForHour(70),
       maximumHeartRate,
     }),
     { score: 0 }
   )
 })
 
-function samplesForHour(beatsPerMinute: number, intervalSeconds: number, startSeconds = 0) {
-  return Array.from({ length: 3_600 / intervalSeconds }, (_, index) => ({
+function samplesForHour(beatsPerMinute: number, startSeconds = 0) {
+  return Array.from({ length: 60 }, (_, index) => ({
     beatsPerMinute,
-    measuredAt: new Date((startSeconds + index * intervalSeconds) * 1_000),
+    measuredAt: new Date((startSeconds + index * 60) * 1_000),
   }))
 }

@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getHealthEntries, getHealthGoals } from "@/lib/health-data"
 import {
+  getDailyCaloriesSeries,
   getDailyRestingHeartRateSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
@@ -62,6 +63,7 @@ async function HealthDashboardContent({
     getHealthEntries(),
     getHealthGoals(),
     getHeartRateChartSeries(),
+    getDailyCaloriesSeries(),
     getDailyStepsSeries(),
     getDailyRestingHeartRateSeries(),
     getHealthStrainScore(),
@@ -88,6 +90,7 @@ async function HealthDashboardContent({
     entries,
     goals,
     heartRateSeries,
+    dailyCalories,
     dailySteps,
     dailyRestingHeartRates,
     healthStrainScore,
@@ -108,6 +111,7 @@ async function HealthDashboardContent({
       goals={goals}
       googleHealthResult={googleHealthResult}
       googleHealthStatus={googleHealthStatus}
+      initialDailyCalories={dailyCalories}
       initialDailySteps={dailySteps}
       initialRestingHeartRates={dailyRestingHeartRates}
       initialHealthStrainScore={healthStrainScore}

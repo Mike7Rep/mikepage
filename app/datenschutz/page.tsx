@@ -15,7 +15,7 @@ const sections = [
   },
   {
     title: "Privates Dashboard und Google Health",
-    text: "Nach ausdrücklicher OAuth-Freigabe liest das private Dashboard ausschliesslich Herzfrequenzdaten, tägliche Ruhepulswerte, tägliche Schrittzahlen und Schlafintervalle aus der Google Health API. Messzeitpunkt, Herzfrequenz, Datum, Ruhepuls, Schrittzahl sowie Beginn und Ende der Schlafintervalle werden in der privaten Dashboard-Datenbank beim Hosting-Anbieter gespeichert und nur zur persönlichen Verlaufsdarstellung und Berechnung des Belastungsscores verwendet; eine Weitergabe für Werbung oder Analysen findet nicht statt. Das Google-Refresh-Token wird verschlüsselt gespeichert. Die Daten bleiben bis zu ihrer Löschung gespeichert. Die Freigabe kann jederzeit im Google-Konto widerrufen werden; eine Löschung der lokal gespeicherten Daten kann über die unten angegebene Kontaktadresse verlangt werden.",
+    text: "Nach ausdrücklicher OAuth-Freigabe liest das private Dashboard ausschliesslich Herzfrequenzdaten, tägliche Ruhepulswerte, tägliche Schrittzahlen, den täglichen Kalorienverbrauch und Schlafintervalle aus der Google Health API. Messzeitpunkt, Herzfrequenz, Datum, Ruhepuls, Schrittzahl, Kalorienverbrauch sowie Beginn und Ende der Schlafintervalle werden in der privaten Dashboard-Datenbank beim Hosting-Anbieter gespeichert und nur zur persönlichen Verlaufsdarstellung und Berechnung des Belastungsscores verwendet; eine Weitergabe für Werbung oder Analysen findet nicht statt. Das Google-Refresh-Token wird verschlüsselt gespeichert. Verlaufsdaten werden spätestens nach einem Jahr automatisch gelöscht. Die Freigabe kann jederzeit im Google-Konto widerrufen werden; eine Löschung der lokal gespeicherten Daten kann über die unten angegebene Kontaktadresse verlangt werden.",
   },
   {
     title: "Server- und Zugriffsdaten",
@@ -51,7 +51,7 @@ export default function DatenschutzPage() {
             Datenschutz
           </h1>
           <p className="max-w-2xl text-base leading-7 text-white/65">
-            Stand: 14. Juli 2026. Diese Erklärung beschreibt die Datenbearbeitung auf dieser Website und im geschützten privaten Dashboardbereich.
+            Stand: 27. Juli 2026. Diese Erklärung beschreibt die Datenbearbeitung auf dieser Website und im geschützten privaten Dashboardbereich.
           </p>
         </div>
 

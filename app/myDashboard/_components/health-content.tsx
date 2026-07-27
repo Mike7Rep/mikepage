@@ -6,6 +6,8 @@ import { SiGoogle } from "react-icons/si"
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -45,6 +47,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type {
+  DailyCaloriesPoint,
   DailyRestingHeartRatePoint,
   DailyStepsPoint,
   GoogleHealthStatus,
@@ -83,7 +86,8 @@ const heartRateChartConfig = {
   bpm: { label: "Herzfrequenz", color: "#fb7185" },
 } satisfies ChartConfig
 
-const dailyStepsChartConfig = {
+const dailyActivityChartConfig = {
+  calories: { label: "Kalorien (kcal)", color: "var(--chart-4)" },
   steps: { label: "Schritte", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
@@ -92,6 +96,7 @@ const restingHeartRateChartConfig = {
 } satisfies ChartConfig
 
 const healthChartClassName = "aspect-[4/3] w-full md:aspect-video"
+const healthCardClassName = "bg-transparent py-0 text-white md:bg-white/[0.035] md:py-4"
 
 const heartRateRangeOptions = [
   { label: "1 Stunde", shortLabel: "1h", value: "1h" },
@@ -105,6 +110,8 @@ const nonHeartRateRangeOptions = [
   { label: "3 Monate", shortLabel: "3M", value: "3m" },
   { label: "Max", shortLabel: "Max", value: "max" },
 ] satisfies Array<{ label: string; shortLabel: string; value: ChartRange }>
+
+const dailyActivityRangeOptions = nonHeartRateRangeOptions.slice(0, 3)
 
 const heartRateMaximum = personalMaximumHeartRate()
 const heartRateZoneColors = [
@@ -171,6 +178,7 @@ export function HealthContent({
   goals,
   googleHealthResult,
   googleHealthStatus: initialGoogleHealthStatus,
+  initialDailyCalories,
   initialDailySteps,
   initialHealthStrainScore,
   initialHeartRateSeries,
@@ -182,6 +190,7 @@ export function HealthContent({
   goals: HealthGoalsView
   googleHealthResult?: string
   googleHealthStatus: GoogleHealthStatus
+  initialDailyCalories: DailyCaloriesPoint[]
   initialDailySteps: DailyStepsPoint[]
   initialHealthStrainScore: HealthStrainScore
   initialHeartRateSeries: HeartRateChartSeries
@@ -199,9 +208,11 @@ export function HealthContent({
   const newestFirst = useMemo(() => [...entries].reverse(), [entries])
   const [editingEntry, setEditingEntry] = useState<HealthEntryView | null>(null)
   const [chartRange, setChartRange] = useState<ChartRange>("max")
+  const [caloriesRange, setCaloriesRange] = useState<ChartRange>("1w")
   const [heartRateRange, setHeartRateRange] = useState<HeartRateChartRange>("1d")
   const [stepsRange, setStepsRange] = useState<ChartRange>("1w")
   const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
+  const [dailyCalories, setDailyCalories] = useState(initialDailyCalories)
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
   const [healthStrainScore, setHealthStrainScore] = useState(initialHealthStrainScore)
   const [heartRateSeries, setHeartRateSeries] = useState(initialHeartRateSeries)
@@ -246,6 +257,7 @@ export function HealthContent({
         return
       }
 
+      setDailyCalories(result.calories)
       setDailySteps(result.steps)
       setHealthStrainScore(result.strainScore)
       setHeartRateSeries(result.series)
@@ -256,10 +268,11 @@ export function HealthContent({
         result.skipped
           ? "Gesundheitsdaten sind bereits aktuell."
           : result.insertedHeartRate > 0
+              || result.updatedCalorieDays > 0
               || result.updatedRestingHeartRateDays > 0
               || result.updatedStepDays > 0
               || result.updatedSleepIntervals > 0
-            ? `${result.insertedHeartRate} neue Herzfrequenz-Messwerte gespeichert, ${result.updatedRestingHeartRateDays} Ruhepulstage, ${result.updatedStepDays} Schritttage und ${result.updatedSleepIntervals} Schlafintervalle abgeglichen.`
+            ? `${result.insertedHeartRate} neue Herzfrequenz-Messwerte gespeichert, ${result.updatedRestingHeartRateDays} Ruhepulstage, ${result.updatedStepDays} Schritttage, ${result.updatedCalorieDays} Kalorientage und ${result.updatedSleepIntervals} Schlafintervalle abgeglichen.`
             : "Keine neuen Gesundheitsdaten gefunden."
       )
     })
@@ -310,7 +323,11 @@ export function HealthContent({
     >
       <div className="flex flex-col gap-10 sm:gap-12">
         <section aria-label="Belastungs- und Erholungsscore" className="w-full">
-          <HealthStrainIndicator score={healthStrainScore.score} />
+          <Card className={healthCardClassName}>
+            <CardContent className="px-0 md:px-4">
+              <HealthStrainIndicator score={healthStrainScore.score} />
+            </CardContent>
+          </Card>
         </section>
 
         <section className="flex w-full flex-col gap-10 sm:gap-12">
@@ -344,10 +361,22 @@ export function HealthContent({
             </HealthChartSection>
           ))}
 
-          <DailyStepsChartCard
+          <DailyBarChartCard
+            dataKey="steps"
             entries={dailySteps}
+            emptyMessage="Noch keine Schrittdaten für diesen Zeitraum vorhanden."
             onRangeChange={setStepsRange}
             range={stepsRange}
+            title="Schritte"
+          />
+
+          <DailyBarChartCard
+            dataKey="calories"
+            entries={dailyCalories}
+            emptyMessage="Noch keine Kaloriendaten für diesen Zeitraum vorhanden."
+            onRangeChange={setCaloriesRange}
+            range={caloriesRange}
+            title="Kalorienverbrauch"
           />
 
           <HealthChartSection
@@ -399,8 +428,8 @@ export function HealthContent({
           />
         </section>
 
-        <Card className="bg-white/[0.035] text-white">
-          <CardHeader>
+        <Card className={healthCardClassName}>
+          <CardHeader className="px-0 md:px-4">
             <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
               Einträge
             </CardTitle>
@@ -418,7 +447,7 @@ export function HealthContent({
                   <TableHead className="w-10 pr-4 text-right text-white/45" />
                 </TableRow>
               </TableHeader>
-              <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
+              <TableBody className="flex flex-col gap-2 px-0 md:table-row-group">
                 {newestFirst.map((entry) => (
                   <TableRow
                     key={entry.id ?? `withings-${entry.date}`}
@@ -611,39 +640,39 @@ function HeartRateChartCard({
   )
 }
 
-function DailyStepsChartCard({
+function DailyBarChartCard<T extends "calories" | "steps">({
+  dataKey,
   entries,
+  emptyMessage,
   onRangeChange,
   range,
+  title,
 }: {
-  entries: DailyStepsPoint[]
+  dataKey: T
+  entries: Array<{ date: string } & Record<T, number | null>>
+  emptyMessage: string
   onRangeChange: (range: ChartRange) => void
   range: ChartRange
+  title: string
 }) {
   const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
-  const hasData = chartEntries.some((entry) => entry.steps !== null)
+  const hasData = chartEntries.some((entry) => entry[dataKey] !== null)
 
   return (
     <HealthChartSection
       action={
         <DataRangeToggle
-          ariaLabel="Schrittezeitraum"
+          ariaLabel={`${title} Zeitraum`}
           onRangeChange={onRangeChange}
-          options={nonHeartRateRangeOptions}
+          options={dailyActivityRangeOptions}
           range={range}
         />
       }
-      title="Schritte"
+      title={title}
     >
       {hasData ? (
-        <ChartContainer config={dailyStepsChartConfig} className={healthChartClassName}>
-          <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
-            <defs>
-              <linearGradient id="daily-steps-fill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-steps)" stopOpacity={0.42} />
-                <stop offset="95%" stopColor="var(--color-steps)" stopOpacity={0.06} />
-              </linearGradient>
-            </defs>
+        <ChartContainer config={dailyActivityChartConfig} className={healthChartClassName}>
+          <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis
               axisLine={false}
@@ -656,35 +685,30 @@ function DailyStepsChartCard({
             <YAxis
               allowDecimals={false}
               axisLine={false}
-              tickFormatter={formatStepsAxis}
+              tickFormatter={formatDailyValueAxis}
               tickLine={false}
               width={44}
             />
             <ChartTooltip
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+              cursor={{ fill: "rgba(255,255,255,0.04)" }}
               content={(
                 <ChartTooltipContent
                   className="border-white/10 bg-background/95"
-                  indicator="line"
                   labelFormatter={formatStepsTooltip}
                 />
               )}
             />
-            <Area
-              connectNulls
-              dataKey="steps"
-              dot={false}
-              fill="url(#daily-steps-fill)"
-              fillOpacity={1}
-              stroke="var(--color-steps)"
-              strokeWidth={2.5}
-              type="monotone"
+            <Bar
+              dataKey={dataKey}
+              fill={`var(--color-${dataKey})`}
+              maxBarSize={32}
+              radius={[4, 4, 0, 0]}
             />
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
-          Noch keine Schrittdaten für diesen Zeitraum vorhanden.
+          {emptyMessage}
         </div>
       )}
     </HealthChartSection>
@@ -922,14 +946,18 @@ function HealthChartSection({
   title: string
 }) {
   return (
-    <section className="flex w-full flex-col gap-4 text-white">
-      <header className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <h2 className="min-w-0 text-xl font-bold tracking-[0] text-white uppercase">
-          {title}
-        </h2>
-        <div className="ml-auto max-w-full shrink-0">{action}</div>
-      </header>
-      {children}
+    <section className="w-full">
+      <Card className={healthCardClassName}>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 px-0 md:px-4">
+          <CardTitle className="min-w-0 text-xl font-bold tracking-[0] text-white uppercase">
+            {title}
+          </CardTitle>
+          <div className="ml-auto max-w-full shrink-0">{action}</div>
+        </CardHeader>
+        <CardContent className="px-0 md:px-4">
+          {children}
+        </CardContent>
+      </Card>
     </section>
   )
 }
@@ -1225,7 +1253,7 @@ function formatStepsTooltip(value: ReactNode) {
   return stepsTooltipFormatter.format(new Date(`${String(value)}T00:00:00.000Z`))
 }
 
-function formatStepsAxis(value: number) {
+function formatDailyValueAxis(value: number) {
   return Math.abs(value) >= 1_000
     ? `${decimalFormatter.format(value / 1_000)}k`
     : decimalFormatter.format(value)
@@ -1242,7 +1270,7 @@ function googleHealthStatusMessage(status: GoogleHealthStatus) {
     return "Die Google-Health-Freigabe ist abgelaufen und muss erneuert werden."
   }
   if (status.state === "scope_update_required") {
-    return "Für Ruhepuls, Schritte und Belastungsscore sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
+    return "Für Ruhepuls, Schritte, Kalorien und Belastungsscore sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
   }
   if (status.lastSyncedAt) {
     return `Zuletzt synchronisiert: ${heartRateTooltipFormatter.format(new Date(status.lastSyncedAt))}.`

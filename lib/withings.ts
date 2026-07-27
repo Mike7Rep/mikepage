@@ -79,6 +79,7 @@ const SYNC_THROTTLE_MS = 60 * 1_000
 const TOKEN_EXPIRY_SKEW_MS = 60 * 1_000
 const UPSERT_BATCH_SIZE = 100
 const MAX_PAGES = 1_000
+const HEALTH_RETENTION_MS = 365 * DAY_MS
 
 export function getWithingsConfig() {
   const clientId = readEnv("WITHINGS_CLIENT_ID")
@@ -262,15 +263,21 @@ export async function syncWithingsData() {
     measurementResult = await fetchMeasurements(accessToken, connection.lastUpdate)
   }
 
-  const measurements = normalizeMeasurements(measurementResult.groups)
+  const retentionStart = new Date(now.getTime() - HEALTH_RETENTION_MS)
+  const measurements = normalizeMeasurements(measurementResult.groups, retentionStart)
   await upsertMeasurements(measurements)
-  await prisma.withingsConnection.update({
-    where: { id: CONNECTION_ID },
-    data: {
-      lastSyncedAt: now,
-      lastUpdate: measurementResult.lastUpdate,
-    },
-  })
+  await prisma.$transaction([
+    prisma.withingsMeasurement.deleteMany({
+      where: { measuredAt: { lt: retentionStart } },
+    }),
+    prisma.withingsConnection.update({
+      where: { id: CONNECTION_ID },
+      data: {
+        lastSyncedAt: now,
+        lastUpdate: measurementResult.lastUpdate,
+      },
+    }),
+  ])
 
   return {
     processedMeasurements: measurements.length,
@@ -370,13 +377,13 @@ async function fetchMeasurements(accessToken: string, lastUpdate: bigint | null)
   throw new Error("Withings hat zu viele Messdatenseiten geliefert.")
 }
 
-function normalizeMeasurements(groups: WithingsMeasureGroup[]) {
+function normalizeMeasurements(groups: WithingsMeasureGroup[], retentionStart: Date) {
   const normalized = new Map<bigint, NormalizedMeasurement>()
 
   for (const group of groups) {
     const groupId = positiveBigInt(group.grpid)
     const measuredAt = unixDate(group.date)
-    if (groupId === null || measuredAt === null) continue
+    if (groupId === null || measuredAt === null || measuredAt < retentionStart) continue
 
     const isDeleted = truthyApiFlag(group.is_deleted)
     let weightKg: number | null = null
