@@ -11,7 +11,6 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ReferenceArea,
   ReferenceLine,
   XAxis,
   YAxis,
@@ -55,11 +54,6 @@ import type {
   HeartRateChartSeries,
 } from "@/lib/google-health"
 import type { HealthEntryView, HealthGoalMetric, HealthGoalsView } from "@/lib/health-data"
-import {
-  HEART_RATE_SCORE_ZONES,
-  type HealthStrainScore,
-  personalMaximumHeartRate,
-} from "@/lib/health-strain"
 import { cn } from "@/lib/utils"
 import type { WithingsStatus } from "@/lib/withings"
 import {
@@ -75,7 +69,6 @@ import {
 } from "./chart-range-toggle"
 import { DashboardDatePicker, formatDashboardDate, todayInputValue } from "./dashboard-date-picker"
 import { DashboardFrame } from "./dashboard-frame"
-import { HealthStrainIndicator } from "./health-strain-indicator"
 
 const bloodPressureChartConfig = {
   bloodPressure1: { label: "Blutdruck 1", color: "#8bc7ff" },
@@ -112,20 +105,6 @@ const nonHeartRateRangeOptions = [
 ] satisfies Array<{ label: string; shortLabel: string; value: ChartRange }>
 
 const dailyActivityRangeOptions = nonHeartRateRangeOptions.slice(0, 3)
-
-const heartRateMaximum = personalMaximumHeartRate()
-const heartRateZoneColors = [
-  "var(--heart-zone-recovery)",
-  "var(--heart-zone-very-light)",
-  "var(--heart-zone-light)",
-  "var(--heart-zone-medium)",
-  "var(--heart-zone-strong)",
-  "var(--heart-zone-maximum)",
-] as const
-const heartRateZones = HEART_RATE_SCORE_ZONES.map((zone, index) => ({
-  ...zone,
-  color: heartRateZoneColors[index],
-}))
 
 type SingleMetric = Extract<
   HealthGoalMetric,
@@ -180,7 +159,6 @@ export function HealthContent({
   googleHealthStatus: initialGoogleHealthStatus,
   initialDailyCalories,
   initialDailySteps,
-  initialHealthStrainScore,
   initialHeartRateSeries,
   initialRestingHeartRates,
   withingsResult,
@@ -192,7 +170,6 @@ export function HealthContent({
   googleHealthStatus: GoogleHealthStatus
   initialDailyCalories: DailyCaloriesPoint[]
   initialDailySteps: DailyStepsPoint[]
-  initialHealthStrainScore: HealthStrainScore
   initialHeartRateSeries: HeartRateChartSeries
   initialRestingHeartRates: DailyRestingHeartRatePoint[]
   withingsResult?: string
@@ -214,7 +191,6 @@ export function HealthContent({
   const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
   const [dailyCalories, setDailyCalories] = useState(initialDailyCalories)
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
-  const [healthStrainScore, setHealthStrainScore] = useState(initialHealthStrainScore)
   const [heartRateSeries, setHeartRateSeries] = useState(initialHeartRateSeries)
   const [restingHeartRates, setRestingHeartRates] = useState(initialRestingHeartRates)
   const [googleHealthSyncState, setGoogleHealthSyncState] = useState<HealthSyncState>(
@@ -259,7 +235,6 @@ export function HealthContent({
 
       setDailyCalories(result.calories)
       setDailySteps(result.steps)
-      setHealthStrainScore(result.strainScore)
       setHeartRateSeries(result.series)
       setRestingHeartRates(result.restingHeartRates)
       setGoogleHealthStatus(result.status)
@@ -322,14 +297,6 @@ export function HealthContent({
       activeSection="health"
     >
       <div className="flex flex-col gap-10 sm:gap-12">
-        <section aria-label="Belastungs- und Erholungsscore" className="w-full">
-          <Card className={healthCardClassName}>
-            <CardContent className="px-0 md:px-4">
-              <HealthStrainIndicator score={healthStrainScore.score} />
-            </CardContent>
-          </Card>
-        </section>
-
         <section className="flex w-full flex-col gap-10 sm:gap-12">
           <HeartRateChartCard
             entries={heartRateSeries[heartRateRange]}
@@ -562,7 +529,7 @@ function HeartRateChartCard({
   range: HeartRateChartRange
 }) {
   const chartMaximum = Math.ceil(
-    Math.max(heartRateMaximum, ...entries.map((entry) => entry.bpm)) / 30
+    Math.max(30, ...entries.map((entry) => entry.bpm)) / 30
   ) * 30
   const ticks = Array.from({ length: chartMaximum / 30 + 1 }, (_, index) => index * 30)
 
@@ -586,18 +553,6 @@ function HeartRateChartCard({
               <stop offset="95%" stopColor="var(--color-bpm)" stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          {heartRateZones.map((zone) => (
-            <ReferenceArea
-              fill={zone.color}
-              fillOpacity={0.18}
-              ifOverflow="hidden"
-              key={zone.label}
-              strokeOpacity={0}
-              y1={heartRateMaximum * zone.from}
-              y2={Number.isFinite(zone.to) ? heartRateMaximum * zone.to : chartMaximum}
-              zIndex={0}
-            />
-          ))}
           <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
           <XAxis
             axisLine={false}
@@ -1270,7 +1225,7 @@ function googleHealthStatusMessage(status: GoogleHealthStatus) {
     return "Die Google-Health-Freigabe ist abgelaufen und muss erneuert werden."
   }
   if (status.state === "scope_update_required") {
-    return "Für Ruhepuls, Schritte, Kalorien und Belastungsscore sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
+    return "Für Ruhepuls, Schritte und Kalorien sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
   }
   if (status.lastSyncedAt) {
     return `Zuletzt synchronisiert: ${heartRateTooltipFormatter.format(new Date(status.lastSyncedAt))}.`

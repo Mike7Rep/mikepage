@@ -28,7 +28,6 @@ import {
   getDailyRestingHeartRateSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
-  getHealthStrainScore,
   getHeartRateChartSeries,
   syncGoogleHealthData,
 } from "@/lib/google-health"
@@ -173,13 +172,12 @@ export async function syncGoogleHealthAction() {
 
   try {
     const sync = await syncGoogleHealthData()
-    const [calories, restingHeartRates, series, status, steps, strainScore] = await Promise.all([
+    const [calories, restingHeartRates, series, status, steps] = await Promise.all([
       getDailyCaloriesSeries(),
       getDailyRestingHeartRateSeries(),
       getHeartRateChartSeries(),
       getGoogleHealthStatus(),
       getDailyStepsSeries(),
-      getHealthStrainScore(),
     ])
     revalidatePath("/myDashboard/health")
     return {
@@ -189,7 +187,6 @@ export async function syncGoogleHealthAction() {
       series,
       status,
       steps,
-      strainScore,
       ...sync,
     } as const
   } catch (error) {

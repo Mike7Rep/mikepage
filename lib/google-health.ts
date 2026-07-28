@@ -2,10 +2,6 @@ import "server-only"
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto"
 
-import {
-  calculateHealthStrainScore,
-  personalMaximumHeartRate,
-} from "@/lib/health-strain"
 import { prisma } from "@/lib/prisma"
 
 const GOOGLE_HEALTH_SCOPES = [
@@ -329,25 +325,6 @@ export async function getDailyRestingHeartRateSeries(): Promise<DailyRestingHear
   }))
 }
 
-export async function getHealthStrainScore() {
-  const now = new Date()
-  const heartRateSamples = await prisma.heartRateSample.findMany({
-    orderBy: { measuredAt: "asc" },
-    select: { beatsPerMinute: true, measuredAt: true },
-    where: {
-      measuredAt: {
-        gte: new Date(now.getTime() - 7 * DAY_MS),
-        lte: now,
-      },
-    },
-  })
-
-  return calculateHealthStrainScore({
-    heartRateSamples,
-    maximumHeartRate: personalMaximumHeartRate(now),
-  })
-}
-
 export async function syncGoogleHealthData() {
   const config = requireGoogleHealthConfig()
   const connection = await prisma.googleHealthConnection.findUnique({ where: { id: CONNECTION_ID } })
@@ -358,7 +335,7 @@ export async function syncGoogleHealthData() {
     throw new Error("Die Google-Health-Verbindung ist abgelaufen. Bitte erneut verbinden.")
   }
   if (!hasGoogleHealthScopes(connection.grantedScopes)) {
-    throw new Error("Für Ruhepuls, Schritte, Kalorien und Belastungsscore braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
+    throw new Error("Für Ruhepuls, Schritte und Kalorien braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
   }
 
   const now = new Date(Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS)

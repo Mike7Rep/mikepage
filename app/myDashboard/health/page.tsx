@@ -9,7 +9,6 @@ import {
   getDailyRestingHeartRateSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
-  getHealthStrainScore,
   getHeartRateChartSeries,
 } from "@/lib/google-health"
 import { getWithingsStatus } from "@/lib/withings"
@@ -66,7 +65,6 @@ async function HealthDashboardContent({
     getDailyCaloriesSeries(),
     getDailyStepsSeries(),
     getDailyRestingHeartRateSeries(),
-    getHealthStrainScore(),
     getGoogleHealthStatus(),
     getWithingsStatus(),
     searchParams,
@@ -93,7 +91,6 @@ async function HealthDashboardContent({
     dailyCalories,
     dailySteps,
     dailyRestingHeartRates,
-    healthStrainScore,
     googleHealthStatus,
     withingsStatus,
     params,
@@ -114,7 +111,6 @@ async function HealthDashboardContent({
       initialDailyCalories={dailyCalories}
       initialDailySteps={dailySteps}
       initialRestingHeartRates={dailyRestingHeartRates}
-      initialHealthStrainScore={healthStrainScore}
       initialHeartRateSeries={heartRateSeries}
       withingsResult={withingsResult}
       withingsStatus={withingsStatus}
