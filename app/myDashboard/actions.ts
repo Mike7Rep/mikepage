@@ -25,10 +25,8 @@ import {
 } from "@/lib/health-data"
 import {
   getDailyCaloriesSeries,
-  getDailyRestingHeartRateSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
-  getHeartRateChartSeries,
   syncGoogleHealthData,
 } from "@/lib/google-health"
 import { incrementPullUps } from "@/lib/pull-up-data"
@@ -172,10 +170,8 @@ export async function syncGoogleHealthAction() {
 
   try {
     const sync = await syncGoogleHealthData()
-    const [calories, restingHeartRates, series, status, steps] = await Promise.all([
+    const [calories, status, steps] = await Promise.all([
       getDailyCaloriesSeries(),
-      getDailyRestingHeartRateSeries(),
-      getHeartRateChartSeries(),
       getGoogleHealthStatus(),
       getDailyStepsSeries(),
     ])
@@ -183,8 +179,6 @@ export async function syncGoogleHealthAction() {
     return {
       calories,
       ok: true,
-      restingHeartRates,
-      series,
       status,
       steps,
       ...sync,

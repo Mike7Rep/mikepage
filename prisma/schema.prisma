@@ -53,7 +53,6 @@ model HealthEntry {
   waistCm        Decimal? @map("waist_cm") @db.Decimal(5, 1)
   bodyFatPercent Decimal? @map("body_fat_percent") @db.Decimal(4, 1)
   weightKg       Decimal? @map("weight_kg") @db.Decimal(5, 1)
-  pulse          Int?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -68,7 +67,6 @@ model HealthGoal {
   waistCm        Decimal? @map("waist_cm") @db.Decimal(5, 1)
   bodyFatPercent Decimal? @map("body_fat_percent") @db.Decimal(4, 1)
   weightKg       Decimal? @map("weight_kg") @db.Decimal(5, 1)
-  pulse          Int?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -81,20 +79,10 @@ model GoogleHealthConnection {
   refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
   grantedScopes          String    @default("") @map("granted_scopes")
   lastSyncedAt           DateTime? @map("last_synced_at") @db.Timestamptz(3)
-  backfillBefore         DateTime? @map("backfill_before") @db.Timestamptz(3)
   connectedAt            DateTime  @default(now()) @map("connected_at") @db.Timestamptz(3)
   updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("google_health_connections")
-}
-
-model HeartRateSample {
-  id             Int      @id @default(autoincrement())
-  measuredAt     DateTime @unique @map("measured_at") @db.Timestamptz(3)
-  beatsPerMinute Int      @map("beats_per_minute")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-
-  @@map("heart_rate_samples")
 }
 
 model DailyStepCount {
@@ -113,12 +101,12 @@ model DailyCalorieBurn {
   @@map("daily_calorie_burns")
 }
 
-model DailyRestingHeartRate {
-  date           DateTime @id @db.Date
-  beatsPerMinute Int      @map("beats_per_minute")
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+model DailyCalorieIntake {
+  date         DateTime @id @db.Date
+  kilocalories Int
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  @@map("daily_resting_heart_rates")
+  @@map("daily_calorie_intakes")
 }
 
 model GoogleHealthSleepInterval {

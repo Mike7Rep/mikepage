@@ -10,7 +10,6 @@ export type HealthEntryView = {
   waistCm: number | null
   bodyFatPercent: number | null
   weightKg: number | null
-  pulse: number | null
   updatedAt: string
 }
 
@@ -20,7 +19,6 @@ export type HealthGoalsView = {
   waistCm: number | null
   bodyFatPercent: number | null
   weightKg: number | null
-  pulse: number | null
 }
 
 export type HealthGoalMetric =
@@ -28,14 +26,12 @@ export type HealthGoalMetric =
   | "waistCm"
   | "bodyFatPercent"
   | "weightKg"
-  | "pulse"
 
 type HealthEntryInput = {
   date: Date
   bloodPressure1: number | null
   bloodPressure2: number | null
   waistCm: number | null
-  pulse: number | null
 }
 
 type HealthGoalInput = Partial<{
@@ -44,7 +40,6 @@ type HealthGoalInput = Partial<{
   waistCm: number | null
   bodyFatPercent: number | null
   weightKg: number | null
-  pulse: number | null
 }>
 
 const emptyGoals: HealthGoalsView = {
@@ -53,7 +48,6 @@ const emptyGoals: HealthGoalsView = {
   waistCm: null,
   bodyFatPercent: null,
   weightKg: null,
-  pulse: null,
 }
 
 const HEALTH_RETENTION_YEARS = 1
@@ -89,7 +83,6 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
       waistCm: row.waistCm === null ? null : Number(row.waistCm),
       bodyFatPercent: null,
       weightKg: null,
-      pulse: row.pulse,
       updatedAt: row.updatedAt.toISOString(),
     })
   }
@@ -104,7 +97,6 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
       waistCm: null,
       bodyFatPercent: null,
       weightKg: null,
-      pulse: null,
       updatedAt: measurement.updatedAt.toISOString(),
     }
 
@@ -141,7 +133,6 @@ export async function getHealthGoals(): Promise<HealthGoalsView> {
     waistCm: goal.waistCm === null ? null : Number(goal.waistCm),
     bodyFatPercent: goal.bodyFatPercent === null ? null : Number(goal.bodyFatPercent),
     weightKg: goal.weightKg === null ? null : Number(goal.weightKg),
-    pulse: goal.pulse,
   }
 }
 
@@ -163,7 +154,6 @@ export async function upsertHealthEntry(input: HealthEntryInput) {
         ...(input.bloodPressure1 === null ? {} : { bloodPressure1: input.bloodPressure1 }),
         ...(input.bloodPressure2 === null ? {} : { bloodPressure2: input.bloodPressure2 }),
         ...(input.waistCm === null ? {} : { waistCm: input.waistCm }),
-        ...(input.pulse === null ? {} : { pulse: input.pulse }),
       },
     })
     await transaction.healthEntry.deleteMany({
@@ -191,7 +181,6 @@ export function parseHealthEntryForm(formData: FormData): HealthEntryInput {
     bloodPressure1: parsePositiveInt(formData, "bloodPressure1", "Blutdruck 1", true),
     bloodPressure2: parsePositiveInt(formData, "bloodPressure2", "Blutdruck 2", true),
     waistCm: parsePositiveDecimal(formData, "waistCm", "Bauchumfang", true),
-    pulse: parsePositiveInt(formData, "pulse", "Puls", true),
   }
 }
 
@@ -203,10 +192,6 @@ export function parseHealthGoalsForm(formData: FormData): HealthGoalInput {
       bloodPressure1: parsePositiveInt(formData, "bloodPressure1", "Blutdruck 1"),
       bloodPressure2: parsePositiveInt(formData, "bloodPressure2", "Blutdruck 2"),
     }
-  }
-
-  if (metric === "pulse") {
-    return { pulse: parsePositiveInt(formData, "pulse", "Puls") }
   }
 
   if (metric === "waistCm" || metric === "bodyFatPercent" || metric === "weightKg") {

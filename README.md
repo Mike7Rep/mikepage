@@ -46,6 +46,46 @@ Health checks:
 curl http://localhost:3000/health
 ```
 
+## Google Health
+
+Enable the Google Health API in the Google Cloud project and add the dashboard
+user to the OAuth consent screen while the app is in testing. Register these
+redirect URIs exactly:
+
+```text
+http://localhost:3000/myDashboard/google-health/callback
+https://www.michael-repolusk.com/myDashboard/google-health/callback
+```
+
+Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_KEY` and the matching
+`GOOGLE_HEALTH_REDIRECT_URI`. The dashboard requests read access to activity,
+nutrition and sleep data. After changing these scopes, reconnect Google Health
+once from `/myDashboard/health`; an old refresh token cannot grant the new
+nutrition permission. Google OAuth refresh tokens for an external app in
+`Testing` expire after seven days, so move the consent screen to production for
+a durable connection.
+
+For the production OAuth consent screen use these public URLs:
+
+```text
+Application home page: https://www.michael-repolusk.com/myDashboard
+Privacy policy: https://www.michael-repolusk.com/datenschutz
+Terms of service: https://www.michael-repolusk.com/nutzungsbedingung
+```
+
+The app requests only these Google Health read scopes:
+
+```text
+https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly
+https://www.googleapis.com/auth/googlehealth.nutrition.readonly
+https://www.googleapis.com/auth/googlehealth.sleep.readonly
+```
+
+Do not declare `googlehealth.health_metrics_and_measurements.readonly` unless a
+current feature actually reads those measurements. Google requires the narrowest
+possible scope set. Verify ownership of `michael-repolusk.com`, publish the OAuth
+app and submit the restricted scopes for verification if Google requests it.
+
 ## Withings
 
 Create a Public API application in the Withings Developer Dashboard and register

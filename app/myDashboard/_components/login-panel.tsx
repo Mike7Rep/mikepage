@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { AlertCircle, LockKeyhole, LogIn } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -29,13 +30,22 @@ export function LoginPanel({
             myDashboard
           </CardTitle>
           <CardDescription className="text-sm leading-6 text-white/60">
-            Privater Zugriff auf das Alpaca-Depot.
+            Persönliches Single-User-Dashboard von Michael Repolusk für Vermögen,
+            Gesundheit und die private Auswertung eigener Google-Health-Daten.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {config.configured
             ? <LoginForm loginError={loginError} nextPath={nextPath} />
             : <MissingConfig missing={config.missing} />}
+          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/45">
+            <Link className="transition-colors hover:text-white" href="/datenschutz">
+              Datenschutz
+            </Link>
+            <Link className="transition-colors hover:text-white" href="/nutzungsbedingung">
+              Nutzungsbedingungen
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </main>

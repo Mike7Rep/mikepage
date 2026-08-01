@@ -6,10 +6,8 @@ import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getHealthEntries, getHealthGoals } from "@/lib/health-data"
 import {
   getDailyCaloriesSeries,
-  getDailyRestingHeartRateSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
-  getHeartRateChartSeries,
 } from "@/lib/google-health"
 import { getWithingsStatus } from "@/lib/withings"
 import { DashboardError } from "../_components/dashboard-error"
@@ -61,10 +59,8 @@ async function HealthDashboardContent({
   const healthData = await Promise.all([
     getHealthEntries(),
     getHealthGoals(),
-    getHeartRateChartSeries(),
     getDailyCaloriesSeries(),
     getDailyStepsSeries(),
-    getDailyRestingHeartRateSeries(),
     getGoogleHealthStatus(),
     getWithingsStatus(),
     searchParams,
@@ -87,10 +83,8 @@ async function HealthDashboardContent({
   const [
     entries,
     goals,
-    heartRateSeries,
     dailyCalories,
     dailySteps,
-    dailyRestingHeartRates,
     googleHealthStatus,
     withingsStatus,
     params,
@@ -110,8 +104,6 @@ async function HealthDashboardContent({
       googleHealthStatus={googleHealthStatus}
       initialDailyCalories={dailyCalories}
       initialDailySteps={dailySteps}
-      initialRestingHeartRates={dailyRestingHeartRates}
-      initialHeartRateSeries={heartRateSeries}
       withingsResult={withingsResult}
       withingsStatus={withingsStatus}
     />

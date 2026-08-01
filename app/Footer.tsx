@@ -4,12 +4,7 @@ import Link from "next/link"
 
 import { contact } from "@/lib/profile-data"
 
-
-export default function Footer
-(
-
-) {
-
+export default function Footer() {
   const linkStyle = "text-[10px] uppercase tracking-[0.12em] text-white/30 transition hover:text-white"
 
   return (
@@ -25,9 +20,15 @@ export default function Footer
         <Link href="/datenschutz" className={linkStyle}>
           Datenschutz
         </Link>
+        <Link href="/nutzungsbedingung" className={linkStyle}>
+          Nutzungsbedingungen
+        </Link>
         <a
           href={contact.linkedin}
-          className={linkStyle}>
+          className={linkStyle}
+          rel="noreferrer"
+          target="_blank"
+        >
           LinkedIn
         </a>
       </div>
