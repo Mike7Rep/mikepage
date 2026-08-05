@@ -48,6 +48,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type {
   DailyCaloriesPoint,
   DailyRunPoint,
+  DailySleepPoint,
   DailyStepsPoint,
   GoogleHealthStatus,
 } from "@/lib/google-health"
@@ -82,6 +83,10 @@ const dailyActivityChartConfig = {
 const runChartConfig = {
   distanceKm: { label: "Distanz (km)", color: "#45C456" },
   efficiencyScore: { label: "Effizienz", color: "#c4a7ff" },
+} satisfies ChartConfig
+
+const sleepChartConfig = {
+  sleepIndex: { label: "Schlafindex", color: "#8bc7ff" },
 } satisfies ChartConfig
 
 const healthChartClassName = "aspect-[4/3] w-full"
@@ -143,6 +148,7 @@ export function HealthContent({
   googleHealthStatus: initialGoogleHealthStatus,
   initialDailyCalories,
   initialDailyRuns,
+  initialDailySleep,
   initialDailySteps,
   withingsResult,
   withingsStatus: initialWithingsStatus,
@@ -153,6 +159,7 @@ export function HealthContent({
   googleHealthStatus: GoogleHealthStatus
   initialDailyCalories: DailyCaloriesPoint[]
   initialDailyRuns: DailyRunPoint[]
+  initialDailySleep: DailySleepPoint[]
   initialDailySteps: DailyStepsPoint[]
   withingsResult?: string
   withingsStatus: WithingsStatus
@@ -170,10 +177,12 @@ export function HealthContent({
   const [caloriesRange, setCaloriesRange] = useState<ChartRange>("1w")
   const [stepsRange, setStepsRange] = useState<ChartRange>("1w")
   const [runsRange, setRunsRange] = useState<ChartRange>("1m")
+  const [sleepRange, setSleepRange] = useState<ChartRange>("1m")
   const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
   const [dailyCalories, setDailyCalories] = useState(initialDailyCalories)
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
   const [dailyRuns, setDailyRuns] = useState(initialDailyRuns)
+  const [dailySleep, setDailySleep] = useState(initialDailySleep)
   const [googleHealthSyncState, setGoogleHealthSyncState] = useState<HealthSyncState>(
     initialGoogleHealthStatus.state === "connected" ? "syncing" : "idle"
   )
@@ -216,6 +225,7 @@ export function HealthContent({
 
       setDailyCalories(result.calories)
       setDailyRuns(result.runs)
+      setDailySleep(result.sleep)
       setDailySteps(result.steps)
       setGoogleHealthStatus(result.status)
       setGoogleHealthSyncState("synced")
@@ -315,6 +325,12 @@ export function HealthContent({
             entries={dailySteps}
             onRangeChange={setStepsRange}
             range={stepsRange}
+          />
+
+          <DailySleepChartCard
+            entries={dailySleep}
+            onRangeChange={setSleepRange}
+            range={sleepRange}
           />
 
           <DailyRunsChartCard
@@ -622,6 +638,89 @@ function DailyStepsChartCard({
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
           Noch keine Schrittdaten für diesen Zeitraum vorhanden.
+        </div>
+      )}
+    </HealthChartSection>
+  )
+}
+
+function DailySleepChartCard({
+  entries,
+  onRangeChange,
+  range,
+}: {
+  entries: DailySleepPoint[]
+  onRangeChange: (range: ChartRange) => void
+  range: ChartRange
+}) {
+  const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
+  const scale = chartScale(chartEntries.map((entry) => entry.sleepIndex))
+
+  return (
+    <HealthChartSection
+      action={
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.sleepIndex)} />
+          <DataRangeToggle
+            ariaLabel="Schlafindexzeitraum"
+            onRangeChange={onRangeChange}
+            options={chartRangeOptions}
+            range={range}
+          />
+        </div>
+      }
+      title="Schlafindex"
+    >
+      {chartEntries.length > 0 ? (
+        <ChartContainer config={sleepChartConfig} className={healthChartClassName}>
+          <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="sleep-index-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-sleepIndex)" stopOpacity={0.42} />
+                <stop offset="95%" stopColor="var(--color-sleepIndex)" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="date"
+              minTickGap={32}
+              tickFormatter={formatChartAxisDate}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              allowDecimals={false}
+              axisLine={false}
+              domain={scale.domain}
+              tickLine={false}
+              width={40}
+            />
+            <ChartTooltip
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+              content={(
+                <ChartTooltipContent
+                  className="border-white/10 bg-background/95"
+                  indicator="line"
+                  labelFormatter={formatStepsTooltip}
+                />
+              )}
+            />
+            <Area
+              connectNulls
+              dataKey="sleepIndex"
+              dot={false}
+              fill="url(#sleep-index-fill)"
+              fillOpacity={1}
+              stroke="var(--color-sleepIndex)"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+          </AreaChart>
+        </ChartContainer>
+      ) : (
+        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+          Noch keine Schlafdaten für diesen Zeitraum vorhanden.
         </div>
       )}
     </HealthChartSection>
