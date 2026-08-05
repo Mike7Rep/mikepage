@@ -119,6 +119,20 @@ model GoogleHealthSleepInterval {
   @@map("google_health_sleep_intervals")
 }
 
+model GoogleHealthRun {
+  id               Int      @id @default(autoincrement())
+  startedAt        DateTime @map("started_at") @db.Timestamptz(3)
+  endedAt          DateTime @map("ended_at") @db.Timestamptz(3)
+  activeSeconds    Int      @map("active_seconds")
+  distanceKm       Decimal  @map("distance_km") @db.Decimal(8, 3)
+  averageHeartRate Decimal? @map("average_heart_rate") @db.Decimal(5, 1)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([startedAt, endedAt])
+  @@index([endedAt])
+  @@map("google_health_runs")
+}
+
 model WithingsConnection {
   id                     Int       @id @default(1)
   userId                 BigInt    @unique @map("user_id")
@@ -180,12 +194,12 @@ model AssetPriceBar {
 }
 
 model Run {
-  id         Int       @id @default(autoincrement())
-  runDate    DateTime  @map("run_date") @db.Date
+  id         Int               @id @default(autoincrement())
+  runDate    DateTime          @map("run_date") @db.Date
   kind       String
   status     String
-  createdAt  DateTime  @default(now()) @map("created_at")
-  finishedAt DateTime? @map("finished_at")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  finishedAt DateTime?         @map("finished_at")
   reviews    Review[]
   strategies StrategyVersion[]
 

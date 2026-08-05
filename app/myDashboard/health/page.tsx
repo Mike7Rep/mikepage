@@ -6,6 +6,7 @@ import { getDashboardSessionStatus } from "@/lib/dashboard-auth"
 import { getHealthEntries, getHealthGoals } from "@/lib/health-data"
 import {
   getDailyCaloriesSeries,
+  getDailyRunSeries,
   getDailyStepsSeries,
   getGoogleHealthStatus,
 } from "@/lib/google-health"
@@ -60,6 +61,7 @@ async function HealthDashboardContent({
     getHealthEntries(),
     getHealthGoals(),
     getDailyCaloriesSeries(),
+    getDailyRunSeries(),
     getDailyStepsSeries(),
     getGoogleHealthStatus(),
     getWithingsStatus(),
@@ -84,6 +86,7 @@ async function HealthDashboardContent({
     entries,
     goals,
     dailyCalories,
+    dailyRuns,
     dailySteps,
     googleHealthStatus,
     withingsStatus,
@@ -103,6 +106,7 @@ async function HealthDashboardContent({
       googleHealthResult={googleHealthResult}
       googleHealthStatus={googleHealthStatus}
       initialDailyCalories={dailyCalories}
+      initialDailyRuns={dailyRuns}
       initialDailySteps={dailySteps}
       withingsResult={withingsResult}
       withingsStatus={withingsStatus}

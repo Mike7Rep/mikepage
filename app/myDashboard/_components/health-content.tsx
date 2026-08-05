@@ -47,6 +47,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type {
   DailyCaloriesPoint,
+  DailyRunPoint,
   DailyStepsPoint,
   GoogleHealthStatus,
 } from "@/lib/google-health"
@@ -78,7 +79,12 @@ const dailyActivityChartConfig = {
   steps: { label: "Schritte", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
-const healthChartClassName = "aspect-[4/3] w-full md:aspect-video"
+const runChartConfig = {
+  distanceKm: { label: "Distanz (km)", color: "#45C456" },
+  efficiencyScore: { label: "Effizienz", color: "#c4a7ff" },
+} satisfies ChartConfig
+
+const healthChartClassName = "aspect-[4/3] w-full"
 const healthCardClassName = "bg-transparent py-0 text-white md:bg-white/[0.035] md:py-4"
 
 const chartRangeOptions = [
@@ -136,6 +142,7 @@ export function HealthContent({
   googleHealthResult,
   googleHealthStatus: initialGoogleHealthStatus,
   initialDailyCalories,
+  initialDailyRuns,
   initialDailySteps,
   withingsResult,
   withingsStatus: initialWithingsStatus,
@@ -145,6 +152,7 @@ export function HealthContent({
   googleHealthResult?: string
   googleHealthStatus: GoogleHealthStatus
   initialDailyCalories: DailyCaloriesPoint[]
+  initialDailyRuns: DailyRunPoint[]
   initialDailySteps: DailyStepsPoint[]
   withingsResult?: string
   withingsStatus: WithingsStatus
@@ -156,14 +164,16 @@ export function HealthContent({
   const entries = withingsEntries?.source === initialEntries
     ? withingsEntries.value
     : initialEntries
-  const newestFirst = useMemo(() => [...entries].reverse(), [entries])
+  const newestFirst = useMemo(() => [...entries].reverse().slice(0, 10), [entries])
   const [editingEntry, setEditingEntry] = useState<HealthEntryView | null>(null)
   const [chartRange, setChartRange] = useState<ChartRange>("max")
   const [caloriesRange, setCaloriesRange] = useState<ChartRange>("1w")
   const [stepsRange, setStepsRange] = useState<ChartRange>("1w")
+  const [runsRange, setRunsRange] = useState<ChartRange>("1m")
   const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
   const [dailyCalories, setDailyCalories] = useState(initialDailyCalories)
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
+  const [dailyRuns, setDailyRuns] = useState(initialDailyRuns)
   const [googleHealthSyncState, setGoogleHealthSyncState] = useState<HealthSyncState>(
     initialGoogleHealthStatus.state === "connected" ? "syncing" : "idle"
   )
@@ -191,7 +201,7 @@ export function HealthContent({
     ...chartEntries.flatMap((entry) => [entry.bloodPressure1, entry.bloodPressure2]),
     goals.bloodPressure1,
     goals.bloodPressure2,
-  ], 10)
+  ])
 
   useEffect(() => {
     if (googleHealthStatus.state !== "connected" || googleHealthSyncStarted.current) return
@@ -205,6 +215,7 @@ export function HealthContent({
       }
 
       setDailyCalories(result.calories)
+      setDailyRuns(result.runs)
       setDailySteps(result.steps)
       setGoogleHealthStatus(result.status)
       setGoogleHealthSyncState("synced")
@@ -217,6 +228,7 @@ export function HealthContent({
                 || result.updatedConsumedCalorieDays > 0
                 || result.updatedStepDays > 0
                 || result.updatedSleepIntervals > 0
+                || result.updatedRuns > 0
               ? "Google-Health-Daten wurden aktualisiert."
               : "Keine neuen Gesundheitsdaten gefunden."
       )
@@ -278,7 +290,7 @@ export function HealthContent({
             <HealthChartSection
               action={
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <ChangeValue value={tenDayChange(entries, (entry) => entry.date, (entry) => entry[metric.key])} />
+                  <ChangeValue value={rangeChange(chartEntries, (entry) => entry[metric.key])} />
                   <HealthGoalDialog
                     goals={goals}
                     metric={metric.key}
@@ -305,10 +317,16 @@ export function HealthContent({
             range={stepsRange}
           />
 
+          <DailyRunsChartCard
+            entries={dailyRuns}
+            onRangeChange={setRunsRange}
+            range={runsRange}
+          />
+
           <HealthChartSection
             action={
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <ChangeValue value={tenDayChange(entries, (entry) => entry.date, (entry) => entry.bloodPressure1)} />
+                <ChangeValue value={rangeChange(chartEntries, (entry) => entry.bloodPressure1)} />
                 <HealthGoalDialog
                   goals={goals}
                   metric="bloodPressure"
@@ -332,7 +350,6 @@ export function HealthContent({
                   allowDecimals={false}
                   axisLine={false}
                   domain={bloodPressureScale.domain}
-                  ticks={bloodPressureScale.ticks}
                   tickLine={false}
                   width={40}
                 />
@@ -432,7 +449,7 @@ function SingleMetricChart({
   const scale = chartScale([
     ...entries.map((entry) => entry[metric.key]),
     goal,
-  ], 5)
+  ])
 
   return (
     <ChartContainer config={config} className={healthChartClassName}>
@@ -449,7 +466,6 @@ function SingleMetricChart({
           allowDecimals={false}
           axisLine={false}
           domain={scale.domain}
-          ticks={scale.ticks}
           tickLine={false}
           width={40}
         />
@@ -484,12 +500,13 @@ function DailyCaloriesChartCard({
 }) {
   const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
   const hasData = chartEntries.some((entry) => entry.burned !== null || entry.consumed !== null)
+  const scale = chartScale(chartEntries.flatMap((entry) => [entry.burned, entry.consumed]))
 
   return (
     <HealthChartSection
       action={
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <ChangeValue value={tenDayChange(entries, (entry) => entry.date, (entry) => entry.consumed)} />
+          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.consumed)} />
           <DataRangeToggle
             ariaLabel="Kalorienzeitraum"
             onRangeChange={onRangeChange}
@@ -515,6 +532,7 @@ function DailyCaloriesChartCard({
             <YAxis
               allowDecimals={false}
               axisLine={false}
+              domain={scale.domain}
               tickFormatter={formatDailyValueAxis}
               tickLine={false}
               width={44}
@@ -552,12 +570,13 @@ function DailyStepsChartCard({
 }) {
   const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
   const hasData = chartEntries.some((entry) => entry.steps !== null)
+  const scale = chartScale(chartEntries.map((entry) => entry.steps))
 
   return (
     <HealthChartSection
       action={
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <ChangeValue value={tenDayChange(entries, (entry) => entry.date, (entry) => entry.steps)} />
+          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.steps)} />
           <DataRangeToggle
             ariaLabel="Schrittezeitraum"
             onRangeChange={onRangeChange}
@@ -583,6 +602,7 @@ function DailyStepsChartCard({
             <YAxis
               allowDecimals={false}
               axisLine={false}
+              domain={scale.domain}
               tickFormatter={formatDailyValueAxis}
               tickLine={false}
               width={44}
@@ -602,6 +622,102 @@ function DailyStepsChartCard({
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
           Noch keine Schrittdaten für diesen Zeitraum vorhanden.
+        </div>
+      )}
+    </HealthChartSection>
+  )
+}
+
+function DailyRunsChartCard({
+  entries,
+  onRangeChange,
+  range,
+}: {
+  entries: DailyRunPoint[]
+  onRangeChange: (range: ChartRange) => void
+  range: ChartRange
+}) {
+  const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
+  const distanceScale = chartScale(chartEntries.map((entry) => entry.distanceKm))
+  const efficiencyScale = chartScale(chartEntries.map((entry) => entry.efficiencyScore))
+
+  return (
+    <HealthChartSection
+      action={
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.efficiencyScore)} />
+          <DataRangeToggle
+            ariaLabel="Laufzeitraum"
+            onRangeChange={onRangeChange}
+            options={chartRangeOptions}
+            range={range}
+          />
+        </div>
+      }
+      title="Läufe"
+    >
+      {chartEntries.length > 0 ? (
+        <ChartContainer config={runChartConfig} className={healthChartClassName}>
+          <LineChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 0, bottom: 4, left: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="date"
+              minTickGap={32}
+              tickFormatter={formatChartAxisDate}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              allowDecimals
+              axisLine={false}
+              domain={distanceScale.domain}
+              tickLine={false}
+              width={40}
+              yAxisId="distance"
+            />
+            <YAxis
+              allowDecimals={false}
+              axisLine={false}
+              domain={efficiencyScale.domain}
+              orientation="right"
+              tickLine={false}
+              width={36}
+              yAxisId="efficiency"
+            />
+            <ChartTooltip
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
+              content={(
+                <ChartTooltipContent
+                  className="border-white/10 bg-background/95"
+                  indicator="line"
+                  labelFormatter={formatStepsTooltip}
+                />
+              )}
+            />
+            <Line
+              connectNulls
+              dataKey="distanceKm"
+              dot={false}
+              stroke="var(--color-distanceKm)"
+              strokeWidth={2.5}
+              type="monotone"
+              yAxisId="distance"
+            />
+            <Line
+              connectNulls
+              dataKey="efficiencyScore"
+              dot={false}
+              stroke="var(--color-efficiencyScore)"
+              strokeWidth={2.5}
+              type="monotone"
+              yAxisId="efficiency"
+            />
+          </LineChart>
+        </ChartContainer>
+      ) : (
+        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+          Noch keine Laufaktivitäten für diesen Zeitraum vorhanden.
         </div>
       )}
     </HealthChartSection>
@@ -690,7 +806,7 @@ function HealthApiActions({
     <>
       <HealthApiButton
         disclosure={{
-          description: "myDashboard liest Schritte, verbrannte und aufgenommene Kalorien sowie Schlafintervalle aus Google Health. Die Daten werden nur für Michael Repolusks persönliche Verlaufsdarstellung in der privaten Dashboard-Datenbank gespeichert, nicht verkauft und nicht für Werbung verwendet.",
+          description: "myDashboard liest Schritte, verbrannte und aufgenommene Kalorien, Laufaktivitäten mit Distanz und Durchschnittspuls sowie Schlafintervalle aus Google Health. Die Daten werden nur für Michael Repolusks persönliche Verlaufsdarstellung in der privaten Dashboard-Datenbank gespeichert, nicht verkauft und nicht für Werbung verwendet.",
           title: "Google Health verbinden?",
         }}
         healthy={
@@ -1130,7 +1246,7 @@ function googleHealthStatusMessage(status: GoogleHealthStatus) {
     return "Die Google-Health-Freigabe ist abgelaufen und muss erneuert werden."
   }
   if (status.state === "scope_update_required") {
-    return "Für Schritte, Kalorien und Ernährung sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
+    return "Für Schritte, Kalorien, Laufaktivitäten und Ernährung sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
   }
   if (status.lastSyncedAt) {
     return `Zuletzt synchronisiert: ${dateTimeFormatter.format(new Date(status.lastSyncedAt))}.`
@@ -1183,45 +1299,24 @@ function withingsResultIsError(result?: string) {
   return Boolean(result && result !== "connected")
 }
 
-function tenDayChange<T>(
-  entries: T[],
-  dateForEntry: (entry: T) => string,
-  valueForEntry: (entry: T) => number | null
-) {
-  const values = entries
-    .flatMap((entry) => {
-      const value = valueForEntry(entry)
-      const timestamp = Date.parse(`${dateForEntry(entry)}T00:00:00.000Z`)
-      return value === null || !Number.isFinite(timestamp)
-        ? []
-        : [{ timestamp, value }]
-    })
-    .sort((left, right) => left.timestamp - right.timestamp)
-  const latest = values.at(-1)
-  if (!latest) return null
-
-  const cutoff = latest.timestamp - 10 * 24 * 60 * 60 * 1_000
-  const baseline = values.find((entry) => (
-    entry.timestamp >= cutoff && entry.timestamp < latest.timestamp
-  ))
-  return baseline ? latest.value - baseline.value : null
+function rangeChange<T>(entries: T[], valueForEntry: (entry: T) => number | null) {
+  const values = entries.flatMap((entry) => {
+    const value = valueForEntry(entry)
+    return value === null ? [] : [value]
+  })
+  return values.length >= 2 ? values.at(-1)! - values[0] : null
 }
 
-function chartScale(values: Array<number | null | undefined>, step: number) {
+function chartScale(values: Array<number | null | undefined>) {
   const numbers = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value))
 
   if (numbers.length === 0) {
-    return {
-      domain: [0, step * 4] as [number, number],
-      ticks: Array.from({ length: 5 }, (_, index) => index * step),
-    }
+    return { domain: [0, 1] as [number, number] }
   }
 
-  const minimum = Math.max(0, Math.floor(Math.min(...numbers) / step) * step - step)
-  const maximum = Math.ceil(Math.max(...numbers) / step) * step + step
+  const minimum = Math.max(0, Math.floor(Math.min(...numbers) * 0.98))
+  const calculatedMaximum = Math.ceil(Math.max(...numbers) * 1.02)
+  const maximum = calculatedMaximum > minimum ? calculatedMaximum : minimum + 1
 
-  return {
-    domain: [minimum, maximum] as [number, number],
-    ticks: Array.from({ length: (maximum - minimum) / step + 1 }, (_, index) => minimum + index * step),
-  }
+  return { domain: [minimum, maximum] as [number, number] }
 }

@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "Zugriff auf Google Health",
-    text: "Nach ausdrücklicher OAuth-Freigabe erhält das Dashboard ausschliesslich lesenden Zugriff auf Aktivitäts- und Fitnessdaten, Ernährungsdaten und Schlafdaten. Konkret werden tägliche Schritte, insgesamt verbrannte Kalorien, aufgenommene Kalorien sowie Beginn und Ende von Schlafintervallen abgerufen. Das Dashboard schreibt keine Daten zu Google Health zurück.",
+    text: "Nach ausdrücklicher OAuth-Freigabe erhält das Dashboard ausschliesslich lesenden Zugriff auf Aktivitäts- und Fitnessdaten, Ernährungsdaten und Schlafdaten. Konkret werden tägliche Schritte, insgesamt verbrannte Kalorien, aufgenommene Kalorien, Laufaktivitäten mit Distanz, Dauer und durchschnittlicher Herzfrequenz sowie Beginn und Ende von Schlafintervallen abgerufen. Das Dashboard schreibt keine Daten zu Google Health zurück.",
   },
   {
     title: "Verwendung und Speicherung der Health-Daten",
