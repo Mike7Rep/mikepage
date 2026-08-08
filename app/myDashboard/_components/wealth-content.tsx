@@ -379,7 +379,7 @@ function InvestmentAssetsTable({
                           inputMode="numeric"
                           name="investmentAssetTotalValue"
                           onChange={(event) => updateRow(row.key, "totalValue", wholeNumberInputValue(event.target.value))}
-                          pattern="\\d*"
+                          pattern="[0-9]*"
                           required
                           type="text"
                           value={row.totalValue}
@@ -392,7 +392,7 @@ function InvestmentAssetsTable({
                           inputMode="numeric"
                           name="investmentAssetSharePercent"
                           onChange={(event) => updateRow(row.key, "sharePercent", wholeNumberInputValue(event.target.value, 100))}
-                          pattern="\\d*"
+                          pattern="[0-9]*"
                           required
                           type="text"
                           value={row.sharePercent}
@@ -468,7 +468,7 @@ function MoneyField({
             event.currentTarget.value = wholeNumberInputValue(event.currentTarget.value)
           }
         }}
-        pattern={kind === "money" ? "\\d*" : "\\d{2}_\\d{2}"}
+        pattern={kind === "money" ? "[0-9]*" : "[0-9]{2}_[0-9]{2}"}
         required
         type="text"
       />

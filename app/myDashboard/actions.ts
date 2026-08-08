@@ -31,7 +31,11 @@ import {
   getGoogleHealthStatus,
   syncGoogleHealthData,
 } from "@/lib/google-health"
-import { incrementPullUps } from "@/lib/pull-up-data"
+import {
+  createPullUpChallenge,
+  incrementPullUps,
+  parsePullUpChallengeForm,
+} from "@/lib/pull-up-data"
 import { getWithingsStatus, syncWithingsData } from "@/lib/withings"
 import {
   deleteWealthSnapshot,
@@ -230,9 +234,19 @@ export async function incrementPullUpsAction(amount: number) {
 
   const entry = await incrementPullUps(amount)
   updateTag("dashboard:pull-ups")
-  revalidatePath("/myDashboard/pullUps")
+  revalidatePath("/myDashboard/challenge")
 
   return { count: entry.count }
+}
+
+export async function createPullUpChallengeAction(formData: FormData) {
+  await requireDashboardSession()
+
+  const challenge = await createPullUpChallenge(parsePullUpChallengeForm(formData))
+  updateTag("dashboard:pull-ups")
+  revalidatePath("/myDashboard/challenge")
+
+  return { id: challenge.id }
 }
 
 async function requireDashboardSession() {

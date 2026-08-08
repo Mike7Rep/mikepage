@@ -3,7 +3,6 @@ import Link from "next/link"
 import { LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { logoutDashboardAction } from "../actions"
 
@@ -45,21 +44,14 @@ export function DashboardFrame({
 function DashboardLogoutButton() {
   return (
     <form action={logoutDashboardAction}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button aria-label="Logout" className="size-11" size="icon-lg" type="submit" variant="ghost">
-            <LogOut className="size-5" aria-hidden="true" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" sideOffset={8}>
-          Logout
-        </TooltipContent>
-      </Tooltip>
+      <Button aria-label="Logout" className="size-11" size="icon-lg" title="Logout" type="submit" variant="ghost">
+        <LogOut className="size-5" aria-hidden="true" />
+      </Button>
     </form>
   )
 }
 
-type DashboardSection = "depot" | "health" | "pullUps" | "vermoegen"
+type DashboardSection = "challenge" | "depot" | "health" | "vermoegen"
 
 function DashboardNavigation({ activeSection }: { activeSection?: DashboardSection }) {
   return (
@@ -70,8 +62,8 @@ function DashboardNavigation({ activeSection }: { activeSection?: DashboardSecti
       <DashboardNavLink active={activeSection === "health"} href="/myDashboard/health">
         Health
       </DashboardNavLink>
-      <DashboardNavLink active={activeSection === "pullUps"} href="/myDashboard/pullUps">
-        Pullups
+      <DashboardNavLink active={activeSection === "challenge"} href="/myDashboard/challenge">
+        Challenge
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
         Depot

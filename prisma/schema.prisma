@@ -175,6 +175,24 @@ model PullUpEntry {
   @@map("pull_up_entries")
 }
 
+model PullUpChallenge {
+  id            Int       @id @default(autoincrement())
+  name          String
+  targetCount   Int       @map("target_count")
+  startDate     DateTime  @map("start_date") @db.Date
+  targetDate    DateTime  @map("target_date") @db.Date
+  startDayCount Int       @default(0) @map("start_day_count")
+  endDate       DateTime? @map("end_date") @db.Date
+  endDayCount   Int?      @map("end_day_count")
+  finalCount    Int?      @map("final_count")
+  closedAt      DateTime? @map("closed_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([closedAt, targetDate])
+  @@map("pull_up_challenges")
+}
+
 model AssetPriceBar {
   id        Int      @id @default(autoincrement())
   symbol    String

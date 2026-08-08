@@ -10,8 +10,8 @@ pnpm dev
 ```
 
 The Next.js dev server runs directly on the host and reloads changes immediately.
-Docker is not required locally. Set the dashboard variables and the public Railway
-proxy URLs in `.env.local`:
+The app uses the Railway Postgres and Redis services in development as well as in
+production. Set their public proxy URLs in `.env.local`:
 
 ```bash
 MYDASHBOARD_USER=<user>
@@ -31,7 +31,8 @@ WITHINGS_REDIRECT_URI=http://localhost:3000/myDashboard/withings/callback
 
 Use Railway's public proxy URLs (`*.proxy.rlwy.net`) locally. Internal
 `*.railway.internal` addresses only work between Railway services. The current
-local `.env.local` already contains the public Postgres and Redis endpoints.
+local `.env.local` already contains the public Postgres and Redis endpoints. No
+local database, Redis process or container setup is required.
 
 > **Warning:** Local development reads and writes production data. Do not run
 > `prisma migrate dev`, `prisma migrate reset`, or `pnpm db:seed` against this
@@ -103,27 +104,29 @@ later page visits fetch only changes and store them idempotently in Postgres.
 
 ## Database
 
-Prisma owns the Postgres schema. The production Docker start command runs migrations before `next start`.
+Prisma owns the Postgres schema. Railway runs pending migrations as a pre-deploy
+command before starting the new application version.
 
-Useful commands for a dedicated local or staging database:
+Useful read-only checks:
 
 ```bash
 pnpm prisma validate
-pnpm prisma migrate dev
-pnpm db:seed
+pnpm prisma migrate status
 ```
 
-`pnpm db:seed` imports the historical Vermögen snapshots into the configured `DATABASE_URL`.
-Do not run these write commands against the production URLs used for local app testing.
+`pnpm db:seed` imports historical Vermögen snapshots into the configured
+`DATABASE_URL`. Since local development points to Railway, do not run seeds,
+resets or development migrations unless changing production data is intentional.
 
 ## Railway
 
-Deploy the web app as a single Railway service plus Postgres and Redis.
+Deploy the web app as a single Railway service plus Postgres and Redis. The
+repository's `railway.json` selects Railpack, builds Next.js, runs Prisma
+migrations before deployment and starts the app without a custom image.
 
 Web service:
 
 ```bash
-Dockerfile Path: Dockerfile
 DATABASE_URL=<Railway Postgres internal DATABASE_URL>
 REDIS_URL=${{Redis.REDIS_URL}}
 ALPACA_ENDPOINT=https://api.alpaca.markets
@@ -138,6 +141,9 @@ WITHINGS_REDIRECT_URI=https://www.michael-repolusk.com/myDashboard/withings/call
 `REDIS_URL` must be configured on the web service as a Railway variable reference
 to the Redis service. Defining it only on the Redis service does not expose it to
 the web application.
+
+For local development use the public `*.proxy.rlwy.net` URLs. Inside Railway,
+keep using the private service URLs supplied by the Postgres and Redis services.
 
 After deploying, seed the production wealth data once from a Railway shell or local Railway environment:
 

@@ -1,4 +1,4 @@
-import "dotenv/config"
+import { config } from "dotenv"
 import { PrismaPg } from "@prisma/adapter-pg"
 
 import { PrismaClient } from "../app/generated/prisma/client"
@@ -25,11 +25,14 @@ type InvestmentAssetSeedRow = {
   valuationDate: string
 }
 
-const adapter = new PrismaPg({
-  connectionString:
-    process.env.DATABASE_URL ||
-    "postgresql://mikepage:mikepage@localhost:5432/mikepage",
-})
+config({ path: [".env.local", ".env"] })
+
+const connectionString = process.env.DATABASE_URL
+if (!connectionString) {
+  throw new Error("DATABASE_URL fehlt. Hinterlege die Railway-URL in .env.local.")
+}
+
+const adapter = new PrismaPg({ connectionString })
 
 const prisma = new PrismaClient({ adapter })
 

@@ -1,10 +1,12 @@
-import "dotenv/config"
+import { config } from "dotenv"
 import { defineConfig } from "prisma/config"
 
-const url =
-  process.env.DIRECT_URL ||
-  process.env.DATABASE_URL ||
-  "postgresql://mikepage:mikepage@localhost:5432/mikepage"
+config({ path: [".env.local", ".env"] })
+
+const url = process.env.DIRECT_URL || process.env.DATABASE_URL
+if (!url) {
+  throw new Error("DIRECT_URL oder DATABASE_URL fehlt. Hinterlege die Railway-URL in .env.local.")
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
