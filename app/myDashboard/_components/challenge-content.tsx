@@ -62,6 +62,14 @@ const longDateFormatter = new Intl.DateTimeFormat("de-CH", {
   timeZone: "UTC",
 })
 
+const rarityTiers = [
+  { max: 20, name: "Ungewöhnlich", marker: "border-zinc-200" },
+  { max: 40, name: "Gewöhnlich", marker: "border-emerald-300" },
+  { max: 60, name: "Selten", marker: "border-sky-300" },
+  { max: 80, name: "Legendär", marker: "border-orange-300" },
+  { max: Number.POSITIVE_INFINITY, name: "Mythisch", marker: "border-amber-200" },
+] as const
+
 export function ChallengeContent({
   activeChallenge,
   completedChallenges,
@@ -80,9 +88,11 @@ export function ChallengeContent({
   const pendingCount = useRef(0)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saving = useRef(false)
+  const todayTotal = persistedTodayTotal + currentSetCount
+  const rarityProgress = Math.min(100, Math.max(0, todayTotal))
+  const rarityTier = rarityTiers.find((tier) => todayTotal <= tier.max) ?? rarityTiers.at(-1)!
 
   const displayedEntries = useMemo(() => {
-    const todayTotal = persistedTodayTotal + currentSetCount
     const nextEntries = entries.map((entry) => (
       entry.date === today ? { ...entry, count: todayTotal } : entry
     ))
@@ -92,7 +102,7 @@ export function ChallengeContent({
     }
 
     return nextEntries
-  }, [currentSetCount, entries, persistedTodayTotal, today])
+  }, [entries, today, todayTotal])
 
   const activeTotal = activeChallenge
     ? challengeTotal(activeChallenge, displayedEntries, today)
@@ -152,24 +162,47 @@ export function ChallengeContent({
 
   return (
     <div className="flex flex-col gap-5 sm:gap-8">
-      <section className="flex min-h-[calc(100svh-12rem)] flex-col items-center justify-center gap-6 px-4 pb-8 sm:min-h-[560px] sm:px-0 lg:min-h-[640px]">
+      <section className="flex min-h-[calc(100svh-12rem)] flex-col items-center justify-center px-4 pb-8 sm:min-h-[560px] sm:px-0 lg:min-h-[640px]">
         <Button
-          aria-describedby="pull-up-count"
-          aria-label="Einen Pullup hinzufügen"
-          className="size-52 touch-manipulation rounded-full text-5xl font-bold tracking-[-0.04em] shadow-2xl active:scale-95 sm:size-64 sm:text-6xl"
+          aria-describedby="rep-count"
+          aria-label="Eine Wiederholung hinzufügen"
+          className="size-52 touch-manipulation rounded-full text-5xl font-bold tracking-[0] shadow-2xl active:scale-95 sm:size-64 sm:text-6xl"
           onClick={addPullUp}
           type="button"
         >
           +1
         </Button>
-        <p className="text-xl font-normal text-white tabular-nums" id="pull-up-count">
-          {currentSetCount} Pullups
+        <p className="mt-10 text-sm font-semibold leading-none text-white/70 tabular-nums" id="rep-count">
+          {todayTotal} x Reps
         </p>
+        <div
+          aria-label={`${todayTotal} Reps heute, Stufe ${rarityTier.name}`}
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={rarityProgress}
+          className="mt-7 w-full max-w-xl"
+          role="progressbar"
+        >
+          <div className="relative">
+            <div aria-hidden="true" className="grid h-3 grid-cols-5 overflow-hidden rounded-full">
+              <span className="bg-zinc-400" title="Ungewöhnlich: 0 bis 20 Reps" />
+              <span className="bg-emerald-500" title="Gewöhnlich: 21 bis 40 Reps" />
+              <span className="bg-sky-500" title="Selten: 41 bis 60 Reps" />
+              <span className="bg-orange-500" title="Legendär: 61 bis 80 Reps" />
+              <span className="bg-amber-400" title="Mythisch: mehr als 80 Reps" />
+            </div>
+            <span
+              aria-hidden="true"
+              className={`absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] bg-black shadow-[0_0_0_2px_rgba(0,0,0,0.8)] transition-[left,border-color] duration-300 ${rarityTier.marker}`}
+              style={{ left: `clamp(10px, ${rarityProgress}%, calc(100% - 10px))` }}
+            />
+          </div>
+        </div>
         <p aria-live="polite" className="sr-only">
           {saveStatusMessage(saveState)}
         </p>
         {saveState === "error" ? (
-          <p className="text-sm text-destructive">Speichern fehlgeschlagen. Beim nächsten Pullup wird es erneut versucht.</p>
+          <p className="text-sm text-destructive">Speichern fehlgeschlagen. Beim nächsten Rep wird es erneut versucht.</p>
         ) : null}
       </section>
 
@@ -542,8 +575,8 @@ function signedNumber(value: number) {
 }
 
 function saveStatusMessage(state: SaveState) {
-  if (state === "queued" || state === "saving") return "Pullups werden gespeichert."
-  if (state === "saved") return "Pullups gespeichert."
-  if (state === "error") return "Pullups konnten nicht gespeichert werden."
+  if (state === "queued" || state === "saving") return "Reps werden gespeichert."
+  if (state === "saved") return "Reps gespeichert."
+  if (state === "error") return "Reps konnten nicht gespeichert werden."
   return ""
 }
