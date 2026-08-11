@@ -63,6 +63,7 @@ type NormalizedMeasurement = {
   measuredAt: Date
   model: string | null
   modifiedAt: Date | null
+  muscleMassKg: number | null
   weightKg: number | null
 }
 
@@ -346,7 +347,7 @@ async function fetchMeasurements(accessToken: string, lastUpdate: bigint | null)
       action: "getmeas",
       category: "1",
       lastupdate: requestedLastUpdate.toString(),
-      meastypes: "1,6",
+      meastypes: "1,6,76",
     })
     if (offset) body.set("offset", offset)
 
@@ -388,6 +389,7 @@ function normalizeMeasurements(groups: WithingsMeasureGroup[], retentionStart: D
     const isDeleted = truthyApiFlag(group.is_deleted)
     let weightKg: number | null = null
     let bodyFatPercent: number | null = null
+    let muscleMassKg: number | null = null
 
     if (!isDeleted) {
       for (const measure of group.measures ?? []) {
@@ -401,10 +403,18 @@ function normalizeMeasurements(groups: WithingsMeasureGroup[], retentionStart: D
         if (type === 6 && value >= 0 && value <= 100) {
           bodyFatPercent = Math.round(value * 100) / 100
         }
+        if (type === 76 && value > 0 && value <= 600) {
+          muscleMassKg = Math.round(value * 1_000) / 1_000
+        }
       }
     }
 
-    if (!isDeleted && weightKg === null && bodyFatPercent === null) continue
+    if (
+      !isDeleted
+      && weightKg === null
+      && bodyFatPercent === null
+      && muscleMassKg === null
+    ) continue
 
     normalized.set(groupId, {
       bodyFatPercent,
@@ -414,6 +424,7 @@ function normalizeMeasurements(groups: WithingsMeasureGroup[], retentionStart: D
       measuredAt,
       model: nonEmptyString(group.model),
       modifiedAt: unixDate(group.modified),
+      muscleMassKg,
       weightKg,
     })
   }
@@ -435,6 +446,7 @@ async function upsertMeasurements(measurements: NormalizedMeasurement[]) {
           measuredAt: measurement.measuredAt,
           model: measurement.model,
           modifiedAt: measurement.modifiedAt,
+          muscleMassKg: measurement.muscleMassKg,
           weightKg: measurement.weightKg,
         },
       }))

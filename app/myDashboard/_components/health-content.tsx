@@ -6,8 +6,6 @@ import { SiGoogle } from "react-icons/si"
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -47,7 +45,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type {
   DailyCaloriesPoint,
-  DailyRunPoint,
   DailySleepPoint,
   DailyStepsPoint,
   GoogleHealthStatus,
@@ -76,13 +73,7 @@ const bloodPressureChartConfig = {
 
 const dailyActivityChartConfig = {
   burned: { label: "Verbrannt", color: "#45C456" },
-  consumed: { label: "Zugenommen", color: "#ef4444" },
   steps: { label: "Schritte", color: "var(--chart-2)" },
-} satisfies ChartConfig
-
-const runChartConfig = {
-  distanceKm: { label: "Distanz (km)", color: "#45C456" },
-  efficiencyScore: { label: "Effizienz", color: "#c4a7ff" },
 } satisfies ChartConfig
 
 const sleepChartConfig = {
@@ -103,7 +94,7 @@ const dailyActivityRangeOptions = chartRangeOptions.slice(0, 3)
 
 type SingleMetric = Extract<
   HealthGoalMetric,
-  "waistCm" | "weightKg" | "bodyFatPercent"
+  "waistCm" | "weightKg" | "bodyFatPercent" | "muscleMassKg"
 >
 type SingleMetricDefinition = {
   key: SingleMetric
@@ -115,6 +106,7 @@ const singleMetrics: SingleMetricDefinition[] = [
   { key: "waistCm", title: "Bauchumfang", color: "#f5c778" },
   { key: "weightKg", title: "Gewicht", color: "#8bc7ff" },
   { key: "bodyFatPercent", title: "Fettgehalt", color: "#c4a7ff" },
+  { key: "muscleMassKg", title: "Muskelmasse", color: "#45C456" },
 ]
 
 const decimalFormatter = new Intl.NumberFormat("de-CH", {
@@ -147,7 +139,6 @@ export function HealthContent({
   googleHealthResult,
   googleHealthStatus: initialGoogleHealthStatus,
   initialDailyCalories,
-  initialDailyRuns,
   initialDailySleep,
   initialDailySteps,
   withingsResult,
@@ -158,7 +149,6 @@ export function HealthContent({
   googleHealthResult?: string
   googleHealthStatus: GoogleHealthStatus
   initialDailyCalories: DailyCaloriesPoint[]
-  initialDailyRuns: DailyRunPoint[]
   initialDailySleep: DailySleepPoint[]
   initialDailySteps: DailyStepsPoint[]
   withingsResult?: string
@@ -176,12 +166,10 @@ export function HealthContent({
   const [chartRange, setChartRange] = useState<ChartRange>("max")
   const [caloriesRange, setCaloriesRange] = useState<ChartRange>("1w")
   const [stepsRange, setStepsRange] = useState<ChartRange>("1w")
-  const [runsRange, setRunsRange] = useState<ChartRange>("1m")
   const [sleepRange, setSleepRange] = useState<ChartRange>("1m")
   const [googleHealthStatus, setGoogleHealthStatus] = useState(initialGoogleHealthStatus)
   const [dailyCalories, setDailyCalories] = useState(initialDailyCalories)
   const [dailySteps, setDailySteps] = useState(initialDailySteps)
-  const [dailyRuns, setDailyRuns] = useState(initialDailyRuns)
   const [dailySleep, setDailySleep] = useState(initialDailySleep)
   const [googleHealthSyncState, setGoogleHealthSyncState] = useState<HealthSyncState>(
     initialGoogleHealthStatus.state === "connected" ? "syncing" : "idle"
@@ -224,7 +212,6 @@ export function HealthContent({
       }
 
       setDailyCalories(result.calories)
-      setDailyRuns(result.runs)
       setDailySleep(result.sleep)
       setDailySteps(result.steps)
       setGoogleHealthStatus(result.status)
@@ -235,10 +222,8 @@ export function HealthContent({
           : result.warnings.length > 0
             ? `Teilweise aktualisiert. Nicht erreichbar: ${result.warnings.join(", ")}.`
             : result.updatedBurnedCalorieDays > 0
-                || result.updatedConsumedCalorieDays > 0
                 || result.updatedStepDays > 0
                 || result.updatedSleepIntervals > 0
-                || result.updatedRuns > 0
               ? "Google-Health-Daten wurden aktualisiert."
               : "Keine neuen Gesundheitsdaten gefunden."
       )
@@ -289,11 +274,17 @@ export function HealthContent({
       activeSection="health"
     >
       <div className="flex flex-col gap-10 sm:gap-12">
-        <section className="flex w-full flex-col gap-10 sm:gap-12">
+        <section className="grid w-full grid-cols-1 gap-10 sm:gap-12 lg:grid-cols-2">
           <DailyCaloriesChartCard
             entries={dailyCalories}
             onRangeChange={setCaloriesRange}
             range={caloriesRange}
+          />
+
+          <DailyStepsChartCard
+            entries={dailySteps}
+            onRangeChange={setStepsRange}
+            range={stepsRange}
           />
 
           {singleMetrics.map((metric) => (
@@ -321,22 +312,10 @@ export function HealthContent({
             </HealthChartSection>
           ))}
 
-          <DailyStepsChartCard
-            entries={dailySteps}
-            onRangeChange={setStepsRange}
-            range={stepsRange}
-          />
-
           <DailySleepChartCard
             entries={dailySleep}
             onRangeChange={setSleepRange}
             range={sleepRange}
-          />
-
-          <DailyRunsChartCard
-            entries={dailyRuns}
-            onRangeChange={setRunsRange}
-            range={runsRange}
           />
 
           <HealthChartSection
@@ -389,7 +368,7 @@ export function HealthContent({
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-2">
-            <Table className="block min-w-0 text-white md:table md:min-w-[1080px]">
+            <Table className="block min-w-0 text-white md:table md:min-w-[1180px]">
               <TableHeader className="hidden md:table-header-group">
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="px-4 text-white/45">Datum</TableHead>
@@ -398,6 +377,7 @@ export function HealthContent({
                   <TableHead className="text-right text-white/45">Bauchumfang (cm)</TableHead>
                   <TableHead className="text-right text-white/45">Gewicht (kg)</TableHead>
                   <TableHead className="text-right text-white/45">Fettgehalt (%)</TableHead>
+                  <TableHead className="text-right text-white/45">Muskelmasse (kg)</TableHead>
                   <TableHead className="w-10 pr-4 text-right text-white/45" />
                 </TableRow>
               </TableHeader>
@@ -422,6 +402,7 @@ export function HealthContent({
                     <MetricCell label="Bauchumfang" unit="cm" value={entry.waistCm} />
                     <MetricCell label="Gewicht" unit="kg" value={entry.weightKg} />
                     <MetricCell label="Fettgehalt" unit="%" value={entry.bodyFatPercent} />
+                    <MetricCell label="Muskelmasse" unit="kg" value={entry.muscleMassKg} />
                     <TableCell
                       className="absolute top-2 right-2 p-0 text-right md:static md:table-cell md:p-2 md:pr-4"
                       onClick={(event) => event.stopPropagation()}
@@ -515,14 +496,14 @@ function DailyCaloriesChartCard({
   range: ChartRange
 }) {
   const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
-  const hasData = chartEntries.some((entry) => entry.burned !== null || entry.consumed !== null)
-  const scale = chartScale(chartEntries.flatMap((entry) => [entry.burned, entry.consumed]))
+  const hasData = chartEntries.some((entry) => entry.burned !== null)
+  const scale = chartScale(chartEntries.map((entry) => entry.burned))
 
   return (
     <HealthChartSection
       action={
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.consumed)} />
+          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.burned)} />
           <DataRangeToggle
             ariaLabel="Kalorienzeitraum"
             onRangeChange={onRangeChange}
@@ -535,7 +516,13 @@ function DailyCaloriesChartCard({
     >
       {hasData ? (
         <ChartContainer config={dailyActivityChartConfig} className={healthChartClassName}>
-          <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+          <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="daily-calories-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-burned)" stopOpacity={0.42} />
+                <stop offset="95%" stopColor="var(--color-burned)" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis
               axisLine={false}
@@ -554,17 +541,26 @@ function DailyCaloriesChartCard({
               width={44}
             />
             <ChartTooltip
-              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
               content={(
                 <ChartTooltipContent
                   className="border-white/10 bg-background/95"
+                  indicator="line"
                   labelFormatter={formatStepsTooltip}
                 />
               )}
             />
-            <Bar dataKey="burned" fill="var(--color-burned)" maxBarSize={28} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="consumed" fill="var(--color-consumed)" maxBarSize={28} radius={[4, 4, 0, 0]} />
-          </BarChart>
+            <Area
+              connectNulls
+              dataKey="burned"
+              dot={false}
+              fill="url(#daily-calories-fill)"
+              fillOpacity={1}
+              stroke="var(--color-burned)"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+          </AreaChart>
         </ChartContainer>
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
@@ -605,7 +601,13 @@ function DailyStepsChartCard({
     >
       {hasData ? (
         <ChartContainer config={dailyActivityChartConfig} className={healthChartClassName}>
-          <BarChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+          <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
+            <defs>
+              <linearGradient id="daily-steps-fill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-steps)" stopOpacity={0.42} />
+                <stop offset="95%" stopColor="var(--color-steps)" stopOpacity={0.06} />
+              </linearGradient>
+            </defs>
             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis
               axisLine={false}
@@ -624,16 +626,26 @@ function DailyStepsChartCard({
               width={44}
             />
             <ChartTooltip
-              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
               content={(
                 <ChartTooltipContent
                   className="border-white/10 bg-background/95"
+                  indicator="line"
                   labelFormatter={formatStepsTooltip}
                 />
               )}
             />
-            <Bar dataKey="steps" fill="var(--color-steps)" maxBarSize={32} radius={[4, 4, 0, 0]} />
-          </BarChart>
+            <Area
+              connectNulls
+              dataKey="steps"
+              dot={false}
+              fill="url(#daily-steps-fill)"
+              fillOpacity={1}
+              stroke="var(--color-steps)"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+          </AreaChart>
         </ChartContainer>
       ) : (
         <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
@@ -727,102 +739,6 @@ function DailySleepChartCard({
   )
 }
 
-function DailyRunsChartCard({
-  entries,
-  onRangeChange,
-  range,
-}: {
-  entries: DailyRunPoint[]
-  onRangeChange: (range: ChartRange) => void
-  range: ChartRange
-}) {
-  const chartEntries = filterChartRange(entries, range, (entry) => entry.date)
-  const distanceScale = chartScale(chartEntries.map((entry) => entry.distanceKm))
-  const efficiencyScale = chartScale(chartEntries.map((entry) => entry.efficiencyScore))
-
-  return (
-    <HealthChartSection
-      action={
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <ChangeValue value={rangeChange(chartEntries, (entry) => entry.efficiencyScore)} />
-          <DataRangeToggle
-            ariaLabel="Laufzeitraum"
-            onRangeChange={onRangeChange}
-            options={chartRangeOptions}
-            range={range}
-          />
-        </div>
-      }
-      title="Läufe"
-    >
-      {chartEntries.length > 0 ? (
-        <ChartContainer config={runChartConfig} className={healthChartClassName}>
-          <LineChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 0, bottom: 4, left: 0 }}>
-            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
-            <XAxis
-              axisLine={false}
-              dataKey="date"
-              minTickGap={32}
-              tickFormatter={formatChartAxisDate}
-              tickLine={false}
-              tickMargin={10}
-            />
-            <YAxis
-              allowDecimals
-              axisLine={false}
-              domain={distanceScale.domain}
-              tickLine={false}
-              width={40}
-              yAxisId="distance"
-            />
-            <YAxis
-              allowDecimals={false}
-              axisLine={false}
-              domain={efficiencyScale.domain}
-              orientation="right"
-              tickLine={false}
-              width={36}
-              yAxisId="efficiency"
-            />
-            <ChartTooltip
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1 }}
-              content={(
-                <ChartTooltipContent
-                  className="border-white/10 bg-background/95"
-                  indicator="line"
-                  labelFormatter={formatStepsTooltip}
-                />
-              )}
-            />
-            <Line
-              connectNulls
-              dataKey="distanceKm"
-              dot={false}
-              stroke="var(--color-distanceKm)"
-              strokeWidth={2.5}
-              type="monotone"
-              yAxisId="distance"
-            />
-            <Line
-              connectNulls
-              dataKey="efficiencyScore"
-              dot={false}
-              stroke="var(--color-efficiencyScore)"
-              strokeWidth={2.5}
-              type="monotone"
-              yAxisId="efficiency"
-            />
-          </LineChart>
-        </ChartContainer>
-      ) : (
-        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
-          Noch keine Laufaktivitäten für diesen Zeitraum vorhanden.
-        </div>
-      )}
-    </HealthChartSection>
-  )
-}
-
 function DataRangeToggle<T extends string>({
   ariaLabel,
   onRangeChange,
@@ -905,7 +821,7 @@ function HealthApiActions({
     <>
       <HealthApiButton
         disclosure={{
-          description: "myDashboard liest Schritte, verbrannte und aufgenommene Kalorien, Laufaktivitäten mit Distanz und Durchschnittspuls sowie Schlafintervalle aus Google Health. Die Daten werden nur für Michael Repolusks persönliche Verlaufsdarstellung in der privaten Dashboard-Datenbank gespeichert, nicht verkauft und nicht für Werbung verwendet.",
+          description: "myDashboard liest Schritte, verbrannte Kalorien und Schlafintervalle aus Google Health. Die Daten werden nur für Michael Repolusks persönliche Verlaufsdarstellung in der privaten Dashboard-Datenbank gespeichert, nicht verkauft und nicht für Werbung verwendet.",
           title: "Google Health verbinden?",
         }}
         healthy={
@@ -1115,8 +1031,8 @@ export function HealthEntryDialog({
           <DialogTitle>{selectedEntry ? "Eintrag bearbeiten" : "Eintrag hinzufügen"}</DialogTitle>
           <DialogDescription>
             {selectedEntry
-              ? "Blutdruck oder Bauchumfang ergänzen oder ändern. Gewicht und Fettgehalt kommen automatisch von Withings."
-              : "Blutdruck oder Bauchumfang eintragen. Gewicht und Fettgehalt kommen automatisch von Withings."}
+              ? "Blutdruck oder Bauchumfang ergänzen oder ändern. Gewicht, Fettgehalt und Muskelmasse kommen automatisch von Withings."
+              : "Blutdruck oder Bauchumfang eintragen. Gewicht, Fettgehalt und Muskelmasse kommen automatisch von Withings."}
           </DialogDescription>
         </DialogHeader>
         <form action={submitEntry} className="flex flex-col gap-4" key={`${date}-${selectedEntry?.updatedAt ?? "new"}`}>
@@ -1244,6 +1160,7 @@ function goalFields(metric: HealthGoalMetric, goals: HealthGoalsView) {
   const fields = {
     waistCm: { label: "Bauchumfang (cm)", decimal: true },
     bodyFatPercent: { label: "Fettgehalt (%)", decimal: true },
+    muscleMassKg: { label: "Muskelmasse (kg)", decimal: true },
     weightKg: { label: "Gewicht (kg)", decimal: true },
   } as const
 
@@ -1257,7 +1174,7 @@ function goalButtonLabel(metric: HealthGoalMetric, goals: HealthGoalsView) {
       : "Zielwert"
   }
 
-  const units = { waistCm: "cm", bodyFatPercent: "%", weightKg: "kg" }
+  const units = { waistCm: "cm", bodyFatPercent: "%", muscleMassKg: "kg", weightKg: "kg" }
   const value = goals[metric]
   return value === null ? "Zielwert" : `Ziel ${decimalFormatter.format(value)} ${units[metric]}`
 }
@@ -1345,7 +1262,7 @@ function googleHealthStatusMessage(status: GoogleHealthStatus) {
     return "Die Google-Health-Freigabe ist abgelaufen und muss erneuert werden."
   }
   if (status.state === "scope_update_required") {
-    return "Für Schritte, Kalorien, Laufaktivitäten und Ernährung sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
+    return "Für Schritte, verbrannte Kalorien und Schlaf sind zusätzliche Google-Health-Freigaben nötig. Bitte einmal neu verbinden."
   }
   if (status.lastSyncedAt) {
     return `Zuletzt synchronisiert: ${dateTimeFormatter.format(new Date(status.lastSyncedAt))}.`
@@ -1371,7 +1288,7 @@ function withingsStatusMessage(status: WithingsStatus) {
     return `OAuth-Konfiguration fehlt: ${status.missing.join(", ")}.`
   }
   if (status.state === "not_connected") {
-    return "Verbinde einmal dein Withings-Konto. Gewicht und Fettgehalt werden danach automatisch geladen."
+    return "Verbinde einmal dein Withings-Konto. Gewicht, Fettgehalt und Muskelmasse werden danach automatisch geladen."
   }
   if (status.state === "expired") {
     return "Die Withings-Freigabe ist abgelaufen und muss erneuert werden."

@@ -25,11 +25,15 @@ const sections = [
   },
   {
     title: "Zugriff auf Google Health",
-    text: "Nach ausdrücklicher OAuth-Freigabe erhält das Dashboard ausschliesslich lesenden Zugriff auf Aktivitäts- und Fitnessdaten, Ernährungsdaten und Schlafdaten. Konkret werden tägliche Schritte, insgesamt verbrannte Kalorien, aufgenommene Kalorien, Laufaktivitäten mit Distanz, Dauer und durchschnittlicher Herzfrequenz sowie Beginn und Ende von Schlafintervallen abgerufen. Das Dashboard schreibt keine Daten zu Google Health zurück.",
+    text: "Nach ausdrücklicher OAuth-Freigabe erhält das Dashboard ausschliesslich lesenden Zugriff auf Aktivitäts-, Fitness- und Schlafdaten. Konkret werden tägliche Schritte, insgesamt verbrannte Kalorien sowie Beginn und Ende von Schlafintervallen abgerufen. Das Dashboard schreibt keine Daten zu Google Health zurück.",
   },
   {
     title: "Verwendung und Speicherung der Health-Daten",
     text: "Die abgerufenen Google-Health-Daten werden nur verwendet, um Michael Repolusks persönliche Gesundheitsverläufe im geschützten Dashboard darzustellen. Sie werden in einer privaten Postgres-Datenbank beim Hosting-Anbieter gespeichert. Das Google-Refresh-Token wird verschlüsselt gespeichert. Der Datenabruf setzt beim jeweils letzten gespeicherten Messpunkt fort; Verlaufsdaten werden spätestens nach einem Jahr automatisch gelöscht.",
+  },
+  {
+    title: "Zugriff auf Withings",
+    text: "Nach ausdrücklicher OAuth-Freigabe liest das Dashboard Gewicht, Körperfett und Muskelmasse aus dem persönlichen Withings-Konto. Die Messwerte werden ausschliesslich für die private Verlaufsdarstellung gespeichert. Das Dashboard schreibt keine Daten zu Withings zurück.",
   },
   {
     title: "Keine Weitergabe oder Werbung",

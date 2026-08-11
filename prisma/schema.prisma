@@ -67,6 +67,7 @@ model HealthGoal {
   waistCm        Decimal? @map("waist_cm") @db.Decimal(5, 1)
   bodyFatPercent Decimal? @map("body_fat_percent") @db.Decimal(4, 1)
   weightKg       Decimal? @map("weight_kg") @db.Decimal(5, 1)
+  muscleMassKg   Decimal? @map("muscle_mass_kg") @db.Decimal(5, 1)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -154,6 +155,7 @@ model WithingsMeasurement {
   measuredAt     DateTime  @map("measured_at") @db.Timestamptz(3)
   weightKg       Decimal?  @map("weight_kg") @db.Decimal(6, 3)
   bodyFatPercent Decimal?  @map("body_fat_percent") @db.Decimal(5, 2)
+  muscleMassKg   Decimal?  @map("muscle_mass_kg") @db.Decimal(6, 3)
   isDeleted      Boolean   @default(false) @map("is_deleted")
   modifiedAt     DateTime? @map("modified_at") @db.Timestamptz(3)
   deviceId       String?   @map("device_id")

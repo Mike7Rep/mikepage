@@ -201,7 +201,14 @@ export function ChallengeContent({
           className={`mb-12 w-full max-w-xl rounded-md border-4 p-5 transition-[border-color,background-color] duration-300 ${rarityTier.panel}`}
           role="progressbar"
         >
-          <div className="relative">
+          <div className="relative pt-9">
+            <span
+              aria-hidden="true"
+              className={`absolute top-0 min-w-10 -translate-x-1/2 rounded-sm border-2 bg-black px-2 py-1 text-center text-xs font-bold tabular-nums transition-[left,border-color,color] duration-300 ${rarityTier.marker} ${rarityTier.text}`}
+              style={{ left: `clamp(24px, ${rarityProgress}%, calc(100% - 24px))` }}
+            >
+              {todayTotal}
+            </span>
             <div aria-hidden="true" className="grid h-3 grid-cols-5 overflow-hidden rounded-full">
               <span className="bg-zinc-400" title="Ungewöhnlich: 0 bis 20 Reps" />
               <span className="bg-emerald-500" title="Gewöhnlich: 21 bis 40 Reps" />
@@ -211,7 +218,7 @@ export function ChallengeContent({
             </div>
             <span
               aria-hidden="true"
-              className={`absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] bg-black shadow-[0_0_0_2px_rgba(0,0,0,0.8)] transition-[left,border-color] duration-300 ${rarityTier.marker}`}
+              className={`absolute bottom-1.5 size-5 -translate-x-1/2 translate-y-1/2 rounded-full border-[3px] bg-black shadow-[0_0_0_2px_rgba(0,0,0,0.8)] transition-[left,border-color] duration-300 ${rarityTier.marker}`}
               style={{ left: `clamp(10px, ${rarityProgress}%, calc(100% - 10px))` }}
             />
           </div>
@@ -229,7 +236,7 @@ export function ChallengeContent({
           +1
         </Button>
         <p className="mt-10 text-sm font-semibold leading-none text-white/70 tabular-nums" id="rep-count">
-          {todayTotal} x Reps
+          {currentSetCount} x Reps
         </p>
         <p aria-live="polite" className="sr-only">
           {saveStatusMessage(saveState)}

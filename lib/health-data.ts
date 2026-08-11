@@ -9,6 +9,7 @@ export type HealthEntryView = {
   bloodPressure2: number | null
   waistCm: number | null
   bodyFatPercent: number | null
+  muscleMassKg: number | null
   weightKg: number | null
   updatedAt: string
 }
@@ -18,6 +19,7 @@ export type HealthGoalsView = {
   bloodPressure2: number | null
   waistCm: number | null
   bodyFatPercent: number | null
+  muscleMassKg: number | null
   weightKg: number | null
 }
 
@@ -25,6 +27,7 @@ export type HealthGoalMetric =
   | "bloodPressure"
   | "waistCm"
   | "bodyFatPercent"
+  | "muscleMassKg"
   | "weightKg"
 
 type HealthEntryInput = {
@@ -39,6 +42,7 @@ type HealthGoalInput = Partial<{
   bloodPressure2: number | null
   waistCm: number | null
   bodyFatPercent: number | null
+  muscleMassKg: number | null
   weightKg: number | null
 }>
 
@@ -47,6 +51,7 @@ const emptyGoals: HealthGoalsView = {
   bloodPressure2: null,
   waistCm: null,
   bodyFatPercent: null,
+  muscleMassKg: null,
   weightKg: null,
 }
 
@@ -82,6 +87,7 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
       bloodPressure2: row.bloodPressure2,
       waistCm: row.waistCm === null ? null : Number(row.waistCm),
       bodyFatPercent: null,
+      muscleMassKg: null,
       weightKg: null,
       updatedAt: row.updatedAt.toISOString(),
     })
@@ -96,6 +102,7 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
       bloodPressure2: null,
       waistCm: null,
       bodyFatPercent: null,
+      muscleMassKg: null,
       weightKg: null,
       updatedAt: measurement.updatedAt.toISOString(),
     }
@@ -105,6 +112,9 @@ export async function getHealthEntries(): Promise<HealthEntryView[]> {
       bodyFatPercent: measurement.bodyFatPercent === null
         ? entry.bodyFatPercent
         : Number(measurement.bodyFatPercent),
+      muscleMassKg: measurement.muscleMassKg === null
+        ? entry.muscleMassKg
+        : Number(measurement.muscleMassKg),
       weightKg: measurement.weightKg === null
         ? entry.weightKg
         : Number(measurement.weightKg),
@@ -132,6 +142,7 @@ export async function getHealthGoals(): Promise<HealthGoalsView> {
     bloodPressure2: goal.bloodPressure2,
     waistCm: goal.waistCm === null ? null : Number(goal.waistCm),
     bodyFatPercent: goal.bodyFatPercent === null ? null : Number(goal.bodyFatPercent),
+    muscleMassKg: goal.muscleMassKg === null ? null : Number(goal.muscleMassKg),
     weightKg: goal.weightKg === null ? null : Number(goal.weightKg),
   }
 }
@@ -194,10 +205,16 @@ export function parseHealthGoalsForm(formData: FormData): HealthGoalInput {
     }
   }
 
-  if (metric === "waistCm" || metric === "bodyFatPercent" || metric === "weightKg") {
+  if (
+    metric === "waistCm"
+    || metric === "bodyFatPercent"
+    || metric === "muscleMassKg"
+    || metric === "weightKg"
+  ) {
     const labels = {
       waistCm: "Bauchumfang",
       bodyFatPercent: "Fettgehalt",
+      muscleMassKg: "Muskelmasse",
       weightKg: "Gewicht",
     } as const
     return { [metric]: parsePositiveDecimal(formData, metric, labels[metric]) }

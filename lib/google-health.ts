@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma"
 const GOOGLE_HEALTH_SCOPES = [
   "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
   "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
-  "https://www.googleapis.com/auth/googlehealth.nutrition.readonly",
 ] as const
 
 export const GOOGLE_HEALTH_SCOPE = GOOGLE_HEALTH_SCOPES.join(" ")
@@ -21,14 +20,7 @@ export type DailyStepsPoint = {
 
 export type DailyCaloriesPoint = {
   burned: number | null
-  consumed: number | null
   date: string
-}
-
-export type DailyRunPoint = {
-  date: string
-  distanceKm: number
-  efficiencyScore: number | null
 }
 
 export type DailySleepPoint = {
@@ -54,20 +46,6 @@ type GoogleHealthTokenResponse = {
 }
 
 type GoogleHealthDataPoint = {
-  exercise?: {
-    activeDuration?: string
-    displayName?: string
-    exerciseType?: string
-    interval?: {
-      endTime?: string
-      startTime?: string
-    }
-    metricsSummary?: {
-      averageHeartRateBeatsPerMinute?: number | string
-      averageSpeedMillimetersPerSecond?: number | string
-      distanceMillimeters?: number | string
-    }
-  }
   sleep?: {
     interval?: {
       endTime?: string
@@ -94,11 +72,6 @@ type GoogleHealthDailyRollupPoint = {
       year?: number
     }
   }
-  nutritionLog?: {
-    energy?: {
-      kcalSum?: number | string
-    }
-  }
   steps?: {
     countSum?: string
   }
@@ -114,8 +87,6 @@ type GoogleHealthDailyRollupResponse = {
 
 const STEPS_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp"
 const CALORIE_BURN_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/total-calories/dataPoints:dailyRollUp"
-const CALORIE_INTAKE_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/nutrition-log/dataPoints:dailyRollUp"
-const EXERCISE_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/exercise/dataPoints"
 const SLEEP_API_URL = "https://health.googleapis.com/v4/users/me/dataTypes/sleep/dataPoints:reconcile"
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -128,7 +99,6 @@ const CALORIE_QUERY_WINDOW_DAYS = 14
 const CALORIE_SYNC_DAYS = 90
 const STEPS_SYNC_DAYS = 90
 const SLEEP_SYNC_DAYS = 7
-const RUN_SYNC_DAYS = 365
 const SLEEP_TARGET_MINUTES = 8 * 60
 const SLEEP_SESSION_GAP_MS = 2 * 60 * 60 * 1_000
 const API_TIMEOUT_MS = 15_000
@@ -206,7 +176,7 @@ export async function saveGoogleHealthAuthorizationCode(code: string, redirectUr
   }
 
   if (tokens.scope && !hasGoogleHealthScopes(tokens.scope)) {
-    throw new Error("Die Freigabe für Aktivitäts-, Ernährungs- und Schlafdaten wurde nicht vollständig erteilt.")
+    throw new Error("Die Freigabe für Aktivitäts- und Schlafdaten wurde nicht vollständig erteilt.")
   }
 
   const refreshTokenExpiresAt = tokens.refresh_token_expires_in
@@ -271,79 +241,19 @@ export async function getDailyStepsSeries(): Promise<DailyStepsPoint[]> {
 }
 
 export async function getDailyCaloriesSeries(): Promise<DailyCaloriesPoint[]> {
-  const [burnedRows, consumedRows] = await Promise.all([
-    prisma.dailyCalorieBurn.findMany({
-      orderBy: { date: "asc" },
-      where: { date: { gte: healthRetentionStart() } },
-    }),
-    prisma.dailyCalorieIntake.findMany({
-      orderBy: { date: "asc" },
-      where: { date: { gte: healthRetentionStart() } },
-    }),
-  ])
+  const burnedRows = await prisma.dailyCalorieBurn.findMany({
+    orderBy: { date: "asc" },
+    where: { date: { gte: healthRetentionStart() } },
+  })
   const burnedByDate = new Map(
     burnedRows.map((row) => [row.date.toISOString().slice(0, 10), row.kilocalories])
   )
-  const consumedByDate = new Map(
-    consumedRows.map((row) => [row.date.toISOString().slice(0, 10), row.kilocalories])
-  )
-  const dates = dailySeriesDates(
-    [...burnedByDate.keys(), ...consumedByDate.keys()],
-    CALORIE_SYNC_DAYS
-  )
+  const dates = dailySeriesDates([...burnedByDate.keys()], CALORIE_SYNC_DAYS)
 
   return dates.map((date) => ({
     burned: burnedByDate.get(date) ?? null,
-    consumed: consumedByDate.get(date) ?? null,
     date,
   }))
-}
-
-export async function getDailyRunSeries(): Promise<DailyRunPoint[]> {
-  const rows = await prisma.googleHealthRun.findMany({
-    orderBy: { startedAt: "asc" },
-    where: { endedAt: { gte: healthRetentionStart() } },
-  })
-  const runs = rows.map((row) => ({
-    averageHeartRate: row.averageHeartRate === null ? null : Number(row.averageHeartRate),
-    date: civilDateKey(row.startedAt),
-    distanceKm: Number(row.distanceKm),
-    efficiency: runEfficiency(
-      Number(row.distanceKm),
-      row.activeSeconds,
-      row.averageHeartRate === null ? null : Number(row.averageHeartRate)
-    ),
-  }))
-  const validEfficiencies = runs.flatMap((run) => run.efficiency === null ? [] : [run.efficiency])
-  const baselineValues = validEfficiencies.slice(0, Math.min(5, validEfficiencies.length))
-  const baseline = average(baselineValues)
-  const daily = new Map<string, DailyRunPoint>()
-  let efficiencyIndex = 0
-
-  for (const run of runs) {
-    let efficiencyScore: number | null = null
-    if (run.efficiency !== null && baseline !== null && baseline > 0) {
-      const currentWindow = validEfficiencies.slice(
-        Math.max(0, efficiencyIndex - 2),
-        efficiencyIndex + 1
-      )
-      const rollingEfficiency = average(currentWindow)!
-      efficiencyScore = roundTo(
-        Math.max(0, Math.min(100, 50 + 166.67 * (rollingEfficiency / baseline - 1))),
-        1
-      )
-      efficiencyIndex += 1
-    }
-
-    const current = daily.get(run.date)
-    daily.set(run.date, {
-      date: run.date,
-      distanceKm: roundTo((current?.distanceKm ?? 0) + run.distanceKm, 2),
-      efficiencyScore: efficiencyScore ?? current?.efficiencyScore ?? null,
-    })
-  }
-
-  return [...daily.values()].sort((left, right) => left.date.localeCompare(right.date))
 }
 
 export async function getDailySleepIndexSeries(): Promise<DailySleepPoint[]> {
@@ -398,7 +308,7 @@ export async function syncGoogleHealthData() {
     throw new Error("Die Google-Health-Verbindung ist abgelaufen. Bitte erneut verbinden.")
   }
   if (!hasGoogleHealthScopes(connection.grantedScopes)) {
-    throw new Error("Für Schritte, Kalorien, Ernährung und Schlaf braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
+    throw new Error("Für Schritte, Kalorien und Schlaf braucht Google Health zusätzliche Freigaben. Bitte neu verbinden.")
   }
 
   const now = new Date(Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS)
@@ -406,8 +316,6 @@ export async function syncGoogleHealthData() {
     return {
       skipped: true,
       updatedBurnedCalorieDays: 0,
-      updatedConsumedCalorieDays: 0,
-      updatedRuns: 0,
       updatedSleepIntervals: 0,
       updatedStepDays: 0,
       warnings: [] as string[],
@@ -420,47 +328,31 @@ export async function syncGoogleHealthData() {
     throw new Error("Google Health hat kein Zugriffstoken geliefert.")
   }
 
-  const [latestBurn, latestIntake, latestStep, latestSleep, latestRun] = await Promise.all([
+  const [latestBurn, latestStep, latestSleep] = await Promise.all([
     prisma.dailyCalorieBurn.findFirst({ orderBy: { date: "desc" }, select: { date: true } }),
-    prisma.dailyCalorieIntake.findFirst({ orderBy: { date: "desc" }, select: { date: true } }),
     prisma.dailyStepCount.findFirst({ orderBy: { date: "desc" }, select: { date: true } }),
     prisma.googleHealthSleepInterval.findFirst({
       orderBy: { endedAt: "desc" },
       select: { endedAt: true },
     }),
-    prisma.googleHealthRun.findFirst({
-      orderBy: { startedAt: "desc" },
-      select: { startedAt: true },
-    }),
   ])
   const burnedDates = incrementalCivilDates(latestBurn?.date ?? null, CALORIE_SYNC_DAYS)
-  const consumedDates = incrementalCivilDates(latestIntake?.date ?? null, CALORIE_SYNC_DAYS)
   const stepDates = incrementalCivilDates(latestStep?.date ?? null, STEPS_SYNC_DAYS)
   const sleepStart = latestSleep?.endedAt ?? new Date(now.getTime() - SLEEP_SYNC_DAYS * DAY_MS)
-  const runStart = latestRun?.startedAt ?? new Date(now.getTime() - RUN_SYNC_DAYS * DAY_MS)
-  const [burnedResult, consumedResult, stepsResult, sleepResult, runsResult] = await Promise.allSettled([
+  const [burnedResult, stepsResult, sleepResult] = await Promise.allSettled([
     fetchDailyCalorieBurns(tokens.access_token, burnedDates),
-    fetchDailyCalorieIntakes(tokens.access_token, consumedDates),
     fetchDailySteps(tokens.access_token, stepDates),
     fetchSleepIntervals(tokens.access_token, sleepStart, now),
-    fetchRunningActivities(tokens.access_token, runStart, now),
   ])
   const warnings: string[] = []
   let updatedBurnedCalorieDays = 0
-  let updatedConsumedCalorieDays = 0
   let updatedStepDays = 0
   let updatedSleepIntervals = 0
-  let updatedRuns = 0
 
   if (burnedResult.status === "fulfilled") {
     updatedBurnedCalorieDays = await upsertDailyCalorieBurns(burnedResult.value)
   } else {
     warnings.push("Kalorienverbrauch")
-  }
-  if (consumedResult.status === "fulfilled") {
-    updatedConsumedCalorieDays = await upsertDailyCalorieIntakes(consumedResult.value)
-  } else {
-    warnings.push("Kalorienaufnahme")
   }
   if (stepsResult.status === "fulfilled") {
     updatedStepDays = await upsertDailySteps(stepsResult.value)
@@ -472,23 +364,15 @@ export async function syncGoogleHealthData() {
   } else {
     warnings.push("Schlaf")
   }
-  if (runsResult.status === "fulfilled") {
-    updatedRuns = await upsertRuns(runsResult.value)
-  } else {
-    warnings.push("Läufe")
-  }
-
-  if (warnings.length === 5) {
+  if (warnings.length === 3) {
     throw new Error("Google Health hat keine Datenquelle erreicht. Bitte Verbindung und Google-Health-Freigaben prüfen.")
   }
 
   const retentionStart = healthRetentionStart(now)
   await prisma.$transaction([
     prisma.dailyCalorieBurn.deleteMany({ where: { date: { lt: retentionStart } } }),
-    prisma.dailyCalorieIntake.deleteMany({ where: { date: { lt: retentionStart } } }),
     prisma.dailyStepCount.deleteMany({ where: { date: { lt: retentionStart } } }),
     prisma.googleHealthSleepInterval.deleteMany({ where: { endedAt: { lt: retentionStart } } }),
-    prisma.googleHealthRun.deleteMany({ where: { endedAt: { lt: retentionStart } } }),
     prisma.googleHealthConnection.update({
       where: { id: CONNECTION_ID },
       data: {
@@ -506,8 +390,6 @@ export async function syncGoogleHealthData() {
   return {
     skipped: false,
     updatedBurnedCalorieDays,
-    updatedConsumedCalorieDays,
-    updatedRuns,
     updatedSleepIntervals,
     updatedStepDays,
     warnings,
@@ -558,17 +440,6 @@ async function fetchDailyCalorieBurns(accessToken: string, dates: string[]) {
     queryWindowDays: CALORIE_QUERY_WINDOW_DAYS,
   })
   return calorieValues(points, (point) => point.totalCalories?.kcalSum)
-}
-
-async function fetchDailyCalorieIntakes(accessToken: string, dates: string[]) {
-  const points = await fetchDailyRollupPoints({
-    accessToken,
-    apiUrl: CALORIE_INTAKE_API_URL,
-    dates,
-    fallback: "Aufgenommene Kalorien konnten nicht geladen werden.",
-    queryWindowDays: CALORIE_SYNC_DAYS,
-  })
-  return calorieValues(points, (point) => point.nutritionLog?.energy?.kcalSum)
 }
 
 function calorieValues(
@@ -699,65 +570,6 @@ async function fetchSleepIntervals(accessToken: string, start: Date, end: Date) 
   return [...intervals.values()].sort((left, right) => left.startedAt.getTime() - right.startedAt.getTime())
 }
 
-async function fetchRunningActivities(accessToken: string, start: Date, end: Date) {
-  const runs = new Map<string, {
-    activeSeconds: number
-    averageHeartRate: number | null
-    distanceKm: number
-    endedAt: Date
-    startedAt: Date
-  }>()
-  let pageToken = ""
-
-  do {
-    const url = new URL(EXERCISE_API_URL)
-    url.searchParams.set(
-      "filter",
-      `exercise.interval.start_time >= "${start.toISOString()}" AND exercise.interval.start_time < "${end.toISOString()}"`
-    )
-    url.searchParams.set("pageSize", "25")
-    if (pageToken) url.searchParams.set("pageToken", pageToken)
-
-    const response = await googleHealthFetch(url, accessToken)
-    const data = await googleJson<GoogleHealthDataResponse>(response, "Laufaktivitäten konnten nicht geladen werden.")
-
-    for (const point of data.dataPoints ?? []) {
-      const exercise = point.exercise
-      if (!exercise || !isRunningExercise(exercise.exerciseType, exercise.displayName)) continue
-
-      const startedAt = new Date(exercise.interval?.startTime ?? "")
-      const endedAt = new Date(exercise.interval?.endTime ?? "")
-      if (
-        !Number.isFinite(startedAt.getTime())
-        || !Number.isFinite(endedAt.getTime())
-        || endedAt <= startedAt
-      ) {
-        continue
-      }
-
-      const distanceKm = Number(exercise.metricsSummary?.distanceMillimeters) / 1_000_000
-      const averageHeartRate = Number(exercise.metricsSummary?.averageHeartRateBeatsPerMinute)
-      const activeSeconds = parseGoogleDuration(exercise.activeDuration)
-        ?? Math.round((endedAt.getTime() - startedAt.getTime()) / 1_000)
-      if (!Number.isFinite(distanceKm) || distanceKm <= 0 || activeSeconds <= 0) continue
-
-      runs.set(`${startedAt.toISOString()}:${endedAt.toISOString()}`, {
-        activeSeconds,
-        averageHeartRate: Number.isFinite(averageHeartRate) && averageHeartRate > 0
-          ? roundTo(averageHeartRate, 1)
-          : null,
-        distanceKm: roundTo(distanceKm, 3),
-        endedAt,
-        startedAt,
-      })
-    }
-
-    pageToken = data.nextPageToken ?? ""
-  } while (pageToken)
-
-  return [...runs.values()].sort((left, right) => left.startedAt.getTime() - right.startedAt.getTime())
-}
-
 async function googleHealthFetch(url: URL, accessToken: string, init: RequestInit = {}) {
   return retryingFetch(url, {
     ...init,
@@ -820,16 +632,6 @@ async function upsertDailyCalorieBurns(values: Array<{ date: Date; kilocalories:
   return values.length
 }
 
-async function upsertDailyCalorieIntakes(values: Array<{ date: Date; kilocalories: number }>) {
-  if (values.length === 0) return 0
-  await prisma.$transaction(values.map((value) => prisma.dailyCalorieIntake.upsert({
-    where: { date: value.date },
-    create: value,
-    update: { kilocalories: value.kilocalories },
-  })))
-  return values.length
-}
-
 async function upsertSleepIntervals(intervals: Array<{ endedAt: Date; startedAt: Date }>) {
   if (intervals.length === 0) return 0
   const result = await prisma.googleHealthSleepInterval.createMany({
@@ -837,31 +639,6 @@ async function upsertSleepIntervals(intervals: Array<{ endedAt: Date; startedAt:
     skipDuplicates: true,
   })
   return result.count
-}
-
-async function upsertRuns(runs: Array<{
-  activeSeconds: number
-  averageHeartRate: number | null
-  distanceKm: number
-  endedAt: Date
-  startedAt: Date
-}>) {
-  if (runs.length === 0) return 0
-  await prisma.$transaction(runs.map((run) => prisma.googleHealthRun.upsert({
-    where: {
-      startedAt_endedAt: {
-        endedAt: run.endedAt,
-        startedAt: run.startedAt,
-      },
-    },
-    create: run,
-    update: {
-      activeSeconds: run.activeSeconds,
-      averageHeartRate: run.averageHeartRate,
-      distanceKm: run.distanceKm,
-    },
-  })))
-  return runs.length
 }
 
 async function googleJson<T>(response: Response, fallback: string): Promise<T> {
@@ -951,31 +728,6 @@ function incrementalCivilDates(latest: Date | null, fallbackDays: number) {
 
 function dailySeriesDates(storedDates: string[], recentDays: number) {
   return [...new Set([...storedDates, ...recentCivilDates(recentDays)])].sort()
-}
-
-function parseGoogleDuration(value?: string) {
-  const match = value?.match(/^([0-9]+(?:\.[0-9]+)?)s$/)
-  if (!match) return null
-  const seconds = Number(match[1])
-  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds) : null
-}
-
-function isRunningExercise(exerciseType?: string, displayName?: string) {
-  if (exerciseType === "RUNNING") return true
-  return /\b(laufen|lauf|running|run|jogging|jog)\b/i.test(displayName?.trim() ?? "")
-}
-
-function runEfficiency(distanceKm: number, activeSeconds: number, averageHeartRate: number | null) {
-  if (distanceKm <= 0 || activeSeconds <= 0 || averageHeartRate === null || averageHeartRate <= 0) {
-    return null
-  }
-  return (distanceKm / (activeSeconds / 3_600)) / averageHeartRate
-}
-
-function average(values: number[]) {
-  return values.length > 0
-    ? values.reduce((sum, value) => sum + value, 0) / values.length
-    : null
 }
 
 function roundTo(value: number, decimals: number) {
