@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { PullUpChallengeView, PullUpEntryView } from "@/lib/pull-up-data"
 import { createPullUpChallengeAction, incrementPullUpsAction } from "../actions"
+import { dashboardChartClassName } from "./chart-range-toggle"
 import { DashboardDatePicker } from "./dashboard-date-picker"
 
 type SaveState = "idle" | "queued" | "saving" | "saved" | "error"
@@ -65,14 +66,14 @@ const longDateFormatter = new Intl.DateTimeFormat("de-CH", {
 const rarityTiers = [
   {
     max: 20,
-    name: "Ungewöhnlich",
+    name: "Gewöhnlich",
     panel: "border-zinc-400 bg-zinc-400/20",
     marker: "border-zinc-200",
     text: "text-zinc-300",
   },
   {
     max: 40,
-    name: "Gewöhnlich",
+    name: "Ungewöhnlich",
     panel: "border-emerald-500 bg-emerald-500/20",
     marker: "border-emerald-300",
     text: "text-emerald-400",
@@ -210,8 +211,8 @@ export function ChallengeContent({
               {todayTotal}
             </span>
             <div aria-hidden="true" className="grid h-3 grid-cols-5 overflow-hidden rounded-full">
-              <span className="bg-zinc-400" title="Ungewöhnlich: 0 bis 20 Reps" />
-              <span className="bg-emerald-500" title="Gewöhnlich: 21 bis 40 Reps" />
+              <span className="bg-zinc-400" title="Gewöhnlich: 0 bis 20 Reps" />
+              <span className="bg-emerald-500" title="Ungewöhnlich: 21 bis 40 Reps" />
               <span className="bg-sky-500" title="Selten: 41 bis 60 Reps" />
               <span className="bg-orange-500" title="Legendär: 61 bis 80 Reps" />
               <span className="bg-amber-400" title="Mythisch: mehr als 80 Reps" />
@@ -269,7 +270,7 @@ export function ChallengeContent({
                 target={activeChallenge.targetCount}
               />
             ) : (
-              <div className="flex aspect-[4/3] min-h-72 items-center justify-center text-sm text-white/45">
+              <div className={`flex items-center justify-center text-sm text-white/45 ${dashboardChartClassName}`}>
                 Starte eine neue Challenge.
               </div>
             )}
@@ -453,7 +454,7 @@ function ChallengeDetailDialog({
 
 function ChallengeChart({ rows, target }: { rows: ChallengeChartRow[]; target: number }) {
   return (
-    <ChartContainer config={challengeChartConfig} className="aspect-[4/3] min-h-[360px] w-full">
+    <ChartContainer config={challengeChartConfig} className={dashboardChartClassName}>
       <AreaChart accessibilityLayer data={rows} margin={{ top: 16, right: 12, bottom: 4, left: 0 }}>
         <defs>
           <linearGradient id="challenge-actual-fill" x1="0" x2="0" y1="0" y2="1">

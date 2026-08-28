@@ -60,6 +60,7 @@ import {
   updateHealthGoalsAction,
 } from "../actions"
 import {
+  dashboardChartClassName,
   filterChartRange,
   type ChartRange,
 } from "./chart-range-toggle"
@@ -80,7 +81,6 @@ const sleepChartConfig = {
   sleepIndex: { label: "Schlafindex", color: "#8bc7ff" },
 } satisfies ChartConfig
 
-const healthChartClassName = "aspect-[4/3] w-full"
 const healthCardClassName = "bg-transparent py-0 text-white md:bg-white/[0.035] md:py-4"
 
 const chartRangeOptions = [
@@ -337,7 +337,7 @@ export function HealthContent({
             }
             title="Blutdruck"
           >
-            <ChartContainer config={bloodPressureChartConfig} className={healthChartClassName}>
+            <ChartContainer config={bloodPressureChartConfig} className={dashboardChartClassName}>
               <LineChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
                 <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
                 <XAxis axisLine={false} dataKey="date" minTickGap={32} tickFormatter={formatChartDate} tickLine={false} tickMargin={10} />
@@ -449,7 +449,7 @@ function SingleMetricChart({
   ])
 
   return (
-    <ChartContainer config={config} className={healthChartClassName}>
+    <ChartContainer config={config} className={dashboardChartClassName}>
       <AreaChart accessibilityLayer data={entries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -515,7 +515,7 @@ function DailyCaloriesChartCard({
       title="Kalorien"
     >
       {hasData ? (
-        <ChartContainer config={dailyActivityChartConfig} className={healthChartClassName}>
+        <ChartContainer config={dailyActivityChartConfig} className={dashboardChartClassName}>
           <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
             <defs>
               <linearGradient id="daily-calories-fill" x1="0" x2="0" y1="0" y2="1">
@@ -563,7 +563,7 @@ function DailyCaloriesChartCard({
           </AreaChart>
         </ChartContainer>
       ) : (
-        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+        <div className={`${dashboardChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
           Noch keine Kaloriendaten für diesen Zeitraum vorhanden.
         </div>
       )}
@@ -600,7 +600,7 @@ function DailyStepsChartCard({
       title="Schritte"
     >
       {hasData ? (
-        <ChartContainer config={dailyActivityChartConfig} className={healthChartClassName}>
+        <ChartContainer config={dailyActivityChartConfig} className={dashboardChartClassName}>
           <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
             <defs>
               <linearGradient id="daily-steps-fill" x1="0" x2="0" y1="0" y2="1">
@@ -648,7 +648,7 @@ function DailyStepsChartCard({
           </AreaChart>
         </ChartContainer>
       ) : (
-        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+        <div className={`${dashboardChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
           Noch keine Schrittdaten für diesen Zeitraum vorhanden.
         </div>
       )}
@@ -684,7 +684,7 @@ function DailySleepChartCard({
       title="Schlafindex"
     >
       {chartEntries.length > 0 ? (
-        <ChartContainer config={sleepChartConfig} className={healthChartClassName}>
+        <ChartContainer config={sleepChartConfig} className={dashboardChartClassName}>
           <AreaChart accessibilityLayer data={chartEntries} margin={{ top: 12, right: 8, bottom: 4, left: 0 }}>
             <defs>
               <linearGradient id="sleep-index-fill" x1="0" x2="0" y1="0" y2="1">
@@ -731,7 +731,7 @@ function DailySleepChartCard({
           </AreaChart>
         </ChartContainer>
       ) : (
-        <div className={`${healthChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
+        <div className={`${dashboardChartClassName} grid place-items-center border border-dashed border-white/10 text-center text-white/50`}>
           Noch keine Schlafdaten für diesen Zeitraum vorhanden.
         </div>
       )}

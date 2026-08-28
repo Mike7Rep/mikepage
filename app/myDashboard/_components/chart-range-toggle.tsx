@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 export type ChartRange = "1w" | "1m" | "3m" | "6m" | "1y" | "max"
 
-export const dashboardChartClassName = "aspect-[16/5] min-h-[220px] w-full"
+export const dashboardChartClassName = "aspect-[4/3] min-h-[220px] w-full lg:aspect-video"
 
 const chartRanges = [
   { label: "1 Monat", shortLabel: "1M", value: "1m" },
