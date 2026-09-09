@@ -41,6 +41,10 @@ const assetChartConfig = {
 
 const chartRequests = new Map<string, Promise<ChartActionResult>>()
 
+export function clearAssetChartRequests() {
+  chartRequests.clear()
+}
+
 export function prefetchAssetChart(symbol: string) {
   void loadAssetChart(symbol)
 }
@@ -109,7 +113,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
             {chart?.symbol ?? symbol} Verlauf
           </CardTitle>
           <CardDescription className="mt-1 text-sm text-white/55">
-            {chart ? `${chart.name} · ${formatDate(chartRows.at(0)?.date ?? chart.periodStart)} bis ${formatDate(chartRows.at(-1)?.date ?? chart.periodEnd)}` : "2 Jahre Tagesdaten"}
+            {chart ? `${chart.name} · ${formatDate(chartRows.at(0)?.date ?? chart.periodStart)} bis ${formatDate(chartRows.at(-1)?.date ?? chart.periodEnd)} · EK seit Aufzeichnung` : "6 Monate Tagesdaten"}
           </CardDescription>
         </div>
         <CardAction>
@@ -119,7 +123,11 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <ChartRangeToggle className="self-end" onRangeChange={setChartRange} range={chartRange} />
+        <ChartRangeToggle className="self-end" onRangeChange={setChartRange} range={chartRange} options={[
+          { value: "1m", label: "1 Monat", shortLabel: "1M" },
+          { value: "3m", label: "3 Monate", shortLabel: "3M" },
+          { value: "max", label: "6 Monate", shortLabel: "6M" },
+        ]} />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
           <div className={dashboardChartClassName}>
             {state === "loading" ? <LoadingState /> : null}

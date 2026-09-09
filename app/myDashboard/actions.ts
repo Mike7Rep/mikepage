@@ -15,6 +15,9 @@ import {
   validateDashboardLogin,
 } from "@/lib/dashboard-auth"
 import { getAssetChart } from "@/lib/python-api"
+import { getDepotData, getTradingAccount } from "@/lib/depot-data"
+import { advanceTrader, getTraderState, startTrader } from "@/lib/depot-trader"
+import { getDepotOrders, previewOrder, refreshDepotOrders, submitMarketOrder } from "@/lib/depot-orders"
 import {
   deleteHealthEntry,
   getHealthEntries,
@@ -256,6 +259,65 @@ async function requireDashboardSession() {
   if (status !== "authenticated") {
     throw new Error("Nicht angemeldet.")
   }
+}
+
+async function depotAction<T>(work: () => Promise<T>) {
+  try {
+    await requireDashboardSession()
+    return { ok: true, data: await work() } as const
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && ["P2021", "P2022"].includes(String(error.code))) {
+      return { ok: false, error: "Die Depot-Datenbank ist noch nicht eingerichtet. Bitte die neue Prisma-Migration beim Deployment ausführen." } as const
+    }
+    return { ok: false, error: error instanceof Error ? error.message : "Depot-Aktion fehlgeschlagen." } as const
+  }
+}
+
+export async function getDepotWorkspaceAction() {
+  return depotAction(async () => {
+    const account = await getTradingAccount()
+    const [depot, trader, orders] = await Promise.all([getDepotData(account.accountKey), getTraderState(account.accountKey), getDepotOrders(account.accountKey)])
+    return { account, depot, trader, orders }
+  })
+}
+
+export async function startTraderAction(analyze: boolean) {
+  return depotAction(async () => {
+    if (typeof analyze !== "boolean") throw new Error("Ungültiger Analyse-Modus.")
+    return startTrader(analyze)
+  })
+}
+
+export async function advanceTraderAction(runId: number) {
+  return depotAction(async () => {
+    if (!Number.isSafeInteger(runId) || runId <= 0) throw new Error("Ungültiger Analyse-Lauf.")
+    const state = await advanceTrader(runId)
+    updateTag("dashboard:portfolio")
+    updateTag("dashboard:asset-chart")
+    return state
+  })
+}
+
+export async function previewDepotOrderAction(symbol: string, side: "buy" | "sell", qty: string) {
+  return depotAction(() => previewOrder(symbol, side, qty))
+}
+
+export async function submitDepotOrderAction(id: string) {
+  return depotAction(async () => {
+    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error("Ungültige Order-ID.")
+    const orders = await submitMarketOrder(id)
+    updateTag("dashboard:portfolio")
+    updateTag("dashboard:asset-chart")
+    return orders
+  })
+}
+
+export async function refreshDepotOrdersAction() {
+  return depotAction(async () => {
+    const data = await refreshDepotOrders()
+    updateTag("dashboard:portfolio")
+    return data
+  })
 }
 
 async function dashboardLoginIdentifier() {

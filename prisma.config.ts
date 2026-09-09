@@ -1,7 +1,7 @@
 import { config } from "dotenv"
 import { defineConfig } from "prisma/config"
 
-config({ path: [".env.local", ".env"] })
+config({ path: [".env.local", ".env"], quiet: true })
 
 const url = process.env.DIRECT_URL || process.env.DATABASE_URL
 if (!url) {

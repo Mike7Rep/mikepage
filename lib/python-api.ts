@@ -1,6 +1,8 @@
 import { cacheLife, cacheTag } from "next/cache"
+import { createHash } from "node:crypto"
 
 import { prisma } from "@/lib/prisma"
+import { sixMonthsAgo, tradingDate } from "@/lib/depot-calculations"
 
 type Side = "buy" | "sell"
 type JsonRecord = Record<string, unknown>
@@ -18,8 +20,10 @@ export type DashboardPosition = {
 }
 
 export type AlpacaDashboardData = {
+  accountKey: string
   currency: string
   currentValue: number
+  cash: number
   totalDeposited: number | null
   totalCostBasis: number
   totalMarketValue: number
@@ -98,8 +102,10 @@ export async function getDashboardPortfolio() {
   const basis = deposited && deposited > 0 ? deposited : null
   const totalPl = basis ? current - basis : unrealized
   return {
+    accountKey: alpacaAccountKey(account),
     currency: stringValue(account.currency || "USD").toUpperCase(),
     currentValue: current,
+    cash: numberValue(account.cash),
     totalDeposited: deposited,
     totalCostBasis: cost,
     totalMarketValue: market,
@@ -121,7 +127,7 @@ export async function getAssetChart(symbol: string) {
 
   const client = createAlpacaClient(getSettings())
   const end = new Date()
-  const start = addDays(end, -730)
+  const start = sixMonthsAgo(end)
   const [account, positions, asset, bars, fills] = await Promise.all([
     client.getAccount(),
     client.getPositions(),
@@ -133,16 +139,18 @@ export async function getAssetChart(symbol: string) {
     const fill = fillFromAlpaca(item)
     return fill ? [fill] : []
   })
-  const chartBars = barsWithAverageEntryPrice(bars.map(barFromAlpaca), chartFills)
+  const chartBars = bars.map(barFromAlpaca)
   const position = positions.find((item) => stringValue(item.symbol).toUpperCase() === normalizedSymbol)
   const positionAverage = optionalNumber(position?.avg_entry_price)
-  const latestAverage = latestAverageEntryPrice(chartBars)
-
-  if (latestAverage === null && positionAverage !== null) {
-    for (const bar of chartBars) {
-      bar.averageEntryPrice = positionAverage
-    }
-  }
+  const snapshots = await prisma.depotSnapshot.findMany({
+    where: { accountKey: alpacaAccountKey(account), date: { gte: start }, observedAt: { not: null } },
+    select: { date: true, positions: true },
+  })
+  const entryPrices = new Map(snapshots.map((snapshot) => {
+    const held = (snapshot.positions as JsonRecord[] | null)?.find((item) => item.symbol === normalizedSymbol)
+    return [snapshot.date.toISOString().slice(0, 10), held ? optionalNumber(held.avg_entry_price) : null]
+  }))
+  for (const bar of chartBars) bar.averageEntryPrice = entryPrices.get(bar.date) ?? null
 
   return {
     symbol: normalizedSymbol,
@@ -150,13 +158,22 @@ export async function getAssetChart(symbol: string) {
     currency: stringValue(account.currency || "USD").toUpperCase(),
     periodStart: toDateString(start),
     periodEnd: toDateString(end),
-    averageEntryPrice: latestAverage ?? positionAverage,
+    averageEntryPrice: positionAverage,
     bars: chartBars,
     fills: chartFills,
   } satisfies AssetChartData
 }
 
-function createAlpacaClient(settings: AlpacaSettings) {
+export class AlpacaRequestError extends Error {
+  constructor(public status: number, message: string) { super(message) }
+}
+
+export function alpacaAccountKey(account: JsonRecord) {
+  if (!account.id) throw new Error("Alpaca-Konto konnte nicht identifiziert werden.")
+  return createHash("sha256").update(`${getSettings().alpacaEndpoint}:${account.id}`).digest("hex")
+}
+
+export function createAlpacaClient(settings: AlpacaSettings = getSettings()) {
   async function request<T>(method: string, base: string, path: string, init: RequestInit = {}) {
     if (!settings.alpacaEndpoint || !settings.alpacaKey || !settings.alpacaSecret) {
       throw new Error("Alpaca ENV fehlt.")
@@ -165,6 +182,8 @@ function createAlpacaClient(settings: AlpacaSettings) {
     const response = await fetch(`${base}${path}`, {
       ...init,
       method,
+      cache: "no-store",
+      signal: init.signal ?? AbortSignal.timeout(30_000),
       headers: {
         accept: "application/json",
         "APCA-API-KEY-ID": settings.alpacaKey,
@@ -174,40 +193,45 @@ function createAlpacaClient(settings: AlpacaSettings) {
     })
 
     if (!response.ok) {
-      throw new Error(`Alpaca Fehler ${response.status}: ${await errorText(response)}`)
+      throw new AlpacaRequestError(response.status, `Alpaca Fehler ${response.status}: ${await errorText(response)}`)
     }
     return response.json() as Promise<T>
   }
 
+  async function getActivities(types?: string, after?: string, until?: string) {
+    const rows: JsonRecord[] = []
+    let token = ""
+    while (true) {
+      const params = new URLSearchParams({ direction: "asc", page_size: "100" })
+      if (types) params.set("activity_types", types)
+      if (after) params.set("after", after)
+      if (until) params.set("until", until)
+      if (token) params.set("page_token", token)
+      const page = await request<JsonRecord[]>("GET", settings.alpacaEndpoint, `/v2/account/activities?${params}`)
+      rows.push(...page)
+      if (page.length < 100) return rows
+      const next = String(page.at(-1)?.id ?? "")
+      if (!next || next === token || rows.length > 100_000) throw new Error("Alpaca-Aktivitäten konnten nicht vollständig geladen werden.")
+      token = next
+    }
+  }
+
   return {
+    getActivities,
+    getHistory: (start: string, end: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/account/portfolio/history?${new URLSearchParams({ start, end, timeframe: "1D", cashflow_types: "ALL" })}`),
+    getClock: () => request<JsonRecord>("GET", settings.alpacaEndpoint, "/v2/clock"),
+    getOrders: () => request<JsonRecord[]>("GET", settings.alpacaEndpoint, "/v2/orders?status=open&limit=500"),
+    getOrder: (clientId: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/orders:by_client_order_id?${new URLSearchParams({ client_order_id: clientId })}`),
+    submitOrder: (body: JsonRecord) => request<JsonRecord>("POST", settings.alpacaEndpoint, "/v2/orders", { body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }),
     getAccount: () => request<JsonRecord>("GET", settings.alpacaEndpoint, "/v2/account"),
     getPositions: () => request<JsonRecord[]>("GET", settings.alpacaEndpoint, "/v2/positions"),
     getAsset: (symbolOrId: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/assets/${encodeURIComponent(symbolOrId)}`),
-    getCashActivities: () => {
-      const params = new URLSearchParams({ activity_types: "CSD,CSW", direction: "asc", page_size: "100" })
-      return request<JsonRecord[]>("GET", settings.alpacaEndpoint, `/v2/account/activities?${params}`)
-    },
+    getCashActivities: () => getActivities("CSD,CSW"),
     getFillActivities: async (symbol: string, after: string) => {
-      const fills: JsonRecord[] = []
-      let pageToken: string | null = null
-      while (true) {
-        const params = new URLSearchParams({
-          activity_types: "FILL",
-          after,
-          direction: "asc",
-          page_size: "100",
-        })
-        if (pageToken) params.set("page_token", pageToken)
-        const page = await request<JsonRecord[]>("GET", settings.alpacaEndpoint, `/v2/account/activities?${params}`)
-        fills.push(...page.filter((item) => stringValue(item.symbol).toUpperCase() === symbol.toUpperCase()))
-        if (page.length < 100) break
-        const lastId = stringValue(page.at(-1)?.id)
-        if (!lastId) break
-        pageToken = lastId
-      }
-      return fills
+      const activities = await getActivities("FILL", after)
+      return activities.filter((item) => stringValue(item.symbol).toUpperCase() === symbol.toUpperCase())
     },
-    getStockBars: (symbols: string[], start: string, end?: string) => {
+    getStockBars: async (symbols: string[], start: string, end?: string) => {
       const params = new URLSearchParams({
         adjustment: "all",
         feed: "iex",
@@ -217,7 +241,16 @@ function createAlpacaClient(settings: AlpacaSettings) {
         timeframe: "1Day",
       })
       if (end) params.set("end", end)
-      return request<{ bars?: Record<string, JsonRecord[]> }>("GET", settings.alpacaDataEndpoint, `/v2/stocks/bars?${params}`)
+      const bars: Record<string, JsonRecord[]> = {}
+      let token = ""
+      do {
+        if (token) params.set("page_token", token)
+        const page = await request<{ bars?: Record<string, JsonRecord[]>; next_page_token?: string }>("GET", settings.alpacaDataEndpoint, `/v2/stocks/bars?${params}`)
+        for (const [symbol, rows] of Object.entries(page.bars ?? {})) bars[symbol] = [...(bars[symbol] ?? []), ...rows]
+        if (page.next_page_token && page.next_page_token === token) throw new Error("Alpaca-Kursdaten konnten nicht vollständig geladen werden.")
+        token = page.next_page_token ?? ""
+      } while (token)
+      return { bars }
     },
   }
 }
@@ -350,58 +383,12 @@ function fillFromAlpaca(raw: JsonRecord): AssetChartFill | null {
     id: stringValue(raw.id || raw.order_id || timestamp),
     orderId: optionalString(raw.order_id),
     side,
-    date: timestamp.slice(0, 10),
+    date: tradingDate(timestamp),
     transactionTime: timestamp,
     qty,
     price,
     notional: Math.round(Math.abs(qty * price) * 100) / 100,
   }
-}
-
-function barsWithAverageEntryPrice(bars: AssetChartBar[], fills: AssetChartFill[]) {
-  const sortedBars = [...bars].sort((left, right) => left.date.localeCompare(right.date))
-  const sortedFills = [...fills].sort((left, right) => (left.transactionTime || left.date).localeCompare(right.transactionTime || right.date))
-  const lots: Array<{ qty: number; price: number }> = []
-  let fillIndex = 0
-
-  for (const bar of sortedBars) {
-    while (fillIndex < sortedFills.length && sortedFills[fillIndex].date <= bar.date) {
-      applyFill(lots, sortedFills[fillIndex])
-      fillIndex += 1
-    }
-    bar.averageEntryPrice = averageLots(lots)
-  }
-
-  return sortedBars
-}
-
-function applyFill(lots: Array<{ qty: number; price: number }>, fill: AssetChartFill) {
-  if (fill.qty <= 0 || fill.price <= 0) return
-  if (fill.side === "buy") {
-    lots.push({ qty: fill.qty, price: fill.price })
-    return
-  }
-
-  let remaining = fill.qty
-  while (remaining > 0 && lots.length) {
-    if (lots[0].qty <= remaining) {
-      remaining -= lots[0].qty
-      lots.shift()
-    } else {
-      lots[0].qty -= remaining
-      remaining = 0
-    }
-  }
-}
-
-function averageLots(lots: Array<{ qty: number; price: number }>) {
-  const quantity = sumBy(lots, (lot) => lot.qty)
-  if (quantity <= 0) return null
-  return Math.round((sumBy(lots, (lot) => lot.qty * lot.price) / quantity) * 1_000_000) / 1_000_000
-}
-
-function latestAverageEntryPrice(bars: AssetChartBar[]) {
-  return [...bars].reverse().find((bar) => bar.averageEntryPrice)?.averageEntryPrice ?? null
 }
 
 function getSettings(): AlpacaSettings {

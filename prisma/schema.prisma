@@ -218,12 +218,16 @@ model Run {
   runDate    DateTime          @map("run_date") @db.Date
   kind       String
   status     String
+  accountKey String?           @map("account_key")
+  stateJson  Json              @default("{}") @map("state_json")
+  updatedAt  DateTime          @default(now()) @updatedAt @map("updated_at")
   createdAt  DateTime          @default(now()) @map("created_at")
   finishedAt DateTime?         @map("finished_at")
   reviews    Review[]
   strategies StrategyVersion[]
 
   @@unique([runDate, kind])
+  @@index([accountKey, createdAt])
   @@map("runs")
 }
 
@@ -254,4 +258,48 @@ model Review {
   @@index([runId])
   @@index([createdAt])
   @@map("reviews")
+}
+
+model DepotSnapshot {
+  accountKey   String   @map("account_key")
+  date         DateTime @db.Date
+  equity       Decimal  @db.Decimal(20, 6)
+  capital      Decimal? @db.Decimal(20, 6)
+  cash         Decimal? @db.Decimal(20, 6)
+  marketValue  Decimal? @map("market_value") @db.Decimal(20, 6)
+  costBasis    Decimal? @map("cost_basis") @db.Decimal(20, 6)
+  positions    Json?
+  observedAt   DateTime? @map("observed_at") @db.Timestamptz(3)
+  currency     String
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@id([accountKey, date])
+  @@map("depot_snapshots")
+}
+
+model DepotActivity {
+  accountKey String   @map("account_key")
+  activityId String   @map("activity_id")
+  date       DateTime @db.Date
+  data       Json
+
+  @@id([accountKey, activityId])
+  @@index([accountKey, date])
+  @@map("depot_activities")
+}
+
+model DepotOrder {
+  id         String   @id @default(uuid())
+  accountKey String   @map("account_key")
+  symbol     String
+  side       String
+  qty        Decimal  @db.Decimal(24, 9)
+  status     String   @default("preview")
+  data       Json     @default("{}")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([accountKey, createdAt])
+  @@map("depot_orders")
 }
