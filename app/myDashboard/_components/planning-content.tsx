@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { Bangers } from "next/font/google"
 import { Reorder, useDragControls, useReducedMotion } from "framer-motion"
 import { Check, X } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
@@ -12,6 +13,8 @@ import { planningWeekLabel, type PlanningTask } from "@/lib/planning"
 import type { PlanningDashboard } from "@/lib/planning-data"
 import { cn } from "@/lib/utils"
 import { planningAction } from "../planung/actions"
+
+const comic = Bangers({ weight: "400", subsets: ["latin"] })
 
 export function PlanningContent({ initial }: { initial: PlanningDashboard }) {
   const [data, setData] = useState(initial)
@@ -175,11 +178,11 @@ function PlanningRow({ task, points, selected, onPoint, onMove, onChange, onDrop
       className="relative" transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38 }}
       whileDrag={{ scale: 1.02, boxShadow: "0 12px 28px #0008" }}
       onDragStart={() => { dragged.current = true }} onDragEnd={onDrop}>
-      <div className={cn("flex min-h-20 items-center rounded-lg border border-white/10 bg-white/[0.025] transition-colors", selected && "ring-2 ring-primary", task.status === "done" && "border-primary/20 bg-primary/10", task.status === "missed" && "border-destructive/20 bg-destructive/10")}
+      <div className={cn("group relative flex min-h-12 items-center rounded-lg border border-white/10 bg-white/[0.025] transition-colors", selected && "ring-2 ring-primary", task.status === "done" && "border-primary/20 bg-primary/10", task.status === "missed" && "border-destructive/20 bg-destructive/10")}
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDownCapture={(event) => {
           suppressClick.current = false
-          if ((event.pointerType !== "touch" && window.matchMedia("(min-width: 640px)").matches) || (event.target instanceof HTMLTextAreaElement && document.activeElement === event.target) || (event.target as HTMLElement).closest("button")) return
+          if ((event.pointerType !== "touch" && window.matchMedia("(min-width: 640px)").matches) || (event.target instanceof HTMLInputElement && document.activeElement === event.target) || (event.target as HTMLElement).closest("button")) return
           swipe.current = { x: event.clientX, y: event.clientY, active: false }
         }}
         onPointerMoveCapture={(event) => {
@@ -197,7 +200,7 @@ function PlanningRow({ task, points, selected, onPoint, onMove, onChange, onDrop
           const start = swipe.current
           if (start?.active) {
             suppressClick.current = true
-            if (document.activeElement instanceof HTMLTextAreaElement) document.activeElement.blur()
+            if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur()
             const distance = event.clientX - start.x
             if (Math.abs(distance) >= 55) status(distance > 0 ? "done" : "missed")
             event.preventDefault()
@@ -207,23 +210,24 @@ function PlanningRow({ task, points, selected, onPoint, onMove, onChange, onDrop
         }}
         onPointerCancel={() => { swipe.current = null; setOffset(0) }}
         onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false } }}>
-        <div className="hidden shrink-0 pl-1 sm:flex">
-          <Button variant="ghost" size="icon" className="size-11" aria-label={`${task.title || "Aufgabe"}: erledigt`} aria-pressed={task.status === "done"} disabled={!task.title.trim()} onClick={() => status("done")}><Check /></Button>
-          <Button variant="ghost" size="icon" className="size-11" aria-label={`${task.title || "Aufgabe"}: nicht erledigt`} aria-pressed={task.status === "missed"} disabled={!task.title.trim()} onClick={() => status("missed")}><X /></Button>
-        </div>
-        <button type="button" className="flex min-h-20 w-12 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-xl font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing" aria-label={`${points} Punkte, Aufgabe verschieben`} aria-pressed={selected}
+        <button type="button" className="flex min-h-12 w-12 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-xl font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing" aria-label={`${points} Punkte, Aufgabe verschieben`} aria-pressed={selected}
           onPointerDown={(event) => { dragged.current = false; if (event.pointerType === "mouse" && event.button === 0 && window.matchMedia("(min-width: 640px)").matches) controls.start(event) }}
           onClick={() => { if (!dragged.current) onPoint() }}
           onKeyDown={(event) => {
             if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); onMove(event.key === "ArrowUp" ? -1 : 1) }
             if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); status(event.key === "ArrowRight" ? "done" : "missed") }
           }}>{points}</button>
-        <textarea aria-label={`Aufgabe mit ${points} Punkten`} maxLength={100} rows={2} value={task.title} placeholder="Aufgabe …"
-          className={cn("min-h-16 min-w-0 flex-1 resize-none touch-pan-y rounded-md bg-transparent px-2 py-2 text-base leading-6 outline-none placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary", task.status !== "open" && "text-muted-foreground", task.status === "done" && "line-through decoration-primary/40")}
+        <input type="text" aria-label={`Aufgabe mit ${points} Punkten`} maxLength={100} value={task.title} placeholder="Aufgabe …"
+          className={cn("h-12 min-w-0 flex-1 touch-pan-y rounded-md bg-transparent px-2 py-2 text-base leading-6 outline-none placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary", task.status !== "open" && "text-muted-foreground", task.status === "done" && "line-through decoration-primary/40")}
           onChange={(event) => onChange({ title: event.target.value }, false)}
           onBlur={(event) => onChange({ title: event.target.value.trim(), status: event.target.value.trim() ? task.status : "open" })}
           onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.blur() } }} />
+        <div className="hidden shrink-0 pr-1 sm:flex">
+          <Button variant="ghost" size="icon" className="size-11" aria-label={`${task.title || "Aufgabe"}: erledigt`} aria-pressed={task.status === "done"} disabled={!task.title.trim()} onClick={() => status("done")}><Check /></Button>
+          <Button variant="ghost" size="icon" className="size-11" aria-label={`${task.title || "Aufgabe"}: nicht erledigt`} aria-pressed={task.status === "missed"} disabled={!task.title.trim()} onClick={() => status("missed")}><X /></Button>
+        </div>
         <span className="flex w-8 shrink-0 justify-center sm:hidden" aria-label={task.status === "done" ? "Erledigt" : task.status === "missed" ? "Nicht erledigt" : "Unbewertet"}>{task.status === "done" ? <Check className="size-4 text-primary" /> : task.status === "missed" ? <X className="size-4 text-destructive" /> : null}</span>
+        {task.status !== "open" && <span aria-hidden="true" className={cn(comic.className, "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-6 select-none text-4xl tracking-wider opacity-90 transition-opacity [text-shadow:2px_2px_0_#000] group-has-[input:focus]:opacity-20", task.status === "done" ? "text-primary" : "text-red-500")}>{task.status === "done" ? "DONE" : "FAILED"}</span>}
       </div>
     </Reorder.Item>
   )
