@@ -42,7 +42,7 @@ export function PortfolioChart({ data, currency }: { data: DepotData; currency: 
       <CardHeader>
         <CardTitle className="text-xl font-bold tracking-[0] uppercase">Depot-Entwicklung</CardTitle>
         <CardDescription className="text-white/55">
-          {data.lastSyncedAt ? `Gespeichert: ${formatDateTime(data.lastSyncedAt)} · Letzte 6 Monate` : "Starte AI Trader oder aktualisiere die Daten, um den Verlauf zu speichern."}
+          {data.lastSyncedAt ? `Gespeichert: ${formatDateTime(data.lastSyncedAt)} · Letzte 6 Monate` : "Aktualisiere die Depotdaten, um den Verlauf zu speichern."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">

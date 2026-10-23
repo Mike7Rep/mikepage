@@ -22,29 +22,6 @@ export function requiredNumber(value: unknown, label: string) {
   return Number(value)
 }
 
-export function orderQuantity(value: unknown) {
-  const text = String(value).trim().replace(",", ".")
-  if (!/^\d{1,10}(\.\d{1,9})?$/.test(text) || Number(text) <= 0) {
-    throw new Error("Bitte eine positive Stückzahl mit höchstens 9 Nachkommastellen eingeben.")
-  }
-  return text
-}
-
-export function cashAvailable(account: BrokerRecord, orders: BrokerRecord[]) {
-  // Buying power may include margin; cash must also cover existing buy orders.
-  const reserved = orders.filter((order) => order.side === "buy").reduce((sum, order) => {
-    if (order.notional != null) return sum + requiredNumber(order.notional, "Offener Kaufbetrag")
-    const remaining = requiredNumber(order.qty, "Offene Stückzahl") - Number(order.filled_qty ?? 0)
-    const price = Number(order.limit_price ?? order.stop_price ?? 0)
-    return price > 0 ? sum + Math.max(0, remaining) * price : Infinity
-  }, 0)
-  return Math.max(0, Math.min(
-    requiredNumber(account.cash, "Cash") - reserved,
-    requiredNumber(account.buying_power, "Kaufkraft"),
-    requiredNumber(account.non_marginable_buying_power ?? account.buying_power, "Kaufkraft ohne Margin"),
-  ))
-}
-
 export type EquityPoint = { date: string; equity: number; capital: number }
 
 export function equitySeries(history: BrokerRecord, activities: BrokerRecord[], cutoff: string, today: string): EquityPoint[] {
@@ -67,17 +44,4 @@ export function equitySeries(history: BrokerRecord, activities: BrokerRecord[], 
     previous = point.date
     return { ...point, capital }
   })
-}
-
-export function decisionFeedback(previous: { action: string; date: string } | null, bars: { date: string; close: number }[]) {
-  if (!previous) return null
-  // Both ends use the same freshly adjusted series, avoiding split-induced returns.
-  const first = bars.find((bar) => bar.date >= previous.date)
-  const last = bars.at(-1)
-  if (!first || !last || first.date >= last.date || first.close <= 0) return null
-  return {
-    action: previous.action, from: first.date, to: last.date,
-    priceReturnPercent: (last.close / first.close - 1) * 100,
-    note: "Kursentwicklung ab dem ersten Tageskurs nach der Bewertung; keine realisierte Strategie-Rendite und kein Beweis für die Qualität einer langfristigen Entscheidung.",
-  }
 }

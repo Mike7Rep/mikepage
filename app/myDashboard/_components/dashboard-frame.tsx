@@ -51,7 +51,7 @@ function DashboardLogoutButton() {
   )
 }
 
-type DashboardSection = "challenge" | "depot" | "health" | "vermoegen" | "planung"
+type DashboardSection = "depot" | "health" | "vermoegen" | "planung"
 
 function DashboardNavigation({ activeSection }: { activeSection?: DashboardSection }) {
   return (
@@ -61,9 +61,6 @@ function DashboardNavigation({ activeSection }: { activeSection?: DashboardSecti
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "health"} href="/myDashboard/health">
         Health
-      </DashboardNavLink>
-      <DashboardNavLink active={activeSection === "challenge"} href="/myDashboard/challenge">
-        Challenge
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "planung"} href="/myDashboard/planung">
         Planung

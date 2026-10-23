@@ -1,7 +1,7 @@
 import type { Prisma } from "@/app/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
-import { alpacaAccountKey, createAlpacaClient, type DashboardPosition } from "@/lib/python-api"
-import { cashAvailable, equitySeries, requiredNumber, sixMonthsAgo, tradingDate, type BrokerRecord } from "@/lib/depot-calculations"
+import { alpacaAccountKey, createAlpacaClient } from "@/lib/python-api"
+import { equitySeries, requiredNumber, sixMonthsAgo, tradingDate, type BrokerRecord } from "@/lib/depot-calculations"
 
 export function jsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
@@ -17,39 +17,6 @@ export type DepotFill = {
 export type DepotData = {
   points: DepotPoint[]; fills: DepotFill[]; lastSyncedAt: string | null; warnings: string[]
 }
-export type TradingAccount = {
-  accountKey: string; currency: string; cash: number; available: number
-  equity: number; marketOpen: boolean; paper: boolean; canTrade: boolean; blockedReason: string | null
-  positions: DashboardPosition[]
-}
-
-export async function getTradingAccount(): Promise<TradingAccount> {
-  const client = createAlpacaClient()
-  const [account, positions, orders, clock] = await Promise.all([
-    client.getAccount(), client.getPositions(), client.getOrders(), client.getClock(),
-  ])
-  const paper = new URL(process.env.ALPACA_ENDPOINT || "https://api.alpaca.markets").hostname === "paper-api.alpaca.markets"
-  const blockedReason = account.trading_blocked || account.account_blocked || account.trade_suspended_by_user || account.status !== "ACTIVE"
-    ? "Das Alpaca-Konto ist für den Handel gesperrt."
-    : !paper && process.env.ALPACA_ALLOW_LIVE_TRADING !== "true"
-      ? "Live-Handel ist noch nicht freigeschaltet (ALPACA_ALLOW_LIVE_TRADING=true)."
-      : orders.length >= 500 ? "Zu viele offene Orders für eine vollständige Guthabenprüfung." : null
-  return {
-    accountKey: alpacaAccountKey(account), currency: String(account.currency ?? "USD"),
-    cash: requiredNumber(account.cash, "Cash"), available: cashAvailable(account, orders),
-    equity: requiredNumber(account.equity, "Depotwert"), marketOpen: clock.is_open === true,
-    paper, canTrade: !blockedReason, blockedReason,
-    positions: positions.map((position) => ({
-      asset: String(position.symbol), name: String(position.symbol),
-      qty: requiredNumber(position.qty, "Stückzahl"), entryPrice: requiredNumber(position.avg_entry_price, "Einstand"),
-      currentPrice: requiredNumber(position.current_price, "Aktueller Kurs"),
-      marketValue: requiredNumber(position.market_value, "Positionswert"), costBasis: requiredNumber(position.cost_basis, "Einstand"),
-      unrealizedPl: requiredNumber(position.unrealized_pl, "Gewinn/Verlust"),
-      unrealizedPlPercent: requiredNumber(position.unrealized_plpc, "Gewinn/Verlust"),
-    })),
-  }
-}
-
 export async function getDepotData(accountKey: string): Promise<DepotData> {
   const cutoff = sixMonthsAgo()
   const [snapshots, activities] = await Promise.all([
@@ -134,31 +101,6 @@ export async function syncDepot(accountKey: string) {
     await tx.depotSnapshot.deleteMany({ where: { accountKey, date: { lt: cutoff } } })
     await tx.depotActivity.deleteMany({ where: { accountKey, date: { lt: cutoff } } })
     await tx.assetPriceBar.deleteMany({ where: { date: { lt: cutoff } } })
-    const oldRuns = { accountKey, kind: { startsWith: "ai-trader:" }, createdAt: { lt: cutoff } }
-    await tx.review.deleteMany({ where: { run: oldRuns } })
-    await tx.run.deleteMany({ where: oldRuns })
-    await tx.depotOrder.deleteMany({ where: { accountKey, createdAt: { lt: cutoff }, status: { in: ["preview", "filled", "canceled", "expired", "rejected", "replaced"] } } })
   }, { timeout: 60_000 })
   return { symbols: positions.filter((p) => p.asset_class === "us_equity").map((p) => String(p.symbol)).sort(), points: points.length, activities: activities.length }
-}
-
-export async function syncSymbolBars(symbol: string) {
-  const cutoff = sixMonthsAgo()
-  const now = new Date()
-  // Exclude the unfinished current trading day, including the latest 15 minutes.
-  const today = tradingDate(now)
-  const result = await createAlpacaClient().getStockBars([symbol], cutoff.toISOString(), new Date(now.getTime() - 16 * 60_000).toISOString())
-  const bars = (result.bars[symbol] ?? []).map((bar) => ({
-    date: String(bar.t).slice(0, 10),
-    open: requiredNumber(bar.o, "Eröffnungskurs"), high: requiredNumber(bar.h, "Tageshoch"),
-    low: requiredNumber(bar.l, "Tagestief"), close: requiredNumber(bar.c, "Schlusskurs"),
-    volume: requiredNumber(bar.v, "Volumen"),
-  })).filter((bar) => bar.date >= cutoff.toISOString().slice(0, 10) && bar.date < today)
-  if (!bars.length) throw new Error("Keine abgeschlossenen Tageskurse verfügbar.")
-  await prisma.$transaction(bars.map((bar) => {
-    const date = new Date(`${bar.date}T00:00:00Z`)
-    const data = { ...bar, date, source: "alpaca" }
-    return prisma.assetPriceBar.upsert({ where: { symbol_date: { symbol, date } }, create: { symbol, ...data }, update: data })
-  }))
-  return bars
 }

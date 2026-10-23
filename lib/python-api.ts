@@ -219,10 +219,6 @@ export function createAlpacaClient(settings: AlpacaSettings = getSettings()) {
   return {
     getActivities,
     getHistory: (start: string, end: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/account/portfolio/history?${new URLSearchParams({ start, end, timeframe: "1D", cashflow_types: "ALL" })}`),
-    getClock: () => request<JsonRecord>("GET", settings.alpacaEndpoint, "/v2/clock"),
-    getOrders: () => request<JsonRecord[]>("GET", settings.alpacaEndpoint, "/v2/orders?status=open&limit=500"),
-    getOrder: (clientId: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/orders:by_client_order_id?${new URLSearchParams({ client_order_id: clientId })}`),
-    submitOrder: (body: JsonRecord) => request<JsonRecord>("POST", settings.alpacaEndpoint, "/v2/orders", { body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }),
     getAccount: () => request<JsonRecord>("GET", settings.alpacaEndpoint, "/v2/account"),
     getPositions: () => request<JsonRecord[]>("GET", settings.alpacaEndpoint, "/v2/positions"),
     getAsset: (symbolOrId: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/assets/${encodeURIComponent(symbolOrId)}`),

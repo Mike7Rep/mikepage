@@ -104,86 +104,15 @@ later page visits fetch only changes and store them idempotently in Postgres.
 
 ## Database
 
-### Depot and AI Trader
+### Depot
 
-On `/myDashboard/depot`, **Daten aktualisieren** imports Alpaca's daily account
-history and account activities for the last six calendar months. **AI Trader
-starten** performs the same sync and then reviews each held US equity in sequence.
-Symbols reviewed previously but no longer held receive a retrospective review.
-There is no scheduled job: a page visit only reads saved history and current
-account data. Running the workflow again fills in missing daily equity history.
-
-The progress bar reflects completed server steps. Each review is saved before the
-next begins. **Fortsetzen** continues an interrupted workflow; an in-flight step
-can be reclaimed after five minutes if the server stopped responding. Leaving the
-page or pausing stops subsequent steps, while the current server action may finish.
-One failed stock review does not discard other results or the saved portfolio.
-
-Configure these variables on the Railway web service:
-
-```dotenv
-OPENAI_API_KEY=<OpenAI API key>
-OPENAI_MODEL=<model supporting Responses, web_search and Structured Outputs>
-ALPACA_ALLOW_LIVE_TRADING=false
-```
-
-Reviews use the OpenAI Responses API with web research and a strict JSON schema.
-The request sends the relevant position, portfolio weights, available cash,
-adjusted IEX daily bars, and the previous recommendation and price comparison.
-Broker credentials and account identifiers are never sent to OpenAI. Sources,
-the input data, model, output and usage are saved locally, with `store: false` on
-the OpenAI request. API usage is billed separately by the provider.
-This is decision memory with feedback, not reinforcement model training.
-
-The chart has two views:
-
-- **Gesamtdepot**: Alpaca equity including cash; comparison capital begins at the
-  first available equity value and adds subsequent external cash deposits and
-  withdrawals. It is not lifetime cost basis or a time-weighted return. Security
-  transfers and unclassified journals suppress this comparison.
-- **Aktien & Einkauf**: market value and broker cost basis captured together at
-  each manual sync. Historical holdings/cost basis cannot be inferred from equity
-  history, so missing points remain null. No today's basis is copied into the past.
-
-Daily equity uses New York trading dates. Today's point is a current observation;
-past equity points are reconciled from Alpaca on the next sync. Portfolio cash and
-positions share the observation time; saved stock values are not falsely labelled
-as historical closing values. FILL activities (including partial fills and sold
-positions) alone produce buy/sell markers. Recommendations and open orders do not.
-
-Each successful sync removes this account's snapshots, activities and AI review
-runs older than six months, as well as old cached price bars. Reads also filter
-by this window. Inactive periods do not run a cleanup job. Unresolved orders are
-retained until their status is reconciled; terminal order records have the same
-six-month retention. Existing wealth/health and legacy strategy data are untouched.
-
-**Kaufen/Verkaufen** opens a manual, two-step market-order dialog for existing US
-equity positions. A two-minute preview checks the current account, asset,
-available cash and available quantity. Submitting checks them again. Orders use
-`type=market`, `time_in_force=day`, no extended hours, and only submit while the
-regular market is open. Market execution prices are not guaranteed by a preview.
-Cash availability excludes margin purchasing power and reserves pending buys;
-an open market buy with unknown notional conservatively blocks another buy.
-Live orders additionally require `ALPACA_ALLOW_LIVE_TRADING=true` on the server.
-Paper and live accounts are labelled explicitly and stored separately.
-
-Each submitted order has a persistent unique `client_order_id`. An ambiguous
-network response is reconciled using that ID, never blindly submitted again.
-Use **Status aktualisieren** to reconcile orders, and **Daten aktualisieren**
-after fills to update the chart. Open/unresolved dashboard orders block additional
-submissions until reconciled. The AI never calls the order endpoint itself.
-
-Deploy the additive migration `20260909120000_depot_trader` with the existing
-Railway pre-deploy migration command. Do not run it against production merely to
-test locally. `pnpm test` runs pure calculation tests; integration tests require
-an explicitly isolated local database named `depot_test` with migrations applied:
-
-```bash
-DEPOT_TEST_DATABASE_URL=postgresql://<local-test-credentials>@127.0.0.1:<port>/depot_test pnpm test
-```
-
-Integration tests mock every Alpaca and OpenAI request and refuse any other
-network destination. They do not submit real broker orders or incur AI charges.
+`/myDashboard/depot` is a read-only portfolio view: account values, positions,
+asset price charts and portfolio history. There are no AI reviews, trading
+controls or broker order endpoints. **Depotdaten aktualisieren** imports the
+last six months of Alpaca history and account activities using GET requests.
+The portfolio chart compares equity with cash flows, or stock market value with
+recorded cost basis. Existing broker fills are displayed as historical data.
+Legacy AI/order database tables are retained without active application code.
 
 Prisma owns the Postgres schema. Railway runs pending migrations as a pre-deploy
 command before starting the new application version.

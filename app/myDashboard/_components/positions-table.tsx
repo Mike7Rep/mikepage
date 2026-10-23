@@ -31,13 +31,11 @@ export function PositionsTable({
   selectedSymbol,
   onSelect,
   onPrefetch,
-  onTrade,
 }: {
   data: AlpacaDashboardData
   selectedSymbol: string | null
   onSelect: (symbol: string) => void
   onPrefetch?: (symbol: string) => void
-  onTrade: (trade: { symbol: string; side: "buy" | "sell" }) => void
 }) {
   const [sort, setSort] = useState<SortState>(null)
   const positions = useMemo(() => sortPositions(data.positions, sort), [data.positions, sort])
@@ -65,7 +63,6 @@ export function PositionsTable({
           <EmptyPositions />
         ) : (
           <TableRows
-            onTrade={onTrade}
             currency={data.currency}
             onPrefetch={onPrefetch}
             onSelect={onSelect}
@@ -92,7 +89,6 @@ function TableRows({
   setSort,
   onSelect,
   onPrefetch,
-  onTrade,
 }: {
   currency: string
   positions: DashboardPosition[]
@@ -101,7 +97,6 @@ function TableRows({
   setSort: (sort: SortState) => void
   onSelect: (symbol: string) => void
   onPrefetch?: (symbol: string) => void
-  onTrade: (trade: { symbol: string; side: "buy" | "sell" }) => void
 }) {
   return (
     <Table className="block min-w-0 text-white md:table md:min-w-[820px]">
@@ -112,7 +107,6 @@ function TableRows({
               <SortButton column={column} index={index} setSort={setSort} sort={sort} />
             </TableHead>
           ))}
-          <TableHead className="text-right text-white/45">Handeln</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody className="flex flex-col gap-2 px-3 md:table-row-group md:px-0">
@@ -144,12 +138,6 @@ function TableRows({
               <Badge variant={position.unrealizedPl < 0 ? "destructive" : "default"}>
                 {formatPercent(position.unrealizedPlPercent)}
               </Badge>
-            </TableCell>
-            <TableCell className="col-span-2 p-0 md:p-2" onClick={(event) => event.stopPropagation()}>
-              <div className="flex justify-end gap-1">
-                <Button size="sm" variant="outline" aria-label={`${position.asset} kaufen`} onClick={() => onTrade({ symbol: position.asset, side: "buy" })}>Kaufen</Button>
-                <Button size="sm" variant="outline" aria-label={`${position.asset} verkaufen`} onClick={() => onTrade({ symbol: position.asset, side: "sell" })}>Verkaufen</Button>
-              </div>
             </TableCell>
           </TableRow>
         ))}

@@ -14,10 +14,8 @@ import {
   recordFailedDashboardLogin,
   validateDashboardLogin,
 } from "@/lib/dashboard-auth"
-import { getAssetChart } from "@/lib/python-api"
-import { getDepotData, getTradingAccount } from "@/lib/depot-data"
-import { advanceTrader, getTraderState, startTrader } from "@/lib/depot-trader"
-import { getDepotOrders, previewOrder, refreshDepotOrders, submitMarketOrder } from "@/lib/depot-orders"
+import { alpacaAccountKey, createAlpacaClient, getAssetChart } from "@/lib/python-api"
+import { getDepotData, syncDepot } from "@/lib/depot-data"
 import {
   deleteHealthEntry,
   getHealthEntries,
@@ -33,11 +31,7 @@ import {
   getGoogleHealthStatus,
   syncGoogleHealthData,
 } from "@/lib/google-health"
-import {
-  createPullUpChallenge,
-  incrementPullUps,
-  parsePullUpChallengeForm,
-} from "@/lib/pull-up-data"
+
 import { getWithingsStatus, syncWithingsData } from "@/lib/withings"
 import {
   deleteWealthSnapshot,
@@ -225,30 +219,6 @@ export async function syncWithingsAction() {
   }
 }
 
-export async function incrementPullUpsAction(amount: number) {
-  await requireDashboardSession()
-
-  if (!Number.isInteger(amount) || amount <= 0 || amount > 1_000) {
-    throw new Error("Pullups konnten nicht gespeichert werden.")
-  }
-
-  const entry = await incrementPullUps(amount)
-  updateTag("dashboard:pull-ups")
-  revalidatePath("/myDashboard/challenge")
-
-  return { count: entry.count }
-}
-
-export async function createPullUpChallengeAction(formData: FormData) {
-  await requireDashboardSession()
-
-  const challenge = await createPullUpChallenge(parsePullUpChallengeForm(formData))
-  updateTag("dashboard:pull-ups")
-  revalidatePath("/myDashboard/challenge")
-
-  return { id: challenge.id }
-}
-
 async function requireDashboardSession() {
   const status = await getDashboardSessionStatus()
 
@@ -273,50 +243,17 @@ async function depotAction<T>(work: () => Promise<T>) {
   }
 }
 
-export async function getDepotWorkspaceAction() {
+export async function getDepotHistoryAction(refresh = false) {
   return depotAction(async () => {
-    const account = await getTradingAccount()
-    const [depot, trader, orders] = await Promise.all([getDepotData(account.accountKey), getTraderState(account.accountKey), getDepotOrders(account.accountKey)])
-    return { account, depot, trader, orders }
-  })
-}
-
-export async function startTraderAction(analyze: boolean) {
-  return depotAction(async () => {
-    if (typeof analyze !== "boolean") throw new Error("Ungültiger Analyse-Modus.")
-    return startTrader(analyze)
-  })
-}
-
-export async function advanceTraderAction(runId: number) {
-  return depotAction(async () => {
-    if (!Number.isSafeInteger(runId) || runId <= 0) throw new Error("Ungültiger Analyse-Lauf.")
-    const state = await advanceTrader(runId)
-    updateTag("dashboard:portfolio")
-    updateTag("dashboard:asset-chart")
-    return state
-  })
-}
-
-export async function previewDepotOrderAction(symbol: string, side: "buy" | "sell", qty: string) {
-  return depotAction(() => previewOrder(symbol, side, qty))
-}
-
-export async function submitDepotOrderAction(id: string) {
-  return depotAction(async () => {
-    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error("Ungültige Order-ID.")
-    const orders = await submitMarketOrder(id)
-    updateTag("dashboard:portfolio")
-    updateTag("dashboard:asset-chart")
-    return orders
-  })
-}
-
-export async function refreshDepotOrdersAction() {
-  return depotAction(async () => {
-    const data = await refreshDepotOrders()
-    updateTag("dashboard:portfolio")
-    return data
+    if (typeof refresh !== "boolean") throw new Error("Ungültige Anfrage.")
+    const account = await createAlpacaClient().getAccount()
+    const accountKey = alpacaAccountKey(account)
+    if (refresh) {
+      await syncDepot(accountKey)
+      updateTag("dashboard:portfolio")
+      updateTag("dashboard:asset-chart")
+    }
+    return getDepotData(accountKey)
   })
 }
 
