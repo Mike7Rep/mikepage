@@ -53,9 +53,9 @@ export function PortfolioChart({ data, currency }: { data: DepotData; currency: 
           </ToggleGroup>
           <ChartRangeToggle range={range} onRangeChange={setRange} options={ranges} />
         </div>
-        <div className={dashboardChartClassName}>
+        <div className={`relative ${dashboardChartClassName}`}>
           {rows.length ? (
-            <ChartContainer config={config} className="size-full min-h-0 aspect-auto">
+            <ChartContainer config={config} className="absolute inset-0 size-full min-h-0 aspect-auto">
               <ComposedChart accessibilityLayer data={rows} margin={{ top: 35, right: 22, bottom: 15, left: 0 }}>
                 <defs><linearGradient id="depot-value-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="var(--color-value)" stopOpacity={0.35} /><stop offset="100%" stopColor="var(--color-value)" stopOpacity={0.03} /></linearGradient></defs>
                 <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.08)" />
