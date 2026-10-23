@@ -32,10 +32,10 @@ export function carryPlanningTasks(tasks: PlanningTask[]): PlanningTask[] {
   return tasks.map((task) => ({ ...task, title: task.status === "done" ? "" : task.title, status: "open" }))
 }
 
-export function validatePlanningTasks(value: unknown): PlanningTask[] {
+export function validatePlanningTasks(value: unknown, maxLength = 100): PlanningTask[] {
   if (!Array.isArray(value) || value.length !== 11) throw new Error("Es braucht genau elf Aufgabenplätze.")
   const tasks = value.map((task: PlanningTask) => {
-    if (!task || typeof task.id !== "string" || !/^([0-9]|10)$/.test(task.id) || typeof task.title !== "string" || task.title.trim().length > 200 || !["open", "done", "missed"].includes(task.status)) throw new Error("Ungültige Aufgabe.")
+    if (!task || typeof task.id !== "string" || !/^([0-9]|10)$/.test(task.id) || typeof task.title !== "string" || task.title.trim().length > maxLength || !["open", "done", "missed"].includes(task.status)) throw new Error("Ungültige Aufgabe.")
     const title = task.title.trim()
     return { id: task.id, title, status: title ? task.status : "open" as const }
   })

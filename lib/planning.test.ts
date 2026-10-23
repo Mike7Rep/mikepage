@@ -37,9 +37,14 @@ test("reject malformed slots and normalize cleared tasks", () => {
   const clean = emptyPlanningTasks()
   clean[0].status = "done"
   assert.equal(validatePlanningTasks(clean)[0].status, "open")
+  clean[0].title = "a".repeat(100)
+  assert.equal(validatePlanningTasks(clean)[0].title.length, 100)
+  clean[0].title += "a"
+  assert.throws(() => validatePlanningTasks(clean))
+  assert.equal(validatePlanningTasks(clean, 200)[0].title.length, 101)
 })
 
-test("persist, Sunday review, concurrent edits, rollover and paginated history", { skip: !process.env.PLANNING_TEST_DATABASE_URL }, async (t) => {
+test("persist, weekday review, concurrent edits, Sunday deadline and paginated history", { skip: !process.env.PLANNING_TEST_DATABASE_URL }, async (t) => {
   const url = new URL(process.env.PLANNING_TEST_DATABASE_URL!)
   assert.ok(["127.0.0.1", "localhost"].includes(url.hostname) && url.pathname === "/planning_test")
   process.env.DATABASE_URL = url.toString()
@@ -55,11 +60,14 @@ test("persist, Sunday review, concurrent edits, rollover and paginated history",
     tasks[2].title = "Forgot"
     data = await getPlanningDashboard(1, { week: data.week, version: data.version, tasks })
     const rated = tasks.map((task, i) => ({ ...task, status: i === 0 ? "done" : i === 1 ? "missed" : "open" }))
-    await assert.rejects(getPlanningDashboard(1, { week: data.week, version: data.version, tasks: rated }), /Sonntag/)
-    t.mock.timers.setTime(new Date("2026-10-25T12:00:00Z").getTime())
     const results = await Promise.allSettled([getPlanningDashboard(1, { week: data.week, version: data.version, tasks: rated }), getPlanningDashboard(1, { week: data.week, version: data.version, tasks: rated })])
     assert.equal(results.filter((result) => result.status === "fulfilled").length, 1)
-    t.mock.timers.setTime(new Date("2026-10-26T12:00:00Z").getTime())
+    const beforeDeadline = await getPlanningDashboard()
+    assert.equal(beforeDeadline.history.length, 0)
+    assert.equal(beforeDeadline.tasks[0].status, "done")
+    t.mock.timers.setTime(new Date("2026-10-25T22:59:59Z").getTime())
+    assert.equal((await getPlanningDashboard()).history.length, 0)
+    t.mock.timers.setTime(new Date("2026-10-25T23:00:00Z").getTime())
     const [first, second] = await Promise.all([getPlanningDashboard(), getPlanningDashboard()])
     assert.equal(first.history[0].score, 11)
     assert.equal(first.history[0].total, 11)

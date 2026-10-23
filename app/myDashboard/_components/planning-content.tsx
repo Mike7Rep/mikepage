@@ -1,67 +1,101 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Check, GripVertical, Move, Plus } from "lucide-react"
+import { Reorder, useDragControls, useReducedMotion } from "framer-motion"
+import { Check, X } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { planningScore, planningWeekLabel, type PlanningTask } from "@/lib/planning"
+import { planningWeekLabel, type PlanningTask } from "@/lib/planning"
 import type { PlanningDashboard } from "@/lib/planning-data"
 import { cn } from "@/lib/utils"
 import { planningAction } from "../planung/actions"
 
 export function PlanningContent({ initial }: { initial: PlanningDashboard }) {
   const [data, setData] = useState(initial)
+  const [tasks, setTasks] = useState(initial.tasks)
+  const current = useRef(initial)
+  const draft = useRef(initial.tasks)
+  const pending = useRef<PlanningTask[] | null>(null)
+  const saving = useRef<Promise<boolean> | null>(null)
+  const blocked = useRef(false)
   const [busy, setBusy] = useState(false)
-  const saving = useRef(false)
-  const [message, setMessage] = useState("")
-  const [failed, setFailed] = useState(false)
-  const [editing, setEditing] = useState<PlanningTask | null>(null)
+  const [error, setError] = useState("")
   const [moving, setMoving] = useState<string | null>(null)
-  const drag = useRef<{ id: string; y: number; moved: boolean } | null>(null)
-  const [dragTarget, setDragTarget] = useState<number | null>(null)
 
-  async function persist(tasks?: PlanningTask[], page = data.page) {
-    if (saving.current) return false
-    saving.current = true
-    setBusy(true)
-    setFailed(false)
-    setMessage(tasks ? "Wird gespeichert …" : "Wird geladen …")
-    try {
-      const result = await planningAction(page, tasks ? { week: data.week, version: data.version, tasks } : undefined)
-      if (!result.ok) throw new Error(result.error)
-      setData(result.data)
-      setMessage(tasks ? "Gespeichert." : "Aktualisiert.")
-      return true
-    } catch (error) {
-      setFailed(true)
-      setMessage(error instanceof Error ? error.message : "Verbindung fehlgeschlagen. Bitte erneut versuchen.")
-      return false
-    } finally {
-      saving.current = false
-      setBusy(false)
+  // Serialize autosaves so typing, status changes and sorting cannot overwrite each other.
+  function flush(): Promise<boolean> {
+    if (saving.current) return saving.current
+    if (blocked.current) return Promise.resolve(false)
+    saving.current = (async () => {
+      setBusy(true)
+      try {
+        while (pending.current) {
+          const snapshot = pending.current
+          pending.current = null
+          const result = await planningAction(current.current.page, { week: current.current.week, version: current.current.version, tasks: snapshot })
+          if (!result.ok) throw new Error(result.error)
+          current.current = result.data
+          setData(result.data)
+        }
+        setError("")
+        return true
+      } catch (reason) {
+        pending.current = draft.current
+        blocked.current = true
+        setError(reason instanceof Error ? reason.message : "Nicht gespeichert. Bitte erneut versuchen.")
+        return false
+      } finally { setBusy(false) }
+    })().finally(() => { saving.current = null })
+    return saving.current
+  }
+
+  function update(next: PlanningTask[], save = false) {
+    draft.current = next
+    setTasks(next)
+    if (save) {
+      pending.current = next.map((task) => ({ ...task, title: task.title.trim(), status: task.title.trim() ? task.status : "open" }))
+      void flush()
     }
   }
 
-  async function move(id: string, target: number) {
-    const source = data.tasks.findIndex((task) => task.id === id)
-    setMoving(null)
-    if (source < 0 || source === target || target < 0 || target > 10) return
-    const tasks = [...data.tasks]
-    const [task] = tasks.splice(source, 1)
-    tasks.splice(target, 0, task)
-    await persist(tasks)
+  function change(id: string, patch: Partial<PlanningTask>, save = true) {
+    update(draft.current.map((task) => task.id === id ? { ...task, ...patch } : task), save)
   }
 
-  const assigned = data.tasks.reduce((sum, task, i) => sum + (task.title ? 12 - i : 0), 0)
+  function move(id: string, index: number) {
+    setMoving(null)
+    const next = [...draft.current]
+    const from = next.findIndex((task) => task.id === id)
+    if (from < 0 || index < 0 || index > 10 || from === index) return
+    next.splice(index, 0, next.splice(from, 1)[0])
+    update(next, true)
+  }
+
+  async function load(page = data.page, discard = false) {
+    if (!discard && !(await flush())) return
+    setBusy(true)
+    try {
+      const result = await planningAction(page)
+      if (!result.ok) throw new Error(result.error)
+      current.current = result.data
+      setData(result.data)
+      update(result.data.tasks)
+      pending.current = null
+      blocked.current = false
+      setMoving(null)
+      setError("")
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Laden fehlgeschlagen.")
+    } finally { setBusy(false) }
+  }
+
+  const deadline = new Date(`${data.week}T00:00:00Z`)
+  deadline.setUTCDate(deadline.getUTCDate() + 6)
+  const deadlineLabel = new Intl.DateTimeFormat("de-CH", { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(deadline)
   const chart = data.chart.map((row) => ({ ...row, label: planningWeekLabel(row.week) }))
-  const editingIndex = data.tasks.findIndex((task) => task.id === editing?.id)
 
   return (
     <div className="flex min-w-0 flex-col gap-5 sm:gap-8">
@@ -86,89 +120,111 @@ export function PlanningContent({ initial }: { initial: PlanningDashboard }) {
           </> : <div className="flex h-48 flex-col items-center justify-center gap-2 text-center"><p>Deine erste Woche beginnt hier.</p><p className="text-sm text-muted-foreground">Ab Montag erscheint dein erster Wochenabschluss.</p></div>}
         </CardContent>
       </Card>
-
       <Card className="bg-white/[0.035] text-white">
         <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex flex-col gap-2"><CardTitle className="text-xl font-bold uppercase">Planung</CardTitle><CardDescription>{planningWeekLabel(data.week)} · {assigned}/77 Punkte verteilt</CardDescription></div>
-            <span className="text-2xl font-semibold tabular-nums">{planningScore(data.tasks, false)}<span className="ml-1 text-sm text-muted-foreground">Punkte</span></span>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <CardTitle className="text-xl font-bold uppercase">Planung</CardTitle>
+            <CardDescription>{planningWeekLabel(data.week)} · bis So, {deadlineLabel}</CardDescription>
           </div>
-          <p className="text-sm leading-6 text-muted-foreground">Antippen zum Bearbeiten. Am Griff ziehen oder mit „Verschieben“ einen Zielplatz antippen. Oben zählt mehr.</p>
-          <p className="text-sm leading-6 text-muted-foreground">{data.sunday ? "Heute bewerten: erledigt = Punkte, nicht erledigt = 0. Unbewertet = −1 ab Montag." : "Am Sonntag bewerten. Unbewertete Aufgaben kosten ab Montag je 1 Punkt."} Nicht erledigte Aufgaben kommen nächste Woche wieder. Leere Plätze kosten nichts.</p>
-          <div aria-live="polite" className={cn("min-h-6 text-sm", failed ? "text-destructive" : "text-muted-foreground")}>
-            {moving ? "Zielplatz antippen oder mit den Pfeiltasten verschieben." : message}
-          </div>
-          {moving ? <Button variant="outline" onClick={() => setMoving(null)}>Verschieben abbrechen</Button> : null}
-          {failed ? <Button variant="outline" disabled={busy} onClick={() => void persist()}>Aktuellen Stand neu laden</Button> : null}
+          <p className="text-xs text-muted-foreground sm:hidden">Punkte antippen zum Verschieben · rechts ✓ · links ✕</p>
+          <span className="sr-only" role="status">{busy ? "Wird gespeichert oder geladen." : error ? "Nicht gespeichert." : "Gespeichert."}</span>
+          {moving ? <button className="text-left text-xs text-primary" onClick={() => setMoving(null)}>Zielpunktzahl antippen · Abbrechen</button> : null}
+          {error ? <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive"><span>{error}</span><Button variant="outline" disabled={busy} onClick={() => { blocked.current = false; void flush() }}>Erneut speichern</Button><Button variant="ghost" disabled={busy} onClick={() => void load(data.page, true)}>Neu laden</Button></div> : null}
         </CardHeader>
         <CardContent className="px-3 sm:px-6">
-          <ol className="flex flex-col gap-2" aria-label="Aufgaben nach Punkten">
-            {data.tasks.map((task, index) => (
-              <li key={task.id} data-planning-slot={index} className={cn("flex min-h-20 items-stretch gap-1 rounded-lg border border-white/10", (moving === task.id || dragTarget === index) && "ring-2 ring-primary")}
-                style={{ background: `color-mix(in oklch, var(--primary) ${18 - index}%, black)` }}>
-                <Button variant="ghost" className="h-auto min-h-20 w-11 shrink-0 touch-none cursor-grab" aria-label={`${task.title || "Leerer Platz"} ziehen oder verschieben`} disabled={busy}
-                  onClick={(event) => { if (event.detail === 0 || !drag.current?.moved) setMoving(moving === task.id ? null : task.id) }}
-                  onKeyDown={(event) => {
-                    if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); void move(task.id, index + (event.key === "ArrowUp" ? -1 : 1)) }
-                    if (event.key === "Escape") setMoving(null)
-                  }}
-                  onPointerDown={(event) => { if (event.button !== 0) return; drag.current = { id: task.id, y: event.clientY, moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }}
-                  onPointerMove={(event) => {
-                    if (!drag.current || !event.currentTarget.hasPointerCapture(event.pointerId)) return
-                    if (Math.abs(event.clientY - drag.current.y) > 6) drag.current.moved = true
-                    if (!drag.current.moved) return
-                    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-planning-slot]")
-                    setDragTarget(target ? Number(target.dataset.planningSlot) : null)
-                    if (event.clientY > window.innerHeight - 70) window.scrollBy(0, 14)
-                    if (event.clientY < 70) window.scrollBy(0, -14)
-                  }}
-                  onPointerUp={(event) => {
-                    const current = drag.current
-                    if (current?.moved) {
-                      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-planning-slot]")
-                      if (target) void move(current.id, Number(target.dataset.planningSlot))
-                    }
-                    setDragTarget(null)
-                  }}
-                  onPointerCancel={() => { drag.current = null; setDragTarget(null) }}>
-                  <GripVertical />
-                </Button>
-                <button type="button" disabled={busy} className="flex min-h-20 min-w-0 flex-1 items-center gap-3 rounded-md pr-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50" onClick={() => moving ? void move(moving, index) : setEditing({ ...task })}>
-                  <span className="w-8 shrink-0 text-center text-2xl font-bold tabular-nums text-primary">{12 - index}</span>
-                  <span className="flex min-w-0 flex-1 flex-col gap-1 py-3"><span className={cn("break-words text-sm font-medium sm:text-base", !task.title && "text-muted-foreground")}>{task.title || "Aufgabe hinzufügen"}</span>{task.title ? <span className="text-xs text-muted-foreground">{task.status === "done" ? "Erledigt" : task.status === "missed" ? "Nicht erledigt" : "Noch unbewertet"}</span> : null}</span>
-                  {task.status === "done" ? <Check className="size-5 shrink-0 text-primary" /> : !task.title ? <Plus className="size-4 shrink-0 text-muted-foreground" /> : null}
-                </button>
-              </li>
-            ))}
-          </ol>
+          <Reorder.Group as="ol" axis="y" values={tasks.map((task) => task.id)} onReorder={(ids) => update(ids.map((id) => draft.current.find((task) => task.id === id)!))} className="flex flex-col gap-2" aria-label="Wochenaufgaben">
+            {tasks.map((task, index) => <PlanningRow key={task.id} task={task} points={12 - index} selected={moving === task.id}
+              onPoint={() => moving ? move(moving, index) : setMoving(task.id)}
+              onMove={(direction) => move(task.id, index + direction)}
+              onChange={(patch, save) => change(task.id, patch, save)}
+              onDrop={() => { setMoving(null); update(draft.current, true) }} />)}
+          </Reorder.Group>
         </CardContent>
       </Card>
-
       <Card className="bg-white/[0.035] text-white">
-        <CardHeader><CardTitle className="text-xl font-bold uppercase">Letzte Wochen</CardTitle><CardDescription>Gesamt = aufaddierte Wochenpunkte</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="text-xl font-bold uppercase">Letzte Wochen</CardTitle></CardHeader>
         <CardContent>
           <Table>
             <TableHeader><TableRow><TableHead>KW</TableHead><TableHead className="text-right">Punkte</TableHead><TableHead className="text-right">Gesamt</TableHead></TableRow></TableHeader>
             <TableBody>{data.history.length ? data.history.map((row) => <TableRow key={row.week}><TableCell>{planningWeekLabel(row.week)}</TableCell><TableCell className="text-right tabular-nums">{row.score}</TableCell><TableCell className="text-right tabular-nums">{row.total}</TableCell></TableRow>) : <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground">Noch keine abgeschlossenen Wochen.</TableCell></TableRow>}</TableBody>
           </Table>
-          <nav aria-label="Wochenhistorie" className="mt-4 flex items-center justify-between gap-2"><Button className="min-h-11" variant="outline" disabled={busy || data.page <= 1} onClick={() => void persist(undefined, data.page - 1)}>Zurück</Button><span className="text-sm text-muted-foreground">{data.page} / {data.pageCount}</span><Button className="min-h-11" variant="outline" disabled={busy || data.page >= data.pageCount} onClick={() => void persist(undefined, data.page + 1)}>Weiter</Button></nav>
+          {data.pageCount > 1 ? <nav aria-label="Wochenhistorie" className="mt-4 flex items-center justify-between gap-2"><Button className="min-h-11" variant="outline" disabled={busy || data.page <= 1} onClick={() => void load(data.page - 1)}>Zurück</Button><span className="text-sm text-muted-foreground">{data.page} / {data.pageCount}</span><Button className="min-h-11" variant="outline" disabled={busy || data.page >= data.pageCount} onClick={() => void load(data.page + 1)}>Weiter</Button></nav> : null}
         </CardContent>
       </Card>
-
-      <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !busy) setEditing(null) }}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto border-white/10 bg-black text-white sm:max-w-md">
-          <DialogHeader><DialogTitle>Aufgabe · {12 - editingIndex} Punkte</DialogTitle><DialogDescription>Die Position bestimmt deine Punkte. Du kannst die Aufgabe während der Woche ändern.</DialogDescription></DialogHeader>
-          {editing ? <form className="flex flex-col gap-5" onSubmit={async (event) => { event.preventDefault(); if (await persist(data.tasks.map((task) => task.id === editing.id ? editing : task))) setEditing(null) }}>
-            <FieldGroup><Field><FieldLabel htmlFor="planning-title">Deine Aufgabe</FieldLabel><Input id="planning-title" autoFocus maxLength={200} value={editing.title} disabled={busy} placeholder="Was möchtest du diese Woche schaffen?" onChange={(event) => setEditing({ ...editing, title: event.target.value })} /></Field>
-              <Field><FieldLabel>Bewertung am Sonntag</FieldLabel><ToggleGroup type="single" variant="outline" value={editing.status} disabled={busy || !data.sunday || !editing.title.trim()} onValueChange={(status) => { if (status) setEditing({ ...editing, status: status as PlanningTask["status"] }) }} className="w-full flex-wrap"><ToggleGroupItem className="min-h-11 flex-1" value="open">Offen</ToggleGroupItem><ToggleGroupItem className="min-h-11 flex-1" value="done">Erledigt</ToggleGroupItem><ToggleGroupItem className="min-h-11 flex-1" value="missed">Nicht erledigt</ToggleGroupItem></ToggleGroup></Field>
-            </FieldGroup>
-            {failed ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
-            <div className="flex gap-2"><Button type="button" variant="outline" className="min-h-11 flex-1" disabled={busy} onClick={async () => { if (await persist(data.tasks.map((task) => task.id === editing.id ? editing : task))) { setMoving(editing.id); setEditing(null) } }}><Move />Verschieben</Button></div>
-            <DialogFooter><Button type="button" variant="ghost" disabled={busy} onClick={() => setEditing(null)}>Abbrechen</Button><Button type="submit" className="min-h-11" disabled={busy}>{busy ? "Speichert …" : "Speichern"}</Button></DialogFooter>
-            <p className="text-xs text-muted-foreground">Zum Leeren den Aufgabentext entfernen und speichern.</p>
-          </form> : null}
-        </DialogContent>
-      </Dialog>
     </div>
+  )
+}
+
+function PlanningRow({ task, points, selected, onPoint, onMove, onChange, onDrop }: {
+  task: PlanningTask; points: number; selected: boolean
+  onPoint: () => void; onMove: (direction: number) => void
+  onChange: (patch: Partial<PlanningTask>, save?: boolean) => void; onDrop: () => void
+}) {
+  const controls = useDragControls()
+  const reducedMotion = useReducedMotion()
+  const dragged = useRef(false)
+  const swipe = useRef<{ x: number; y: number; active: boolean } | null>(null)
+  const [offset, setOffset] = useState(0)
+  const suppressClick = useRef(false)
+  const status = (value: PlanningTask["status"]) => {
+    if (task.title.trim()) onChange({ status: task.status === value ? "open" : value })
+  }
+
+  return (
+    <Reorder.Item value={task.id} dragListener={false} dragControls={controls} data-task-id={task.id} data-points={points} data-status={task.status}
+      className="relative" transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38 }}
+      whileDrag={{ scale: 1.02, boxShadow: "0 12px 28px #0008" }}
+      onDragStart={() => { dragged.current = true }} onDragEnd={onDrop}>
+      <div className={cn("flex min-h-20 items-center rounded-lg border border-white/10 bg-white/[0.025] transition-colors", selected && "ring-2 ring-primary", task.status === "done" && "border-primary/20 bg-primary/10", task.status === "missed" && "border-destructive/20 bg-destructive/10")}
+        style={{ transform: `translateX(${offset}px)` }}
+        onPointerDownCapture={(event) => {
+          suppressClick.current = false
+          if ((event.pointerType !== "touch" && window.matchMedia("(min-width: 640px)").matches) || (event.target instanceof HTMLTextAreaElement && document.activeElement === event.target) || (event.target as HTMLElement).closest("button")) return
+          swipe.current = { x: event.clientX, y: event.clientY, active: false }
+        }}
+        onPointerMoveCapture={(event) => {
+          const start = swipe.current
+          if (!start) return
+          const x = event.clientX - start.x, y = event.clientY - start.y
+          if (!start.active && Math.abs(y) > 12 && Math.abs(y) > Math.abs(x)) { swipe.current = null; return }
+          if (Math.abs(x) > 16 && Math.abs(x) > Math.abs(y) * 1.5) {
+            start.active = true
+            event.currentTarget.setPointerCapture(event.pointerId)
+            setOffset(Math.max(-80, Math.min(80, x)))
+          }
+        }}
+        onPointerUpCapture={(event) => {
+          const start = swipe.current
+          if (start?.active) {
+            suppressClick.current = true
+            if (document.activeElement instanceof HTMLTextAreaElement) document.activeElement.blur()
+            const distance = event.clientX - start.x
+            if (Math.abs(distance) >= 55) status(distance > 0 ? "done" : "missed")
+            event.preventDefault()
+          }
+          swipe.current = null
+          setOffset(0)
+        }}
+        onPointerCancel={() => { swipe.current = null; setOffset(0) }}
+        onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false } }}>
+        <div className="hidden shrink-0 pl-1 sm:flex">
+          <Button variant="ghost" size="icon" className="size-11" aria-label={`${task.title || "Aufgabe"}: erledigt`} aria-pressed={task.status === "done"} disabled={!task.title.trim()} onClick={() => status("done")}><Check /></Button>
+          <Button variant="ghost" size="icon" className="size-11" aria-label={`${task.title || "Aufgabe"}: nicht erledigt`} aria-pressed={task.status === "missed"} disabled={!task.title.trim()} onClick={() => status("missed")}><X /></Button>
+        </div>
+        <button type="button" className="flex min-h-20 w-12 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-xl font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing" aria-label={`${points} Punkte, Aufgabe verschieben`} aria-pressed={selected}
+          onPointerDown={(event) => { dragged.current = false; if (event.pointerType === "mouse" && event.button === 0 && window.matchMedia("(min-width: 640px)").matches) controls.start(event) }}
+          onClick={() => { if (!dragged.current) onPoint() }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); onMove(event.key === "ArrowUp" ? -1 : 1) }
+            if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); status(event.key === "ArrowRight" ? "done" : "missed") }
+          }}>{points}</button>
+        <textarea aria-label={`Aufgabe mit ${points} Punkten`} maxLength={100} rows={2} value={task.title} placeholder="Aufgabe …"
+          className={cn("min-h-16 min-w-0 flex-1 resize-none touch-pan-y rounded-md bg-transparent px-2 py-2 text-base leading-6 outline-none placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary", task.status !== "open" && "text-muted-foreground", task.status === "done" && "line-through decoration-primary/40")}
+          onChange={(event) => onChange({ title: event.target.value }, false)}
+          onBlur={(event) => onChange({ title: event.target.value.trim(), status: event.target.value.trim() ? task.status : "open" })}
+          onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.blur() } }} />
+        <span className="flex w-8 shrink-0 justify-center sm:hidden" aria-label={task.status === "done" ? "Erledigt" : task.status === "missed" ? "Nicht erledigt" : "Unbewertet"}>{task.status === "done" ? <Check className="size-4 text-primary" /> : task.status === "missed" ? <X className="size-4 text-destructive" /> : null}</span>
+      </div>
+    </Reorder.Item>
   )
 }

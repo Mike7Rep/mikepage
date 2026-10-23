@@ -172,8 +172,11 @@ Then log in to `/myDashboard` and verify Vermögen, Health and Depot.
 ## Weekly planning
 
 `/myDashboard/planung` provides eleven task slots ranked from 12 to 2 points
-(77 total). Tasks can be edited and reordered throughout the week. Reviews are
-available on Sunday in Europe/Zurich: done earns the slot points, missed earns
+(77 total). Tasks are edited inline (max. 100 characters) and saved on blur or Enter.
+Desktop: check/cross to review, drag the point value to reorder with a live
+preview. Mobile: tap a point value and its destination to reorder; swipe right
+for done or left for missed. Tapping the same status again resets it.
+Reviews are available all week; settlement happens after Sunday in Europe/Zurich: done earns the slot points, missed earns
 zero, and an unreviewed named task costs one point at the next week boundary.
 Empty slots have no penalty. Unfinished tasks carry forward with their rank and
 can be edited again; completed tasks leave an empty slot.
