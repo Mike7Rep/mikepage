@@ -51,11 +51,11 @@ function DashboardLogoutButton() {
   )
 }
 
-type DashboardSection = "challenge" | "depot" | "health" | "vermoegen"
+type DashboardSection = "challenge" | "depot" | "health" | "vermoegen" | "planung"
 
 function DashboardNavigation({ activeSection }: { activeSection?: DashboardSection }) {
   return (
-    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-full max-w-md rounded-lg bg-white/[0.055] p-1">
+    <nav aria-label="myDashboard Navigation" className="mt-5 flex w-full max-w-lg rounded-lg bg-white/[0.055] p-1">
       <DashboardNavLink active={activeSection === "vermoegen"} href="/myDashboard/vermoegen">
         Vermögen
       </DashboardNavLink>
@@ -64,6 +64,9 @@ function DashboardNavigation({ activeSection }: { activeSection?: DashboardSecti
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "challenge"} href="/myDashboard/challenge">
         Challenge
+      </DashboardNavLink>
+      <DashboardNavLink active={activeSection === "planung"} href="/myDashboard/planung">
+        Planung
       </DashboardNavLink>
       <DashboardNavLink active={activeSection === "depot"} href="/myDashboard/depot">
         Depot

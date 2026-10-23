@@ -303,3 +303,14 @@ model DepotOrder {
   @@index([accountKey, createdAt])
   @@map("depot_orders")
 }
+
+model PlanningWeek {
+  week      String   @id
+  tasks     Json
+  score     Int?
+  total     Int?
+  version   Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("planning_weeks")
+}
