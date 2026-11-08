@@ -4,7 +4,7 @@ import { DashboardFrame } from "./dashboard-frame"
 export function DashboardLoadingFrame({
   activeSection,
 }: {
-  activeSection?: "depot" | "health" | "vermoegen" | "planung"
+  activeSection?: "depot" | "health" | "vermoegen"
 }) {
   return (
     <DashboardFrame activeSection={activeSection}>

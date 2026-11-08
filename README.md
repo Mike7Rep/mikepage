@@ -168,29 +168,3 @@ curl https://www.michael-repolusk.com/health
 ```
 
 Then log in to `/myDashboard` and verify Vermögen, Health and Depot.
-
-## Weekly planning
-
-`/myDashboard/planung` provides eleven task slots ranked from 12 to 2 points
-(77 total). Tasks are edited inline (max. 100 characters) and saved on blur or Enter.
-Desktop: check/cross to review, drag the point value to reorder with a live
-preview. Mobile: tap a point value and its destination to reorder; swipe right
-for done or left for missed. Tapping the same status again resets it.
-Reviews are available all week; settlement happens after Sunday in Europe/Zurich: done earns the slot points, missed earns
-zero, and an unreviewed named task costs one point at the next week boundary.
-Empty slots have no penalty. Unfinished tasks carry forward with their rank and
-can be edited again; completed tasks leave an empty slot.
-
-On the first request after a week boundary, a database transaction closes all
-elapsed weeks and creates the current week. This also handles several weeks
-without visits, so carried tasks left unreviewed lose one point each elapsed
-week. No scheduled job is required. Closed weeks cannot be edited. The area chart shows only cumulative points, without point markers, and
-loads the latest 26 summaries; history fetches ten rows per page. Total is the
-cumulative score. Concurrent edits are rejected with a reload prompt.
-
-The migration `20261023120000_weekly_planning` must run before using this route
-(Railway's existing pre-deploy migration step handles deployment). Test database
-rollover, concurrency and pagination with `PLANNING_TEST_DATABASE_URL` pointing
-to an isolated localhost database named `planning_test`, then run
-`pnpm exec tsx --test lib/planning.test.ts`. The integration test clears that
-test database's planning table.
