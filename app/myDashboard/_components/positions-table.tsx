@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, LineChart } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import type { AlpacaDashboardData, DashboardPosition } from "@/lib/python-api"
@@ -31,7 +31,9 @@ export function PositionsTable({
   selectedSymbol,
   onSelect,
   onPrefetch,
+  onBuy,
 }: {
+  onBuy: () => void
   data: AlpacaDashboardData
   selectedSymbol: string | null
   onSelect: (symbol: string) => void
@@ -47,11 +49,8 @@ export function PositionsTable({
           <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
             Depotpositionen
           </CardTitle>
-          <CardDescription className="mt-1 text-sm text-white/55">
-            Offene Aktienpositionen aus Alpaca.
-          </CardDescription>
         </div>
-        <CardAction>
+        <CardAction className="flex items-center gap-2"><Button onClick={onBuy}>Aktie kaufen</Button>
           <Badge className="bg-primary text-primary-foreground">
             <LineChart data-icon="inline-start" />
             {data.positions.length} Positionen

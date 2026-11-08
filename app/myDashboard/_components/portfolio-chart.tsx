@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceDot, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { DepotData } from "@/lib/depot-data"
@@ -13,6 +13,8 @@ const ranges = [
   { value: "1m", label: "1 Monat", shortLabel: "1M" },
   { value: "3m", label: "3 Monate", shortLabel: "3M" },
   { value: "6m", label: "6 Monate", shortLabel: "6M" },
+  { value: "1y", label: "1 Jahr", shortLabel: "1J" },
+  { value: "max", label: "All", shortLabel: "All" },
 ] as const
 
 export function PortfolioChart({ data, currency }: { data: DepotData; currency: string }) {
@@ -33,7 +35,7 @@ export function PortfolioChart({ data, currency }: { data: DepotData; currency: 
   }
   const config = {
     value: { label: view === "total" ? "Depotwert inkl. Cash" : "Aktienwert", color: "#8bc7ff" },
-    basis: { label: view === "total" ? "Startwert + Kapitalbewegungen" : "Einkaufswert", color: "#facc15" },
+    basis: { label: view === "total" ? "Netto eingezahlt" : "Einkaufswert", color: "#84cc16" },
   }
   const selectedFills = selectedDate ? fills.filter((fill) => fill.date === selectedDate) : fills.slice(-visibleFills).reverse()
 
@@ -41,9 +43,6 @@ export function PortfolioChart({ data, currency }: { data: DepotData; currency: 
     <Card className="bg-white/[0.035] text-white">
       <CardHeader>
         <CardTitle className="text-xl font-bold tracking-[0] uppercase">Depot-Entwicklung</CardTitle>
-        <CardDescription className="text-white/55">
-          {data.lastSyncedAt ? `Gespeichert: ${formatDateTime(data.lastSyncedAt)} · Letzte 6 Monate` : "Aktualisiere die Depotdaten, um den Verlauf zu speichern."}
-        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -80,11 +79,9 @@ export function PortfolioChart({ data, currency }: { data: DepotData; currency: 
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/65">
           <span><span className="text-[#8bc7ff]">━</span> {config.value.label}</span>
-          <span><span className="text-[#facc15]">┄</span> {config.basis.label}</span>
+          <span><span className="text-[#84cc16]">┄</span> {config.basis.label}</span>
           <span><span className="text-primary">●</span> Kauf</span><span><span className="text-destructive">●</span> Verkauf</span>
         </div>
-        <p className="text-xs leading-5 text-white/45">{view === "total" ? "Der Kapitalvergleich startet beim ersten Depotwert und berücksichtigt danach Ein-/Auszahlungen. Er ist kein historischer Einkaufswert. Tagesstände von Alpaca; der neueste Punkt zeigt den Stand bei der Synchronisierung." : "Markt- und Einkaufswerte der gehaltenen Aktien zum jeweiligen Synchronisierungszeitpunkt. Fehlende historische Bestände werden nicht geschätzt."}</p>
-        {data.warnings.filter((warning) => view === "stocks" || warning.includes("überträge")).map((warning) => <p key={warning} className="text-xs text-white/55">{warning}</p>)}
         {fills.length > 0 ? <details className="text-sm" open={selectedDate !== null}>
           <summary className="cursor-pointer text-white/70">{selectedDate ? `Transaktionen am ${formatDate(selectedDate)}` : `Käufe & Verkäufe (${fills.length})`}</summary>
           <div className="mt-3 grid max-h-64 gap-2 overflow-auto">

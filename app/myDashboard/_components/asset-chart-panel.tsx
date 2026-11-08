@@ -12,8 +12,9 @@ import {
   YAxis,
 } from "recharts"
 
+import { StockOrder } from "./stock-order"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import type { AssetChartData, AssetChartFill } from "@/lib/python-api"
 import { getAssetChartAction } from "../actions"
@@ -49,7 +50,7 @@ export function prefetchAssetChart(symbol: string) {
   void loadAssetChart(symbol)
 }
 
-export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; onClose: () => void }) {
+export function AssetChartPanel({ symbol, onClose, quantity = 0 }: { symbol: string | null; onClose: () => void; quantity?: number }) {
   const [chart, setChart] = useState<AssetChartData | null>(null)
   const [state, setState] = useState<LoadState>("idle")
   const [error, setError] = useState<string | null>(null)
@@ -87,7 +88,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
   }, [symbol])
 
   const allChartRows = useMemo(
-    () => chart?.bars.map((bar) => ({ ...bar, averageEntryPrice: bar.averageEntryPrice ?? null })) ?? [],
+    () => chart?.bars.map((bar) => ({ ...bar, averageEntryPrice: chart.averageEntryPrice ?? null })) ?? [],
     [chart]
   )
   const chartRows = useMemo(
@@ -112,9 +113,6 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
           <CardTitle className="text-xl font-bold tracking-[0] text-white uppercase">
             {chart?.symbol ?? symbol} Verlauf
           </CardTitle>
-          <CardDescription className="mt-1 text-sm text-white/55">
-            {chart ? `${chart.name} · ${formatDate(chartRows.at(0)?.date ?? chart.periodStart)} bis ${formatDate(chartRows.at(-1)?.date ?? chart.periodEnd)} · EK seit Aufzeichnung` : "6 Monate Tagesdaten"}
-          </CardDescription>
         </div>
         <CardAction>
           <Button aria-label="Chart schliessen" size="icon" variant="ghost" onClick={onClose}>
@@ -123,11 +121,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <ChartRangeToggle className="self-end" onRangeChange={setChartRange} range={chartRange} options={[
-          { value: "1m", label: "1 Monat", shortLabel: "1M" },
-          { value: "3m", label: "3 Monate", shortLabel: "3M" },
-          { value: "max", label: "6 Monate", shortLabel: "6M" },
-        ]} />
+        <ChartRangeToggle className="self-end" onRangeChange={setChartRange} range={chartRange} />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
           <div className={dashboardChartClassName}>
             {state === "loading" ? <LoadingState /> : null}
@@ -174,7 +168,7 @@ export function AssetChartPanel({ symbol, onClose }: { symbol: string | null; on
               </ChartContainer>
             ) : null}
           </div>
-          {state === "ready" && chart ? <FillList currency={chart.currency} fills={fills} /> : null}
+          <div className="flex flex-col gap-4"><StockOrder key={symbol} symbol={symbol} quantity={quantity} />{state === "ready" && chart ? <FillList currency={chart.currency} fills={fills} /> : null}</div>
         </div>
       </CardContent>
     </Card>

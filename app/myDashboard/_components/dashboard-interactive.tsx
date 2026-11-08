@@ -6,7 +6,7 @@ import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { DepotData } from "@/lib/depot-data"
 import type { AlpacaDashboardData } from "@/lib/python-api"
-import { getDepotHistoryAction } from "../actions"
+import { getDepotHistoryAction, searchStocksAction } from "../actions"
 import { AssetChartPanel, prefetchAssetChart } from "./asset-chart-panel"
 import { PortfolioChart } from "./portfolio-chart"
 import { PositionsTable } from "./positions-table"
@@ -17,6 +17,14 @@ export function DashboardInteractive({ data }: { data: AlpacaDashboardData }) {
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const [search, setSearch] = useState(false)
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<{ symbol: string; name: string }[]>([])
+  useEffect(() => {
+    let active = true
+    const timer = setTimeout(() => { if (search && query.trim()) searchStocksAction(query).then(rows => { if (active) setResults(rows) }).catch(() => { if (active) setError("Suche fehlgeschlagen.") }); else setResults([]) }, 300)
+    return () => { active = false; clearTimeout(timer) }
+  }, [query, search])
 
   useEffect(() => {
     let active = true
@@ -49,8 +57,9 @@ export function DashboardInteractive({ data }: { data: AlpacaDashboardData }) {
         <Button disabled={busy} variant="outline" onClick={refresh}><RefreshCw data-icon="inline-start" />{busy ? "Daten werden geladen …" : "Depotdaten aktualisieren"}</Button>
       </div>
       <PortfolioChart data={history} currency={data.currency} />
-      <AssetChartPanel key={data.updatedAt} symbol={selectedSymbol} onClose={() => setSelectedSymbol(null)} />
-      <PositionsTable data={data} onPrefetch={prefetchAssetChart} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
+      {search && <div className="grid gap-2 rounded-lg bg-white/5 p-4"><input autoFocus aria-label="Aktie suchen" placeholder="Symbol oder Name" className="rounded border p-3" value={query} onChange={e => setQuery(e.target.value)} />{results.map(asset => <Button variant="ghost" key={asset.symbol} onClick={() => { setSelectedSymbol(asset.symbol); setSearch(false) }}>{asset.symbol} · {asset.name}</Button>)}</div>}
+      <AssetChartPanel quantity={data.positions.find(p => p.asset === selectedSymbol)?.qty ?? 0} key={data.updatedAt} symbol={selectedSymbol} onClose={() => setSelectedSymbol(null)} />
+      <PositionsTable onBuy={() => setSearch(true)} data={data} onPrefetch={prefetchAssetChart} selectedSymbol={selectedSymbol} onSelect={setSelectedSymbol} />
     </>
   )
 }

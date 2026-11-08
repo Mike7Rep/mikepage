@@ -1,7 +1,7 @@
 import type { Prisma } from "@/app/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
 import { alpacaAccountKey, createAlpacaClient } from "@/lib/python-api"
-import { equitySeries, requiredNumber, sixMonthsAgo, tradingDate, type BrokerRecord } from "@/lib/depot-calculations"
+import { equitySeries, requiredNumber, tradingDate, type BrokerRecord } from "@/lib/depot-calculations"
 
 export function jsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
@@ -18,10 +18,9 @@ export type DepotData = {
   points: DepotPoint[]; fills: DepotFill[]; lastSyncedAt: string | null; warnings: string[]
 }
 export async function getDepotData(accountKey: string): Promise<DepotData> {
-  const cutoff = sixMonthsAgo()
   const [snapshots, activities] = await Promise.all([
-    prisma.depotSnapshot.findMany({ where: { accountKey, date: { gte: cutoff } }, orderBy: { date: "asc" } }),
-    prisma.depotActivity.findMany({ where: { accountKey, date: { gte: cutoff } }, orderBy: { date: "asc" } }),
+    prisma.depotSnapshot.findMany({ where: { accountKey }, orderBy: { date: "asc" } }),
+    prisma.depotActivity.findMany({ where: { accountKey }, orderBy: { date: "asc" } }),
   ])
   const points = snapshots.map((row) => ({
     date: row.date.toISOString().slice(0, 10), equity: Number(row.equity),
@@ -56,7 +55,7 @@ export async function getDepotData(accountKey: string): Promise<DepotData> {
 export async function syncDepot(accountKey: string) {
   const client = createAlpacaClient()
   const now = new Date()
-  const cutoff = sixMonthsAgo(now)
+  const cutoff = new Date("2016-01-01T00:00:00Z")
   const start = cutoff.toISOString().slice(0, 10)
   const today = tradingDate(now)
   const [account, positions, history, activities] = await Promise.all([
@@ -67,7 +66,6 @@ export async function syncDepot(accountKey: string) {
   if (alpacaAccountKey(account) !== accountKey) throw new Error("Das Alpaca-Konto wurde gewechselt. Bitte neu starten.")
   const currency = String(account.currency ?? "USD")
   const points = equitySeries(history, activities, start, today)
-  const complexTransfers = activities.some((item) => ["ACATS", "FOPT", "JNLC", "JNLS", "JNL"].includes(String(item.activity_type)))
   const sum = (field: string) => positions.reduce((total, position) => total + requiredNumber(position[field], field), 0)
   const current = {
     equity: requiredNumber(account.equity, "Depotwert"), cash: requiredNumber(account.cash, "Cash"),
@@ -77,18 +75,14 @@ export async function syncDepot(accountKey: string) {
       current_price: p.current_price, avg_entry_price: p.avg_entry_price,
     }))), observedAt: now, currency,
   }
-  const last = points.at(-1)
-  const currentCapital = last ? last.capital + activities.filter((item) =>
-    ["CSD", "CSW", "ACATC"].includes(String(item.activity_type)) && String(item.date).slice(0, 10) > last.date,
-  ).reduce((total, item) => total + requiredNumber(item.net_amount, "Kapitalbewegung"), 0) : current.equity
   await prisma.$transaction(async (tx) => {
     for (const point of points) {
       const date = new Date(`${point.date}T00:00:00Z`)
-      const data = { equity: point.equity, capital: complexTransfers ? null : point.capital, currency }
+      const data = { equity: point.equity, capital: activities.filter((a) => ["CSD", "CSW"].includes(String(a.activity_type)) && String(a.date ?? a.transaction_time).slice(0, 10) <= point.date).reduce((sum, a) => sum + requiredNumber(a.net_amount, "Einzahlung"), 0), currency }
       await tx.depotSnapshot.upsert({ where: { accountKey_date: { accountKey, date } }, create: { accountKey, date, ...data }, update: data })
     }
     const date = new Date(`${today}T00:00:00Z`)
-    const currentData = { ...current, capital: complexTransfers ? null : currentCapital }
+    const currentData = { ...current, capital: activities.filter((a) => ["CSD", "CSW"].includes(String(a.activity_type))).reduce((sum, a) => sum + requiredNumber(a.net_amount, "Einzahlung"), 0) }
     await tx.depotSnapshot.upsert({ where: { accountKey_date: { accountKey, date } }, create: { accountKey, date, ...currentData }, update: currentData })
     for (const activity of activities) {
       const day = activity.transaction_time ? tradingDate(String(activity.transaction_time)) : String(activity.date).slice(0, 10)
@@ -98,9 +92,6 @@ export async function syncDepot(accountKey: string) {
       const data = { date: new Date(`${day}T00:00:00Z`), data: jsonValue(activity) }
       await tx.depotActivity.upsert({ where: { accountKey_activityId: { accountKey, activityId } }, create: { accountKey, activityId, ...data }, update: data })
     }
-    await tx.depotSnapshot.deleteMany({ where: { accountKey, date: { lt: cutoff } } })
-    await tx.depotActivity.deleteMany({ where: { accountKey, date: { lt: cutoff } } })
-    await tx.assetPriceBar.deleteMany({ where: { date: { lt: cutoff } } })
   }, { timeout: 60_000 })
   return { symbols: positions.filter((p) => p.asset_class === "us_equity").map((p) => String(p.symbol)).sort(), points: points.length, activities: activities.length }
 }

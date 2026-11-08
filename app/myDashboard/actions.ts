@@ -267,3 +267,50 @@ function redirectToLogin(reason: "failed" | "limited" | "unavailable", nextPath:
   const params = new URLSearchParams({ login: reason, next: nextPath })
   redirect(`/myDashboard?${params.toString()}`)
 }
+
+export async function getAlpacaEquityAction() {
+  await requireDashboardSession()
+  const account = await createAlpacaClient().getAccount()
+  const value = Number(account.equity)
+  if (!Number.isFinite(value)) throw new Error("Depotwert nicht verfügbar.")
+  return { value, currency: String(account.currency) }
+}
+
+export async function searchStocksAction(query: string) {
+  await requireDashboardSession()
+  if (query.trim().length < 1) return []
+  const assets = await createAlpacaClient().getAssets()
+  const term = query.trim().toUpperCase()
+  return assets.filter(a => a.tradable && (String(a.symbol).includes(term) || String(a.name).toUpperCase().includes(term)))
+    .sort((a,b) => Number(String(b.symbol) === term) - Number(String(a.symbol) === term))
+    .slice(0, 20).map(a => ({ symbol: String(a.symbol), name: String(a.name) }))
+}
+
+export async function placeStockOrderAction(input: { symbol: string; side: "buy" | "sell"; qty: string; type: "market" | "limit"; limit: string; id: string }) {
+  try {
+    await requireDashboardSession()
+    if (!/^[A-Z0-9.-]{1,20}$/.test(input.symbol) || !["buy", "sell"].includes(input.side) || !["market", "limit"].includes(input.type) || !/^[0-9a-f-]{36}$/.test(input.id)) throw new Error("Ungültige Order.")
+    if (!/^\d+(\.\d{1,9})?$/.test(input.qty) || Number(input.qty) <= 0) throw new Error("Ungültige Stückzahl.")
+    if (input.type === "limit" && (!Number.isFinite(Number(input.limit)) || Number(input.limit) <= 0)) throw new Error("Ungültiges Limit.")
+    const client = createAlpacaClient()
+    // Reuse the same broker identifier after a timeout; never create a second order on retry.
+    try {
+      const existing = await client.getOrderByClientId(input.id)
+      return { ok: true as const, status: String(existing.status) }
+    } catch (error) {
+      if (!(error instanceof Error && "status" in error && error.status === 404)) throw error
+    }
+    const [asset, positions, account] = await Promise.all([client.getAsset(input.symbol), client.getPositions(), client.getAccount()])
+    if (!asset.tradable || asset.class !== "us_equity" || account.trading_blocked) throw new Error("Handel nicht verfügbar.")
+    if (!Number.isInteger(Number(input.qty)) && !asset.fractionable) throw new Error("Nur ganze Aktien möglich.")
+    const held = positions.find(p => p.symbol === input.symbol)
+    if (input.side === "sell" && Number(input.qty) > Number(held?.qty_available ?? held?.qty ?? 0)) throw new Error("Nicht genügend verfügbare Aktien.")
+    const order = await client.submitOrder({ symbol: input.symbol, side: input.side, qty: input.qty, type: input.type, time_in_force: "day", client_order_id: input.id, ...(input.type === "limit" ? { limit_price: input.limit } : {}) })
+    updateTag("dashboard:portfolio")
+    updateTag("dashboard:asset-chart")
+    revalidatePath("/myDashboard/depot")
+    return { ok: true as const, status: String(order.status) }
+  } catch (error) {
+    return { ok: false as const, error: error instanceof Error ? error.message : "Order fehlgeschlagen." }
+  }
+}

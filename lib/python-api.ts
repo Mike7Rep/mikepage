@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from "next/cache"
 import { createHash } from "node:crypto"
 
 import { prisma } from "@/lib/prisma"
-import { sixMonthsAgo, tradingDate } from "@/lib/depot-calculations"
+import { tradingDate } from "@/lib/depot-calculations"
 
 type Side = "buy" | "sell"
 type JsonRecord = Record<string, unknown>
@@ -127,7 +127,7 @@ export async function getAssetChart(symbol: string) {
 
   const client = createAlpacaClient(getSettings())
   const end = new Date()
-  const start = sixMonthsAgo(end)
+  const start = new Date("2016-01-01T00:00:00Z")
   const [account, positions, asset, bars, fills] = await Promise.all([
     client.getAccount(),
     client.getPositions(),
@@ -217,6 +217,9 @@ export function createAlpacaClient(settings: AlpacaSettings = getSettings()) {
   }
 
   return {
+    getAssets: () => request<JsonRecord[]>("GET", settings.alpacaEndpoint, "/v2/assets?status=active&asset_class=us_equity"),
+    submitOrder: (body: JsonRecord) => request<JsonRecord>("POST", settings.alpacaEndpoint, "/v2/orders", { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
+    getOrderByClientId: (id: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/orders:by_client_order_id?client_order_id=${encodeURIComponent(id)}`),
     getActivities,
     getHistory: (start: string, end: string) => request<JsonRecord>("GET", settings.alpacaEndpoint, `/v2/account/portfolio/history?${new URLSearchParams({ start, end, timeframe: "1D", cashflow_types: "ALL" })}`),
     getAccount: () => request<JsonRecord>("GET", settings.alpacaEndpoint, "/v2/account"),
@@ -292,7 +295,7 @@ function positionFromAlpaca(raw: JsonRecord, name: string): DashboardPosition {
 
 async function barsForSymbol(client: AlpacaClient, symbol: string, start: Date, end: Date) {
   const cached = await cachedAssetBars(symbol, start, end)
-  if (cached.length && !cacheStale(cached, end)) {
+  if (cached.length && new Date(String(cached[0].date)).getTime() <= start.getTime() && !cacheStale(cached, end)) {
     return cached.map(cachedBarToAlpaca)
   }
 

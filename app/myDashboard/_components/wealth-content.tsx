@@ -1,6 +1,6 @@
 "use client"
 
-import { type Dispatch, type ReactNode, type SetStateAction, useId, useMemo, useState } from "react"
+import { type Dispatch, type ReactNode, type SetStateAction, useEffect, useId, useMemo, useState } from "react"
 import { Plus, Save, Trash2 } from "lucide-react"
 import {
   Area,
@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import type { InvestmentAssetView, WealthSnapshotView } from "@/lib/wealth-data"
-import { createOrUpdateWealthSnapshotAction, deleteWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
+import { getAlpacaEquityAction, createOrUpdateWealthSnapshotAction, deleteWealthSnapshotAction, updateInvestmentAssetsAction } from "../actions"
 import { valueTone } from "../format"
 import {
   ChartRangeToggle,
@@ -199,6 +199,14 @@ function WealthEntryDialog({
   const open = controlledOpen ?? uncontrolledOpen
   const setOpen = onOpenChange ?? setUncontrolledOpen
   const isEditing = Boolean(snapshot)
+  const [alpaca, setAlpaca] = useState<number | null>(null)
+  const [alpacaError, setAlpacaError] = useState("")
+  useEffect(() => {
+    if (!open || snapshot) return
+    let active = true
+    getAlpacaEquityAction().then(result => { if (active) { setAlpaca(Math.round(result.value)); setAlpacaError("") } }).catch(() => { if (active) setAlpacaError("Alpaca-Wert nicht verfügbar. Bitte manuell eingeben.") })
+    return () => { active = false }
+  }, [open, snapshot])
   const fieldDefaults = snapshot ? {
     alpaca: snapshot.alpaca,
     bankAccount: snapshot.bankAccount,
@@ -210,7 +218,7 @@ function WealthEntryDialog({
     savings: snapshot.savings,
     weekKey: snapshot.weekKey,
   } : {
-    alpaca: 0,
+    alpaca: alpaca ?? 0,
     bankAccount: 0,
     bondora: 0,
     card: 0,
@@ -222,6 +230,7 @@ function WealthEntryDialog({
   }
 
   async function submitEntry(formData: FormData) {
+    if (!isEditing && alpaca === null && !alpacaError) return
     await createOrUpdateWealthSnapshotAction(formData)
     setOpen(false)
   }
@@ -249,7 +258,8 @@ function WealthEntryDialog({
             <MoneyField defaultValue={formatMoneyInput(fieldDefaults.investments)} label="Anlagen" name="investments" />
             <MoneyField defaultValue={formatMoneyInput(fieldDefaults.mintos)} label="mintos" name="mintos" />
             <MoneyField defaultValue={formatMoneyInput(fieldDefaults.bondora)} label="bondora" name="bondora" />
-            <MoneyField defaultValue={formatMoneyInput(fieldDefaults.alpaca)} label="Alpaca" name="alpaca" />
+            {!isEditing && alpaca === null && !alpacaError ? <p role="status">Alpaca wird geladen …</p> : <MoneyField key={isEditing ? "existing" : String(alpaca)} defaultValue={formatMoneyInput(fieldDefaults.alpaca)} label="Alpaca (USD)" name="alpaca" />}
+            {alpacaError && <p role="alert">{alpacaError}</p>}
             <MoneyField defaultValue={formatMoneyInput(fieldDefaults.bankAccount)} label="konto" name="bankAccount" />
             <MoneyField defaultValue={formatMoneyInput(fieldDefaults.card)} label="card" name="card" />
           </FieldGroup>

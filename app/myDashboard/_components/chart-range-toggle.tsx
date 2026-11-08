@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils"
 
 export type ChartRange = "1w" | "1m" | "3m" | "6m" | "1y" | "max"
 
-export const dashboardChartClassName = "aspect-[4/3] min-h-[220px] w-full lg:aspect-video"
+export const dashboardChartClassName = "aspect-[8/3] min-h-[160px] w-full lg:aspect-[32/9]"
 
 const chartRanges = [
   { label: "1 Monat", shortLabel: "1M", value: "1m" },
   { label: "3 Monate", shortLabel: "3M", value: "3m" },
   { label: "6 Monate", shortLabel: "6M", value: "6m" },
   { label: "1 Jahr", shortLabel: "1J", value: "1y" },
-  { label: "Max", shortLabel: "Max", value: "max" },
+  { label: "All", shortLabel: "All", value: "max" },
 ] satisfies Array<{ label: string; shortLabel: string; value: ChartRange }>
 
 export function ChartRangeToggle({
