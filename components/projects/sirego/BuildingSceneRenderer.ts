@@ -149,7 +149,10 @@ export function mountBuildingScene(host: HTMLElement, options: BuildingSceneOpti
         if (object instanceof THREE.InstancedMesh) object.dispose()
       })
       geometries.forEach(geometry => geometry.dispose())
-      materials.forEach(material => material.dispose())
+      materials.forEach(material => {
+        if ("map" in material && material.map instanceof THREE.Texture) material.map.dispose()
+        material.dispose()
+      })
       environment.dispose()
       key.shadow.map?.dispose()
       renderer.dispose()

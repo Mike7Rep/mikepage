@@ -13,8 +13,8 @@ test('all responses contribute, only explicitly consented reviews are published'
  ]))
  assert.equal(result.average, 4); assert.equal(result.count, 4); assert.equal(result.recommendation, 50)
  assert.equal(result.reviews.length, 2)
- assert.deepEqual(result.reviews[0], { author: 'KH', company: 'Firma', position: 'Leitung', rating: 6, text: 'Gute, schnelle "Arbeit"\nDanke!' })
- assert.deepEqual(result.reviews[1], { author: 'Anonym', company: '', position: '', rating: 4, text: 'Gut' })
+ assert.deepEqual(result.reviews[1], { author: 'K. H.', company: 'Firma', position: 'Leitung', rating: 6, text: 'Gute, schnelle "Arbeit"\nDanke!' })
+ assert.deepEqual(result.reviews[0], { author: 'Anonym', company: '', position: '', rating: 4, text: 'Gut' })
  assert.ok(!JSON.stringify(result).includes('Secret')); assert.ok(!JSON.stringify(result).includes('Private feedback'))
 })
 test('empty sheet, invalid scores, missing columns and malformed CSV', () => {
@@ -22,4 +22,12 @@ test('empty sheet, invalid scores, missing columns and malformed CSV', () => {
  assert.equal(summarizeReviews(csv([['A','B','','',7,'','Ja',named],['A','B','','',0,'','Nein',named]])).count, 0)
  assert.throws(() => summarizeReviews('<html>Login</html>'))
  assert.throws(() => summarizeReviews('"unclosed'))
+})
+test('public reviews are sorted newest first by Google Forms timestamp', () => {
+ const lines = csv([
+  ['Neu', 'Name', '', '', 6, 'Newest', 'Ja', named],
+  ['Alt', 'Name', '', '', 5, 'Oldest', 'Ja', named],
+ ]).split('\r\n')
+ const source = ['Zeitstempel,' + lines[0], '14.11.2026 14:00:00,' + lines[1], '13.11.2026 18:00:00,' + lines[2]].join('\r\n')
+ assert.deepEqual(summarizeReviews(source).reviews.map(r => r.author), ['N. N.', 'A. N.'])
 })

@@ -19,11 +19,11 @@ Kein Apps Script und keine zusätzlichen Umgebungsvariablen erforderlich. Die Ta
 
 - Sterne: Mittelwert aller gültigen Antworten (ganze Zahlen 1 bis 6) auf „Wie zufrieden waren Sie insgesamt …“.
 - Weiterempfehlung: Anzahl „Ja“ / Anzahl aller gültigen Bewertungen, auf ganze Prozent gerundet. „Vielleicht“, „Nein“ und fehlende Angaben zählen nicht als Empfehlung. Einstellige Werte erhalten eine führende Null; 100 % bleibt 100 %.
-- Name-Freigabe: Initialen aus Vorname/Nachname, Unternehmen, Position, Sterne und positiver Feedbacktext.
+- Name-Freigabe: Initialen mit Punkten (z. B. M. R.) aus Vorname/Nachname, Unternehmen, Position, Sterne und positiver Feedbacktext.
 - Anonyme Freigabe: „Anonym“, Sterne und Feedback; weder Unternehmen noch Position.
 - Nein, leere oder unbekannte Freigabe: ausschliesslich aggregierte Statistik, kein Karusselleintrag und kein Feedbacktext im Browser.
 - Verbesserungsvorschläge und Zeitstempel werden nicht veröffentlicht.
 
-Der Server übergibt nur aggregierte Zahlen und erlaubte öffentliche Felder an die Client-Komponente. Bei leerer Tabelle erscheinen keine Beispieldaten; bei Lesefehlern erscheint ein Verfügbarkeitshinweis. Lange Texte sind gekürzt, per Hover lesbar und per Klick/Touch aufklappbar. Das Karussell lässt sich wischen oder mit Pfeilen bedienen.
+Der Server übergibt nur aggregierte Zahlen und erlaubte öffentliche Felder an die Client-Komponente. Bei leerer Tabelle erscheinen keine Beispieldaten; bei Lesefehlern erscheint ein Verfügbarkeitshinweis. Lange Texte sind gekürzt, per Hover lesbar und per Klick/Touch aufklappbar. Das Karussell sortiert nach Zeitstempel absteigend (neueste links) und startet sichtbar alle vier Sekunden automatisch. Es pausiert bei Hover, Fokus, geöffnetem Feedbacktext, Touch-Bedienung, unsichtbarem Tab und auf Wunsch per Pausenbutton. Bei reduzierter Bewegung bleibt Autoplay aus. Das Karussell lässt sich weiterhin wischen oder mit Pfeilen bedienen.
 
 Tests: `pnpm test` prüft CSV-Escaping, Sterne, Weiterempfehlung und alle Freigabefälle.

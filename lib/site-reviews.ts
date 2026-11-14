@@ -22,7 +22,14 @@ export function summarizeReviews(csv: string): ReviewSummary {
   if (columns.some(i => i < 0)) throw new Error('Review columns missing')
   let total = 0, count = 0, recommended = 0
   const reviews: PublicReview[] = []
-  for (const row of rows) {
+  const timestampColumn = headers.indexOf('Zeitstempel')
+  const newestFirst = rows.map((row, index) => {
+    const raw = row[timestampColumn] ?? ''
+    const match = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})[, ]+(\d{1,2}):(\d{2})(?::(\d{2}))?/)
+    const timestamp = match ? Date.UTC(+match[3], +match[2] - 1, +match[1], +match[4], +match[5], +(match[6] ?? 0)) : Date.parse(raw)
+    return { row, index, timestamp }
+  }).sort((a, b) => Number.isFinite(a.timestamp) && Number.isFinite(b.timestamp) ? b.timestamp - a.timestamp || b.index - a.index : b.index - a.index)
+  for (const { row } of newestFirst) {
     const [first, last, company, position, score, text, recommendation, consent] = columns.map(i => (row[i] ?? '').trim())
     const rating = Number(score)
     if (!Number.isInteger(rating) || rating < 1 || rating > 6) continue
@@ -32,7 +39,7 @@ export function summarizeReviews(csv: string): ReviewSummary {
     if (consent === 'Ja, aber anonym.') {
       reviews.push({ author: 'Anonym', company: '', position: '', rating, text })
     } else if (consent === 'Ja, mit meinem Vor- und Nachnamen sowie meinem Unternehmen (falls angegeben)') {
-      const initials = [first, last].map(n => Array.from(n)[0] ?? '').join('').toLocaleUpperCase('de-CH')
+      const initials = [first, last].map(n => n ? `${Array.from(n)[0]}.` : '').join(' ').toLocaleUpperCase('de-CH')
       reviews.push({ author: initials || 'Anonym', company, position, rating, text })
     }
   }

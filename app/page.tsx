@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import FeedbackSection from "@/components/site/feedback-section"
 import Image from "next/image"
+import eliminationImage from "@/public/image/eliminierung-transparent.png"
 
 import Footer from "./Footer"
 import HeroSection from "./HeroSection"
@@ -101,7 +102,7 @@ export default function Page() {
           <div className="relative isolate flex min-h-[640px] overflow-hidden border-y border-white/10 md:aspect-video md:min-h-0">
             <div className="vision-image-reveal pointer-events-none absolute inset-y-0 left-0 z-0 w-full opacity-45 md:w-[58%] md:opacity-90">
               <Image
-                src="/image/eliminierung.png"
+                src={eliminationImage}
                 alt="Eliminierung von Medienbrüchen als 3D-Visual."
                 fill
                 loading="eager"

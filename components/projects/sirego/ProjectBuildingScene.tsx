@@ -3,10 +3,12 @@
 import {useEffect, useRef, useState} from "react"
 import type {BuildingSceneCallbacks} from "./BuildingSceneRenderer"
 
-export type BuildingProject = "maison" | "novartis" | "hyatt" | "snf" | "wacheNord" | "areon" | "brick" | "rocketTigerli" | "unterwasser" | "theilerhaus"
+export type BuildingProject = "crm" | "realbim" | "maison" | "novartis" | "hyatt" | "snf" | "wacheNord" | "areon" | "brick" | "rocketTigerli" | "unterwasser" | "theilerhaus"
 type SceneController = {dispose: () => void}
 
 const sceneLoaders = {
+  crm: () => import("./SoftwareSceneRenderer").then(module => module.mountCrmScene),
+  realbim: () => import("./SoftwareSceneRenderer").then(module => module.mountRealbimScene),
   theilerhaus: () => import("./TheilerhausSceneRenderer").then(module => module.mountTheilerhausScene),
   unterwasser: () => import("./UnterwasserSceneRenderer").then(module => module.mountUnterwasserScene),
   rocketTigerli: () => import("./RocketTigerliSceneRenderer").then(module => module.mountRocketTigerliScene),
@@ -49,7 +51,7 @@ export function ProjectBuildingScene({project}: {project: BuildingProject}) {
     }
   }, [project, attempt])
 
-  const name = {theilerhaus: "Theilerhaus Zug", unterwasser: "Talstation Unterwasser", rocketTigerli: "Rocket Tigerli", brick: "The Brick 80", maison: "Maison de la Santé", novartis: "Novartis WSJ 25 (Chiron)", hyatt: "Park Hyatt Zürich", snf: "SNF Wankdorf", wacheNord: "Wache Nord", areon: "AREON Chur"}[project]
+  const name = {crm: "Sirego CRM", realbim: "realBIM",theilerhaus: "Theilerhaus Zug", unterwasser: "Talstation Unterwasser", rocketTigerli: "Rocket Tigerli", brick: "The Brick 80", maison: "Maison de la Santé", novartis: "Novartis WSJ 25 (Chiron)", hyatt: "Park Hyatt Zürich", snf: "SNF Wankdorf", wacheNord: "Wache Nord", areon: "AREON Chur"}[project]
   return <figure className="relative aspect-[1.2] min-w-0 sm:aspect-[1.35] lg:min-h-[32rem]" aria-label={`Gebäudeansicht ${name}`} aria-busy={state === "loading"} data-model-state={state}>
     <div ref={hostRef} className={`absolute inset-0 transition-opacity duration-200 motion-reduce:transition-none ${state === "ready" ? "opacity-100" : "opacity-0"}`} aria-hidden="true"/>
     {state === "loading" ? <div role="status" className="absolute inset-0 grid place-content-center">
