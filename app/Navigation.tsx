@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Briefcase, CalendarDays, FileText, FolderKanban, GraduationCap, Mail, Menu, PackageOpen } from "lucide-react"
+import { Briefcase, FileText, FolderKanban, GraduationCap, Mail, Menu, PackageOpen } from "lucide-react"
 
 const navLinks = [
   { href: "/bildung", label: "Bildung", icon: GraduationCap },
@@ -37,23 +37,23 @@ export default function Navigation
   }
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/40 px-6 py-6 backdrop-blur-xl md:px-12">
+    <nav className="public-theme fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/40 px-6 py-6 backdrop-blur-xl md:px-12">
 
       <div className="relative flex items-center">
 
         {/* LEFT */}
         <Link
           href={"/"}
-          className="text-xl font-bold tracking-[0] uppercase">
+          className="max-w-36 truncate text-sm font-bold tracking-[0] uppercase sm:max-w-none sm:text-xl">
           Michael Repolusk
         </Link>
 
         {/* CENTER */}
         <div className="absolute left-1/2 hidden -translate-x-1/2 gap-10 md:flex">
           {navLinks.map((item) => (
-            <Link key={item.href} href={item.href} className={styleLink}>
+            <a key={item.href} href={item.href} className={styleLink}>
               {item.label}
-            </Link>
+            </a>
           ))}
         </div>
 
@@ -72,25 +72,20 @@ export default function Navigation
 
                   return (
                     <DropdownMenuItem key={item.href} asChild className="focus:bg-white/10 focus:text-white">
-                      <Link href={item.href}>
+                      <a href={item.href}>
                         <Icon />
                         {item.label}
-                      </Link>
+                      </a>
                     </DropdownMenuItem>
                   )
                 })}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button asChild variant="ghost" size="icon" className="hidden text-white/70 hover:bg-white/10 hover:text-white sm:inline-flex">
-            <Link href="/bookmeeting" aria-label="Meeting buchen">
-              <CalendarDays />
-            </Link>
-          </Button>
-          <Button asChild className="rounded-md px-3 uppercase tracking-[0.08em] sm:px-6">
-            <Link href={"/kontakt"} aria-label="Kontakt">
+          <Button asChild className="email-cta">
+            <Link href={"mailto:michael.repolusk@sirego.ch?subject=Anfrage"} aria-label="Kontakt">
               <Mail data-icon="inline-start" />
-              <span className="hidden sm:inline">Kontakt</span>
+              <span>Kontakt</span>
             </Link>
           </Button>
         </div>

@@ -202,5 +202,4 @@ export const contact = {
   phone: "+41 76 724 87 93",
   website: "https://www.michael-repolusk.com/",
   linkedin: "https://www.linkedin.com/in/michael-repolusk-6855161b3/",
-  bookingPath: "/bookmeeting",
 }

@@ -4,7 +4,7 @@ import { educationTimeline } from "@/lib/profile-data"
 
 export default function BildungPage() {
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="public-theme min-h-screen bg-black text-white">
       <PageIntro
         eyebrow="Bildung und Weiterbildung"
         title="Technische Basis mit Design- und VDC-Fokus."

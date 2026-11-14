@@ -1,0 +1,93 @@
+[
+  {
+    "id": "novartis",
+    "title": "Novartis",
+    "description": "Wir modellieren die Deckensegel und Anschlussleitungen in Revit und erarbeiten die Rohrfeinverteilung. Daraus erstellen wir Ausführungs- und Bohrpläne sowie detaillierte Rohrleitungspläne und Isometrien für die Montage.",
+    "scene": "novartis",
+    "image": "/images/projects/models/novartis.webp"
+  },
+  {
+    "id": "maison-de-la-sante",
+    "title": "Maison de la Santé",
+    "description": "Wir modellieren die Deckensegel, Rohranschlüsse und Raumlüftungsanschlüsse in Revit und koordinieren die Gebäudetechnik in 3D. Daraus erstellen wir Ausführungspläne, Bohrpläne und Rohrfeinverteilungspläne für die Montage.",
+    "scene": "maison",
+    "image": "/images/projects/models/maison-de-la-sante.webp"
+  },
+  {
+    "id": "hotel-hyatt",
+    "title": "Park Hyatt Zürich",
+    "description": "Wir unterstützten die Erstellung der Ausführungspläne für die Lüftung in Revit.",
+    "scene": "hyatt",
+    "image": "/images/projects/models/hotel-hyatt.webp"
+  },
+  {
+    "id": "snf",
+    "title": "SNF Wankdorf",
+    "description": "Wir modellierten die Deckensegel und die Rohrfeinverteilung in Revit und erstellten die Bohrpläne sowie die Ausführungspläne der Kühldecken.",
+    "scene": "snf",
+    "image": "/images/projects/models/snf.webp"
+  },
+  {
+    "id": "wache-nord",
+    "title": "Wache Nord",
+    "description": "Wir modellierten die Deckensegel in Revit und erstellten die zugehörigen Rohranschlüsse im Modell.",
+    "scene": "wacheNord",
+    "image": "/images/projects/models/wache-nord.webp"
+  },
+  {
+    "id": "rocket-tigerli",
+    "title": "Rocket Tigerli",
+    "description": "Koordination HKLSE und Sprinkler sowie Modellierung der Lüftung in der Phase Bauprojekt, 2025.\n\nPersönlicher Projektbeitrag von Michael Repolusk, erbracht vor seiner Zeit bei SIREGO.",
+    "scene": "rocketTigerli",
+    "image": "/images/projects/models/rocket-tigerli.webp"
+  },
+  {
+    "id": "areon-chur",
+    "title": "AREON Chur",
+    "description": "HKLSE-Koordination, Modellierung der Lüftungs- und Sprinkleranlagen sowie Aussparungsplanung.\n\nPersönlicher Projektbeitrag von Michael Repolusk, erbracht ausserhalb von SIREGO.",
+    "scene": "areon",
+    "image": "/images/projects/models/areon-chur.webp"
+  },
+  {
+    "id": "the-brick-80",
+    "title": "The Brick 80",
+    "description": "Projektleitung Lüftung, Koordination HKLSE und Sprinkler sowie Fachbauleitung Lüftung. Begleitung vom Bauprojekt bis zur Ausführung.\n\nPersönlicher Projektbeitrag von Michael Repolusk, erbracht vor seiner Zeit bei SIREGO.",
+    "scene": "brick",
+    "image": "/images/projects/models/the-brick-80.webp"
+  },
+  {
+    "id": "talstation-unterwasser",
+    "title": "Talstation Unterwasser",
+    "description": "Michael Repolusk übernahm vor seiner Zeit bei SIREGO die HKLS-Koordination, die Aussparungs- und Ausführungsplanung sowie die Fachbauleitung HKLS.",
+    "scene": "unterwasser",
+    "image": "/images/projects/models/talstation-unterwasser.webp"
+  },
+  {
+    "id": "theilerhaus-zug",
+    "title": "Theilerhaus Zug",
+    "description": "Michael Repolusk verantwortete vor seiner Zeit bei SIREGO die Koordination im BIM-Pilotprojekt und die Aussparungspläne. Er übernahm die Fachbauleitung Lüftung und die stellvertretende Projektleitung.",
+    "scene": "theilerhaus",
+    "image": "/images/projects/models/theilerhaus-zug.webp"
+  },
+  {
+    "id": "wohnpark-buchholzstrasse",
+    "title": "Wohnpark Buchholzstrasse",
+    "description": null,
+    "scene": null,
+    "image": "/images/projects/models/wohnpark-buchholzstrasse.webp"
+  },
+  {
+    "id": "vantage-zrh1",
+    "title": "Vantage ZRH1",
+    "description": null,
+    "scene": null,
+    "image": "/images/projects/models/vantage-zrh1.webp"
+  },
+  {
+    "id": "gsk-pharmacenter",
+    "title": "GSK Pharmacenter",
+    "description": null,
+    "scene": null,
+    "image": "/images/projects/models/gsk-pharmacenter.webp"
+  }
+]

@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { CalendarDays, Mail, MapPin, Phone, QrCode } from "lucide-react"
+import { Mail, MapPin, Phone, QrCode } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { contact } from "@/lib/profile-data"
@@ -28,7 +28,7 @@ const contactItems = [
 
 export default function KontaktPage() {
   return (
-    <main className="min-h-screen bg-black px-6 pt-36 pb-20 text-white md:px-12">
+    <main className="public-theme min-h-screen bg-black px-6 pt-36 pb-20 text-white md:px-12">
       <section className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-5">
@@ -36,23 +36,17 @@ export default function KontaktPage() {
               Kontakt
             </h1>
             <p className="motion-preset-slide-up-sm motion-delay-100 motion-duration-700 max-w-2xl text-lg leading-8 text-white/68">
-              Schreib mir direkt eine E-Mail oder buche einen Termin. Es gibt kein Kontaktformular, keine eigene Datenbank und keine unnötige Datensammlung.
+              Schreib mir eine E-Mail mit deiner Projektanfrage.
             </p>
           </div>
           <div className="motion-preset-slide-up-sm motion-delay-200 motion-duration-700 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" className="uppercase tracking-[0.08em]">
+            <Button asChild size="lg" className="email-cta">
               <Link href={`mailto:${contact.email}`}>
                 <Mail data-icon="inline-start" />
-                E-Mail schreiben
+                Kontakt
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-              <Link href={contact.bookingPath}>
-                <CalendarDays data-icon="inline-start" />
-                Meeting buchen
-              </Link>
-            </Button>
-          </div>
+            </div>
         </div>
 
         <div className="motion-preset-slide-up-sm motion-delay-300 motion-duration-700 grid gap-3">

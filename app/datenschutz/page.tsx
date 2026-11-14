@@ -56,10 +56,6 @@ const sections = [
     text: "Wenn du per E-Mail oder Telefon Kontakt aufnimmst, werden die von dir übermittelten Angaben nur zur Bearbeitung deiner Anfrage und für die anschliessende Kommunikation verwendet.",
   },
   {
-    title: "Meeting-Buchung mit Zeeg",
-    text: "Für die direkte Terminbuchung wird ein Zeeg-Embed geladen. Beim Laden und Nutzen des Kalenders können Daten an Zeeg übermittelt werden. Alternativ ist eine Meeting-Anfrage per E-Mail möglich.",
-  },
-  {
     title: "Externe Links",
     text: "Diese Website enthält Links zu externen Angeboten, zum Beispiel LinkedIn und Sirego. Beim Öffnen externer Links gelten die Datenschutzbestimmungen der jeweiligen Anbieter.",
   },
@@ -110,13 +106,6 @@ export default function DatenschutzPage() {
             Die verbindlichen Anforderungen für Daten aus Google APIs stehen in der{" "}
             <a className="text-primary underline-offset-4 hover:underline" href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">
               Google API Services User Data Policy
-            </a>
-            .
-          </p>
-          <p className="mt-4">
-            Hinweise zu Zeeg und zur Einbettung des Buchungssystems findest du im{" "}
-            <a className="text-primary underline-offset-4 hover:underline" href="https://zeeg.me/de/help/articles/12582767-zeeg-auf-deiner-website-einbetten" target="_blank" rel="noreferrer">
-              Zeeg Hilfe-Center
             </a>
             .
           </p>

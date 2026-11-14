@@ -7,6 +7,7 @@ import ProjectsSection from "@/components/projects/projectsSection"
 
 type QuoteItem = {
   author?: string
+  portrait?: string
   quote: string
 }
 
@@ -20,15 +21,18 @@ const quoteGroups = [
     {
       quote:
         "Probleme können nicht mit der gleichen Denkweise gelöst werden, durch die sie entstanden sind.",
-      author: "A. E.",
+      author: "Albert Einstein zugeschrieben",
+      portrait: "/image/quotes/einstein.jpg",
     },
     {
       quote: "Wenn ich 8h Zeit hätte, einen Baum zu fällen, würde ich 6h die Säge schärfen.",
-      author: "A. L.",
+      author: "Abraham Lincoln zugeschrieben",
+      portrait: "/image/quotes/lincoln.png",
     },
     {
       quote: "Mit 20% Aufwand kann man bereits 80% des Ergebnisses erreichen.",
-      author: "V. P.",
+      author: "Vilfredo Pareto · Pareto-Prinzip",
+      portrait: "/image/quotes/pareto.jpg",
     },
   ],
 ] satisfies readonly QuoteItem[][]
@@ -36,21 +40,18 @@ const quoteGroups = [
 function QuoteDivider({ quotes }: { quotes: readonly QuoteItem[] }) {
   return (
     <section className="px-5 py-10 sm:px-8 md:py-16">
-      <div className="mx-auto max-w-7xl border-y border-white/10 py-10">
-        <div className="grid gap-7">
-          {quotes.map(({ quote, author }) => (
-            <blockquote key={quote} className="max-w-4xl">
-              <p className="text-2xl font-semibold leading-tight tracking-[0] text-white sm:text-3xl">
-                &quot;{quote}&quot;
-              </p>
-              {author ? (
-                <cite className="mt-4 block text-xs font-semibold not-italic uppercase tracking-[0.18em] text-white/45">
-                  {author}
-                </cite>
-              ) : null}
-            </blockquote>
-          ))}
-        </div>
+      <div className="mx-auto grid max-w-7xl gap-6">
+        {quotes.map(({ quote, author, portrait }) => (
+          <blockquote key={quote} tabIndex={portrait ? 0 : undefined} className="group relative isolate overflow-hidden px-5 py-10 text-center outline-offset-4 sm:px-12 sm:py-14">
+            {portrait ? <>
+              <div className="pointer-events-none absolute inset-0 m-auto size-40 sm:size-44 [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_72%)]"><Image src={portrait} alt="" fill sizes="176px" className="object-cover object-[center_30%] opacity-40 grayscale" /></div>
+            </> : null}
+            <p className="relative mx-auto max-w-4xl text-2xl font-semibold leading-tight text-white sm:text-3xl">
+              &quot;{quote}&quot;
+            </p>
+            {author ? <cite className="relative mt-6 block text-xs font-semibold not-italic uppercase tracking-[0.14em] text-white/75 opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100 [@media(hover:none)]:opacity-100">{author}</cite> : null}
+          </blockquote>
+        ))}
       </div>
     </section>
   )
@@ -58,7 +59,7 @@ function QuoteDivider({ quotes }: { quotes: readonly QuoteItem[] }) {
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="public-theme min-h-screen bg-black text-white">
       <HeroSection />
 
       <section id="vision" className="relative isolate overflow-hidden px-5 py-20 sm:px-8 md:py-28">
@@ -96,7 +97,7 @@ export default function Page() {
       <section id="eliminierung" className="relative isolate overflow-hidden px-5 py-20 sm:px-8 md:py-28">
         <div className="mx-auto max-w-7xl">
           <div className="relative isolate flex min-h-[640px] overflow-hidden border-y border-white/10 md:aspect-video md:min-h-0">
-            <div className="vision-image-reveal pointer-events-none absolute inset-y-0 left-0 z-0 w-full opacity-35 md:w-[58%] md:opacity-50">
+            <div className="vision-image-reveal pointer-events-none absolute inset-y-0 left-0 z-0 w-full opacity-45 md:w-[58%] md:opacity-90">
               <Image
                 src="/image/eliminierung.png"
                 alt="Eliminierung von Medienbrüchen als 3D-Visual."
@@ -130,7 +131,7 @@ export default function Page() {
         <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[0.38fr_0.62fr] md:items-start md:gap-14">
           <div className="md:sticky md:top-28">
             <h2 className="max-w-xl text-4xl font-black uppercase leading-none tracking-[0] text-white sm:text-5xl">
-              Meine Fähigkeiten
+              Mein Angebot
             </h2>
           </div>
           <OfferCarousel />

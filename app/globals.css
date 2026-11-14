@@ -195,3 +195,41 @@
     will-change: auto;
   }
 }
+
+/* Public contact buttons follow the standalone CV. */
+.public-theme {
+  --primary: #13b7bf;
+  --primary-foreground: #061012;
+  --ring: #13b7bf;
+}
+.email-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 118px;
+  min-height: 43px;
+  height: auto;
+  padding: 0 20px;
+  border: 1px solid #13b7bf;
+  border-radius: 7px;
+  color: #061012;
+  background: #13b7bf;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+.email-cta:hover {
+  color: #061012;
+  background: #37d2d8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgb(19 183 191 / 24%);
+}
+.email-cta:focus-visible { outline: 3px solid #13b7bf; outline-offset: 3px; }
+.email-cta svg { width: 17px; height: 17px; stroke-width: 2; }
+@media (prefers-reduced-motion: reduce) { .email-cta { transition: none; } }

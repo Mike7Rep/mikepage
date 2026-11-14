@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import {Mail, Menu, Users} from "lucide-react"
+import {Mail, Menu} from "lucide-react"
 import {contact} from "@/lib/profile-data"
 
 export default function HeroSection() {
@@ -29,7 +29,7 @@ export default function HeroSection() {
         <div className="pointer-events-auto flex items-center gap-2">
           <details className="group relative">
             <summary
-              className="flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/12 bg-white/6 text-white/78 shadow-2xl shadow-black/40 backdrop-blur-xl transition-all hover:border-cyan-200/40 hover:bg-cyan-200/10 hover:text-cyan-50 sm:size-12 [&::-webkit-details-marker]:hidden"
+              className="flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/12 bg-white/6 text-white/78 shadow-2xl shadow-black/40 backdrop-blur-xl transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary sm:size-12 [&::-webkit-details-marker]:hidden"
               aria-label="Menü öffnen"
             >
               <Menu className="size-5" aria-hidden="true"/>
@@ -41,30 +41,24 @@ export default function HeroSection() {
                 ["Eliminierung", "#eliminierung"],
                 ["Angebot", "#angebot"],
                 ["Projekte", "#projekte"],
+                ["CV", "/cv"],
               ].map(([label, href]) => (
-                <Link
+                <a
                   key={label}
                   href={href}
-                  className="block rounded-xl px-3 py-2 transition-colors hover:bg-white/10 hover:text-cyan-50"
+                  className="block rounded-xl px-3 py-2 transition-colors hover:bg-white/10 hover:text-primary"
                 >
                   {label}
-                </Link>
+                </a>
               ))}
             </nav>
           </details>
           <Link
-            href={contact.bookingPath}
-            className="inline-flex h-11 w-11 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#45C456] px-0 text-xs font-black uppercase tracking-[0.14em] text-black shadow-2xl shadow-black/40 transition-all hover:-translate-y-0.5 hover:bg-[#56d867] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#45C456]/50 sm:w-auto sm:px-5"
-          >
-            <Users className="size-5" aria-hidden="true"/>
-            <span className="hidden sm:inline">30min Meeting</span>
-          </Link>
-          <Link
             href={`mailto:${contact.email}`}
-            className="inline-flex h-11 w-11 items-center justify-center gap-2 rounded-full bg-white px-0 text-xs font-black uppercase tracking-[0.16em] text-black shadow-2xl shadow-black/40 transition-all hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:w-auto sm:px-5"
+            className="email-cta pointer-events-auto"
           >
             <Mail className="size-5" aria-hidden="true"/>
-            <span className="hidden sm:inline">Kontaktieren</span>
+            <span>Kontakt</span>
           </Link>
         </div>
       </div>
@@ -79,10 +73,11 @@ export default function HeroSection() {
             zusammenarbeiten können.
           </p>
           <Link
-            href={contact.bookingPath}
-            className="pointer-events-auto mt-1 inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#45C456] px-6 py-3 text-xs font-black uppercase tracking-[0.14em] text-black shadow-2xl shadow-black/40 transition-all hover:-translate-y-0.5 hover:bg-[#56d867] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#45C456]/50"
+            href={`mailto:${contact.email}?subject=Anfrage`}
+            className="email-cta pointer-events-auto"
           >
-            30min Meeting
+            <Mail aria-hidden="true" />
+            Kontakt
           </Link>
         </div>
 
