@@ -29,9 +29,18 @@ export default function SiteFeedback({ summary, formUrl, unavailable = false }: 
         <h2 className="text-xl font-semibold">Bewertungen</h2>
         <a href={formUrl} target="_blank" rel="noreferrer" className="email-cta">Bewertung abgeben</a>
       </div>
-      <div className="mt-7 flex flex-wrap items-center gap-x-10 gap-y-5">
-        <div><div className="flex items-center gap-3"><strong className="text-2xl tabular-nums">{average === null ? '—' : average.toLocaleString('de-CH', { maximumFractionDigits: 1 })}<span className="text-sm font-normal text-white/50"> / 6</span></strong><Stars value={average ?? 0}/></div><p className="mt-2 text-sm text-white/55">{unavailable ? 'Bewertungen momentan nicht verfügbar' : count ? `${count} Bewertungen` : 'Noch keine Bewertungen'}</p></div>
-        <div><strong className="text-2xl tabular-nums text-primary">{recommendation === null ? '—' : String(recommendation).padStart(2, '0')} %</strong><p className="mt-2 text-sm text-white/55">Weiterempfehlung</p></div>
+      <div className="mx-auto mt-8 grid max-w-lg grid-cols-2 gap-4 text-center sm:gap-12">
+        <div>
+          <div className="flex h-20 flex-col items-center justify-center gap-2">
+            <strong className="text-3xl leading-none tabular-nums">{average === null ? '—' : average.toLocaleString('de-CH', { maximumFractionDigits: 1 })}<span className="text-sm font-normal text-white/50"> / 6</span></strong>
+            <div className="flex [&_svg]:size-4 sm:[&_svg]:size-5"><Stars value={average ?? 0}/></div>
+          </div>
+          <p className="mt-3 text-xs text-white/55 sm:text-sm">{unavailable ? 'Bewertungen momentan nicht verfügbar' : count ? `${count} Bewertungen` : 'Noch keine Bewertungen'}</p>
+        </div>
+        <div>
+          <div className="flex h-20 items-center justify-center"><strong className="text-5xl leading-none tabular-nums text-primary min-[375px]:text-6xl sm:text-7xl">{recommendation === null ? '—' : String(recommendation).padStart(2, '0')}<span className="ml-1">%</span></strong></div>
+          <p className="mt-3 text-xs text-white/55 sm:text-sm">Weiterempfehlung</p>
+        </div>
       </div>
       {reviews.length > 0 ? <div className="relative mt-8">
         <ul ref={carousel} tabIndex={0} aria-label="Einzelne Bewertungen" className="flex [contain:layout_paint] snap-x snap-mandatory gap-8 overflow-x-auto py-3 [scrollbar-width:none]">{reviews.map((r, i) => <li key={i} className="w-full min-w-0 shrink-0 snap-start sm:w-[calc(50%-1rem)]">
