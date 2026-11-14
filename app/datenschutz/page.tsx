@@ -12,6 +12,10 @@ export const metadata: Metadata = {
 
 const sections = [
   {
+    title: "Besucherzähler und Bewertungen",
+    text: "Wir zählen Besuche der Website, Besuche des Lebenslaufs und Klicks auf E-Mail-Kontaktlinks. Ein zufälliges Cookie (site_visit, 24 Stunden) verhindert mehrfaches Zählen desselben Browsers. Gespeichert werden aggregierte Zähler und kurzlebige zufällige Kennungen, keine Namen oder IP-Adressen für diese Statistik. Freigegebene Bewertungen werden nur mit Kürzeln und Sternzahl veröffentlicht. Bei einer Bewertung über Google Forms gelten zusätzlich die Datenschutzbestimmungen von Google.",
+  },
+  {
     title: "Verantwortliche Stelle",
     text: `${contact.name}, ${contact.street}, ${contact.city}, Schweiz. Für Datenschutzfragen erreichst du mich per E-Mail unter ${contact.email}.`,
   },

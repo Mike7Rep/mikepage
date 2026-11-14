@@ -78,7 +78,7 @@ function loginAttemptKey(identifier: string) {
   return `mydashboard:login:v1:${keyedHash(identifier)}`
 }
 
-async function getRedis() {
+export async function getRedis() {
   const url = readEnv("REDIS_URL")
   if (!url) {
     throw new Error("REDIS_URL fehlt.")

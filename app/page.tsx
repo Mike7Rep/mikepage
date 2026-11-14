@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+import FeedbackSection from "@/components/site/feedback-section"
 import Image from "next/image"
 
 import Footer from "./Footer"
@@ -141,6 +143,7 @@ export default function Page() {
       <QuoteDivider quotes={quoteGroups[1]} />
 
       <ProjectsSection />
+      <Suspense fallback={null}><FeedbackSection /></Suspense>
 
       <Footer />
     </main>

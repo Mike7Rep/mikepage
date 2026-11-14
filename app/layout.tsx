@@ -6,6 +6,7 @@ import "./globals.css";
 import {ThemeProvider} from "@/components/theme-provider";
 import {TooltipProvider} from "@/components/ui/tooltip";
 import Navigation from "./Navigation"
+import Script from "next/script"
 
 
 const outfit = Outfit({subsets: ["latin"], variable: "--font-sans"});
@@ -35,6 +36,7 @@ export default function RootLayout({
     <TooltipProvider>
       <ThemeProvider>
         <Navigation />
+        <Script src="/site-metrics.js" strategy="afterInteractive" />
         {children}
       </ThemeProvider>
     </TooltipProvider>
